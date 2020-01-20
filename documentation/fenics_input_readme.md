@@ -5,17 +5,18 @@ Author: Kurtis Mann
 Date Edited: 1/16/2010  
 
 
-<h1>"Simulation_parameters"</h1>  
+<h1>Simulation Parameters"</h1>  
 These define what drives the simulation.  
 
- <h2> "sim_geometry"</h2>  
+ <h2>"sim_geometry"</h2>  
  Choose between [single_cell], [sheet], or [ventricle].
     [single_cell]: Simulates a unit cube meant to represent a single half sarcomere.
     [Sheet]: A 2D thin sheet of sarcomeres.
     [ventricle]: Full ventricle simulations. Can choose specific meshes or use ellipsoidal.
 
-  "sim_type": For the given geometry, choose what type of simulation.
-
+  <h2>"sim_type"</h2>  
+  For the given geometry, choose what type of simulation.  
+  
     Single Cell Simulations  
     
     [isometric]: Unit cube where length is fixed.  
@@ -31,10 +32,11 @@ These define what drives the simulation.
     [beat, "path/to/mesh"]: Supply the (relative?) path to the desired mesh and it will "beat" for "sim_duration"  
     [vena_cava_occlusion, "path/to/mesh"]: Use the specified mesh and simulate a vena cava occlusion. Useful for calculating ESPVR.  
   
-  "sim_duration": Enter in time for simulation in seconds.  
+ <h2>"sim_duration"</h2>  
+ Enter in time for simulation in seconds.  
   
-  "sim_timestep": Time-step to be used in implicit finite element solving.  
-
+ <h2>"sim_timestep"</h2>  
+ Time-step to be used in implicit finite element solving.  
 
 <h1>"output_parameters"</h1>  
 These control what information gets output for a given simulation.  
