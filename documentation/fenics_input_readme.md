@@ -20,11 +20,12 @@ Date Edited: 1/20/2020
 [force]:| Unit cube where a given force boundary condition is enforced.  
 [single_cell_custom]:| Allows for a combination of length and force controlled simulations. Also allows for length changes.  
 
-**Tissue Sheet | Description**
----------------|---------------
+Tissue Sheet | Description
+-------------|---------------
 [sheet]:| Place-holder for now. Will use this for fiber splay simulations or spiral dynamics.  
   
-**Left Ventricle | Description**  
+Left Ventricle | Description 
+---------------|--------------
 [beat, "path/to/mesh"]:| Supply the (relative?) path to the desired mesh and it will "beat" for "sim_duration"  
 [vena_cava_occlusion, "path/to/mesh"]:| Use the specified mesh and simulate a vena cava occlusion. Useful for calculating ESPVR.  
   
