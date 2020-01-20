@@ -2,15 +2,16 @@ This document explains each input in the "fenics_input.json" file. Terms in "" r
 Note: All inputs must be in brackets [], as the code loads in "key"[value][0]. This was to be able to include units next to input values, and standardize input.
 
 Author: Kurtis Mann  
-Date Edited: 1/16/2010  
+Date Edited: 1/20/2020  
 
 
-**"simulation_parameters"**: These drive the simulation.  
+** "simulation_parameters" ** 
+These drive the simulation.  
 
-    **"sim_geometry"**: Choose between [single_cell], [sheet], or [ventricle].  
-        [single_cell]: Simulates a unit cube meant to represent a single half sarcomere.  
-        [sheet]: A 2D thin sheet of sarcomeres.  
-        [ventricle]: Full ventricle simulations. Can choose specific meshes or use ellipsoidal.  
+**"sim_geometry"**: Choose between [single_cell], [sheet], or [ventricle].  
+[single_cell]: Simulates a unit cube meant to represent a single half sarcomere.  
+[sheet]: A 2D thin sheet of sarcomeres.  
+[ventricle]: Full ventricle simulations. Can choose specific meshes or use ellipsoidal.  
 
 **"sim_type"**: For the given geometry, choose what type of simulation.  
   
