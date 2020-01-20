@@ -5,9 +5,7 @@ Author: Kurtis Mann
 Date Edited: 1/20/2020  
 
 
-### **Simulation Parameters"**
-These drive the simulation.  
-
+### **Simulation Parameters**: These drive the simulation.
 **"sim_geometry"**: Choose between [single_cell], [sheet], or [ventricle].  
 [single_cell]: Simulates a unit cube meant to represent a single half sarcomere.  
 [sheet]: A 2D thin sheet of sarcomeres.  
