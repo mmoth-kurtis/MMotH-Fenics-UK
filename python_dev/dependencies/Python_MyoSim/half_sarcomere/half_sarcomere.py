@@ -1,12 +1,18 @@
 import numpy as np
 import pandas as pd
 import Python_MyoSim.half_sarcomere.myofilaments.myofilaments as myofilaments
-import Python_MyoSim.half_sarcomere.membranes.membranes as membranes
+#import Python_MyoSim.half_sarcomere.membranes.membranes as membranes
 
-##import membranes
+#import membranes
+
+## Class for a half-sarcomere
+#
+# The half_sarcomere class initializes all of the properties
+# of a half-sarcomere. Each gauss point in the finite-element
+# mesh is treated as a half-sarcomere, where the system of
+# ODE's describing cross-bridge population changes is solved
 
 class half_sarcomere():
-    """Class for a half-sarcomere"""
 
     from .implement import update_simulation, update_data_holder
     from .display import display_fluxes
