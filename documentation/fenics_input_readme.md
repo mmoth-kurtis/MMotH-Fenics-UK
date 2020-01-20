@@ -26,16 +26,14 @@ Place-holder for now. Will use this for fiber splay simulations or spiral dynami
 [beat, "path/to/mesh"]: Supply the (relative?) path to the desired mesh and it will "beat" for "sim_duration"  
 [vena_cava_occlusion, "path/to/mesh"]: Use the specified mesh and simulate a vena cava occlusion. Useful for calculating ESPVR.  
   
-"sim_duration":    
-Enter an *integer* time for the simulation in seconds.  
+**"sim_duration":** Enter an *integer* time for the simulation in seconds.  
   
-"sim_timestep":  
-Time-step to be used in implicit finite element solving.  
+**"sim_timestep":** Time-step to be used in implicit finite element solving.  
 
 ### **Output Parameters**  
 
 ### **Forms Parameters**
-"passive_law": Select one of the available passive tissue laws.  
+**"passive_law":** Select one of the available passive tissue laws.  
 * [guccione_transverse_isotropy]: Phenomenological model. See "". Must define C, bf, bt, bfs.  
     * [c]:  
     * [bf]:  
