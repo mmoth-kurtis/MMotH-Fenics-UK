@@ -8,19 +8,19 @@ Date Edited: 1/16/2010
 <h1>Simulation Parameters</h1>  
 These define what drives the simulation.  
 
- **"sim_geometry": [single_cell], [sheet], [ventricle]**: Choose between **[single_cell]**, **[sheet**], or **[ventricle**].  
-    **[single_cell]**: Simulates a unit cube meant to represent a single half sarcomere.  
-    **[sheet]**: A 2D thin sheet of sarcomeres.  
-    **[ventricle]**: Full ventricle simulations. Can choose specific meshes or use ellipsoidal.  
+ **"sim_geometry"**: Choose between **[single_cell]**, **[sheet**], or **[ventricle**].  
+* **[single_cell]**: Simulates a unit cube meant to represent a single half sarcomere.  
+* **[sheet]**: A 2D thin sheet of sarcomeres.  
+* **[ventricle]**: Full ventricle simulations. Can choose specific meshes or use ellipsoidal.  
 
   **"sim_type"**: For the given geometry, choose what type of simulation.  
   
-    Single Cell Simulations  
+* Single Cell Simulations  
     
-    [isometric]: Unit cube where length is fixed.  
-    [ktr]: Tension recovery experiment.  
-    [force]: Unit cube where a given force boundary condition is enforced.  
-    [single_cell_custom]: Allows for a combination of length and force controlled simulations. Also allows for length changes.  
+    *    [isometric]: Unit cube where length is fixed.  
+    *    [ktr]: Tension recovery experiment.  
+    *    [force]: Unit cube where a given force boundary condition is enforced.  
+    *    [single_cell_custom]: Allows for a combination of length and force controlled simulations. Also allows for length changes.  
 
     Tissue Sheet Simulations  
     Place-holder for now. Will use this for fiber splay simulations or spiral dynamics.  
