@@ -5,7 +5,7 @@ Author: Kurtis Mann
 Date Edited: 1/20/2020  
 
 
-** "simulation_parameters" ** 
+## **"simulation_parameters"**## 
 These drive the simulation.  
 
 **"sim_geometry"**: Choose between [single_cell], [sheet], or [ventricle].  
