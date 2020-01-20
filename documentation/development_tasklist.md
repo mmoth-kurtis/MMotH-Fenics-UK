@@ -4,8 +4,8 @@ Date Edited:  1/20/2020
 
 Testing task list markdown from GitHub:  
 - [x] Set up GitHub repository
-- [ ] Initialize Doxygen documentation
-    -[ ] To utilize the special commands of Doxygen, ## instead of document strings """ must be used. Going to take a bit, but want to document every file.
+- [ ] Initialize Doxygen documentation  
+    - [ ] To utilize the special commands of Doxygen, ## instead of document strings """ must be used. Going to take a bit, but want to document every file.
 - [ ] Organize fenics script so that all existing cases (singe cell isometric, single cell force bc, ellipsoid LV, patient specific mesh LV)  are in one file.
 - [ ] Complete json input file so that the above cases can be switched between without changing anything in the fenics script.
 - [ ] Learn how to create meshes from Hossein
