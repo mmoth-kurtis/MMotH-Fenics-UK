@@ -3,7 +3,7 @@ import pandas as pd
 import Python_MyoSim.half_sarcomere.myofilaments.myofilaments as myofilaments
 import Python_MyoSim.half_sarcomere.membranes.membranes as membranes
 
-#import membranes
+##import membranes
 
 class half_sarcomere():
     """Class for a half-sarcomere"""
@@ -13,36 +13,43 @@ class half_sarcomere():
 
     def __init__(self,hs_params, data_buffer_size):
 
-#  Changed input to json instead of xml. Each input is [value "units"], so assigning
+        ## Documentation for initializing the half sarcomere.
+        # @param self is the half sarcomere, @param hs_params
+        # are read in from a json file in the fenics.py file.
+        # Finally, @param data_buffer_size is set to one, as
+        # the half-sarcomere machinery is used by the data is
+        # stored in the parents fenics.py script.
+
+##  Changed input to json instead of xml. Each input is [value "units"], so assigning
 #  hs_params["key"][0] gives the value, ignores the units
         self.hs_length = float(hs_params["initial_hs_length"][0])
         self.Ca_conc = 1.0e-9
         self.activation = 0.0
 
-        # Pull of class parameters
+        ## Pull of class parameters
         self.max_rate = float(hs_params["max_rate"][0])
         self.temperature = float(hs_params["temperature"][0])
         self.cb_number_density = float(hs_params["cb_number_density"][0])
 
-        # Pull of membrane parameters
+        ## Pull of membrane parameters
         # Don't think I need these for fenics
         #membr_params = hs_params.membranes
         #self.membr = membranes.membranes(membr_params, self)
 
-        # Initialise hs_force, required for myofilament kinetics
+        ## Initialise hs_force, required for myofilament kinetics
         self.hs_force = 0
 
-        # Pull off the mofilament_params
+        ## Pull off the mofilament_params
         myofil_params = hs_params["myofilament_parameters"]
         self.myof = myofilaments.myofilaments(myofil_params,self)
 
         print(self.myof.cb_force)
 
-        # Update forces
+        ## Update forces
         self.hs_force = self.myof.cb_force + self.myof.pas_force
         print("hs_force: %f" % self.hs_force)
 
-        # Create a pandas data structure to store data
+        ## Create a pandas data structure to store data
         self.data_buffer_size = data_buffer_size
         self.hs_time = 0.0
         self.data_buffer_index = int(0)
@@ -53,7 +60,7 @@ class half_sarcomere():
                                      'pas_force' : np.zeros(self.data_buffer_size),
                                      'Ca_conc' : np.zeros(self.data_buffer_size)})
 
-        # Add in specific fields for each scheme
+        ## Add in specific fields for each scheme
         if (self.myof.kinetic_scheme == '3state_with_SRX'):
             # Initialise
             self.hs_data['M_OFF'] = pd.Series(np.zeros(self.data_buffer_size))
@@ -63,7 +70,7 @@ class half_sarcomere():
             self.hs_data['n_on'] = pd.Series(np.zeros(self.data_buffer_size))
             self.hs_data['n_bound'] = pd.Series(np.zeros(self.data_buffer_size))
 
-            # Set first values
+            ## Set first values
             self.hs_data.at[self.data_buffer_index, 'M_OFF'] = 1.0
             self.hs_data.at[self.data_buffer_index, 'M_ON'] = 0.0
             self.hs_data.at[self.data_buffer_index, 'M_bound'] = 0.0
