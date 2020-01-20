@@ -15,12 +15,11 @@ These define what drives the simulation.
 
 **"sim_type"**: For the given geometry, choose what type of simulation.  
   
-    **__Single Cell Simulations__**  
-    
- * [isometric]: Unit cube where length is fixed.  
- * [ktr]: Tension recovery experiment.  
- * [force]: Unit cube where a given force boundary condition is enforced.  
- * [single_cell_custom]: Allows for a combination of length and force controlled simulations. Also allows for length changes.  
+__Single Cell Simulations__  
+* [isometric]: Unit cube where length is fixed.  
+* [ktr]: Tension recovery experiment.  
+* [force]: Unit cube where a given force boundary condition is enforced.  
+* [single_cell_custom]: Allows for a combination of length and force controlled simulations. Also allows for length changes.  
 
     **__Tissue Sheet Simulations__**  
     *    Place-holder for now. Will use this for fiber splay simulations or spiral dynamics.  
