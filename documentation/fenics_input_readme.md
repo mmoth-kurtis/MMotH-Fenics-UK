@@ -1,12 +1,12 @@
 This document explains each input in the "fenics_input.json" file. Terms in "" represent the parameter name, and terms in [] represent the possible values.
 Note: All inputs must be in brackets [], as the code loads in "key"[value][0]. This was to be able to include units next to input values, and standardize input.
 
-Author: Kurtis Mann
-Date Edited: 1/16/2010
+Author: Kurtis Mann  
+Date Edited: 1/16/2010  
 
-------------------------
-"Simulation_parameters": These define what drive the simulation
-------------------------
+
+<h1>"Simulation_parameters": These define what drive the simulation </h1>
+
   "sim_geometry": Choose between [single_cell], [sheet], or [ventricle].
     [single_cell]: Simulates a unit cube meant to represent a single half sarcomere.
     [Sheet]: A 2D thin sheet of sarcomeres.
