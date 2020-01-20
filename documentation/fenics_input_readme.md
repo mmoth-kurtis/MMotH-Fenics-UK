@@ -5,7 +5,7 @@ Author: Kurtis Mann
 Date Edited: 1/20/2020  
 
 
-### **Simulation Parameters**: These drive the simulation.
+### **Simulation Parameters**
 **"sim_geometry"**: Choose between [single_cell], [sheet], or [ventricle].  
 [single_cell]: Simulates a unit cube meant to represent a single half sarcomere.  
 [sheet]: A 2D thin sheet of sarcomeres.  
@@ -13,16 +13,16 @@ Date Edited: 1/20/2020
 
 **"sim_type"**: For the given geometry, choose what type of simulation.  
   
-####**Single Cell Simulations**  
+#### **Single Cell Simulations**  
 [isometric]: Unit cube where length is fixed.  
 [ktr]: Tension recovery experiment.  
 [force]: Unit cube where a given force boundary condition is enforced.  
 [single_cell_custom]: Allows for a combination of length and force controlled simulations. Also allows for length changes.  
 
-####**Tissue Sheet Simulations**  
+#### **Tissue Sheet Simulations**  
 Place-holder for now. Will use this for fiber splay simulations or spiral dynamics.  
   
-####**Left Ventricle Simulations**  
+#### **Left Ventricle Simulations**  
 [beat, "path/to/mesh"]: Supply the (relative?) path to the desired mesh and it will "beat" for "sim_duration"  
 [vena_cava_occlusion, "path/to/mesh"]: Use the specified mesh and simulate a vena cava occlusion. Useful for calculating ESPVR.  
   
@@ -32,28 +32,24 @@ Enter an *integer* time for the simulation in seconds.
 "sim_timestep":  
 Time-step to be used in implicit finite element solving.  
 
-###"Output Parameters"  
-These control what information gets output for a given simulation.  
+### **Output Parameters**  
 
-"forms_parameters"  
-Input all parameters needed for the "forms.py" file. Forms is a class object that contains all of the methods needed to calculate necessary continuum tensors, as well as return stresses from constitutive equations.  
-
-    "passive_law": Select one of the available passive tissue laws.  
-        * [guccione_transverse_isotropy]: Phenomenological model. See "". Must define C, bf, bt, bfs.  
-            * [c]:  
-            * [bf]:  
-            * [bt]:  
-            * [bfs]:  
-        * [semi_structural]: Separates out the myofiber passive stress from bulk response. Requires Guccione parameters AND c2, c3. See above and "Microstructure-based finite element model of left ventricle passive inflation" by Xi, et al.  
-            * [c]:  
-            * [c2]:  
-            * [c3]:  
-            * [bf]:  
-            * [bt]:  
-            * [bfs]:  
-        * [full_structural]: Plan to implement a fully structural model.  
-
+### **Forms Parameters**
+"passive_law": Select one of the available passive tissue laws.  
+* [guccione_transverse_isotropy]: Phenomenological model. See "". Must define C, bf, bt, bfs.  
+    * [c]:  
+    * [bf]:  
+    * [bt]:  
+    * [bfs]:  
+* [semi_structural]: Separates out the myofiber passive stress from bulk response. Requires Guccione parameters AND c2, c3. See above and "Microstructure-based finite element model of left ventricle passive inflation" by Xi, et al.  
+    * [c]:  
+    * [c2]:  
+    * [c3]:  
+    * [bf]:  
+    * [bt]:  
+    * [bfs]:  
+* [full_structural]: Plan to implement a fully structural model. 
   "Kappa"
 
-<h1>"myosim_parameters"</h1>  
-These are the active contraction parameters to be used by the embedded python version of MyoSim.  
+### **Myosim Parameters**
+  
