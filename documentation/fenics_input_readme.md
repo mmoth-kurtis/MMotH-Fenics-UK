@@ -5,9 +5,11 @@ Author: Kurtis Mann
 Date Edited: 1/16/2010  
 
 
-<h1>"Simulation_parameters": These define what drive the simulation </h1>
+<h1>"Simulation_parameters"</h1>  
+These define what drives the simulation.  
 
-  "sim_geometry": Choose between [single_cell], [sheet], or [ventricle].
+ <h2> "sim_geometry"</h2>  
+ Choose between [single_cell], [sheet], or [ventricle].
     [single_cell]: Simulates a unit cube meant to represent a single half sarcomere.
     [Sheet]: A 2D thin sheet of sarcomeres.
     [ventricle]: Full ventricle simulations. Can choose specific meshes or use ellipsoidal.
