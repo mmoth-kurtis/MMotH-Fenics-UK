@@ -13,8 +13,8 @@ Date Edited: 1/20/2020
 
 **"sim_type"**: For the given geometry, choose what type of simulation.  
   
-#### **Single Cell Simulations**  |  
-----------------------------------|--
+**Single Cell Simulations** | filler  
+----------------------------|-------  
 [isometric]:| Unit cube where length is fixed.  
 [ktr]:| Tension recovery experiment.  
 [force]:| Unit cube where a given force boundary condition is enforced.  
