@@ -8,6 +8,7 @@ Date Edited:  1/22/2020
 - [ ] Create .md file for creating meshes
 - [ ] Revise/improve instructions for running docker/fenics
 - [ ] Comment ALL code and figure out Doxygen  
+- [ ] Put all markdown files in doxygen generated documentation
 
 **FEniCS Functionality**  
 - [ ] Organize fenics script so that all existing cases (singe cell isometric, single cell force bc, ellipsoid LV, patient specific mesh LV)  are in one file. Also just organize in general
