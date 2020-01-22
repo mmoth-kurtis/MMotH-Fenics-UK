@@ -15,7 +15,7 @@ Date Edited:  1/22/2020
 - [ ] Generalize Python Myosim  
 
 **Sobol Sensitivity**
-- [ ] **Get MRI data from 3 state study**
+- [ ]__**Get MRI data from 3 state study**__
 - [ ] **Learn how to create meshes from Hossein**
 - [ ] **Create meshes for rat LV's for three state sensitivity analysis**
 - [ ] Start coding up optimization wrapper
@@ -25,7 +25,7 @@ Date Edited:  1/22/2020
 - [ ] Finalize model inputs and outputs for analysis  
 
 **Miscellaneous**
-- [**x**] Set up GitHub repository
+- [x] Set up GitHub repository
 - [x] Initialize Doxygen documentation
   * To utilize the special commands of Doxygen, ## instead of document strings """ must be used. Going to take a bit, but want to document every file.
 - [ ] **Finish paper review**
