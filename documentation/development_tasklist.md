@@ -15,11 +15,13 @@ Date Edited:  1/22/2020
 - [ ] Generalize Python Myosim  
 
 **Sobol Sensitivity**
-- [ ] **Get MRI data from 3 state study**
-- [ ] **Learn how to create meshes from Hossein**
+- [x] **Get MRI data from 3 state study**
+  * The raw data is in the "austin_backup" directory on the cluster
+- [ ] **Learn how to create meshes from Hossein (Friday)**
 - [ ] **Create meshes for rat LV's for three state sensitivity analysis**
 - [ ] **Start coding up optimization wrapper**
-  - Have messaged Dylan about his optimization repository
+  - Have messaged Dylan about his optimization repository.
+  - Dylan has shared his repository with me. This will be a great help. Speaking to him about running jobs in parallel
 - [ ] Decide on calcium transient to be used (match 3 state paper?)
 - [ ] Optimize parameters for sensitivity analysis
 - [ ] Code up Sobol' indices sensitivity framework
@@ -31,7 +33,7 @@ Date Edited:  1/22/2020
   * To utilize the special commands of Doxygen, ## instead of document strings """ must be used. Going to take a bit, but want to document every file.
 - [ ] **Finish paper review**
 - [ ] **Notes/discuss 3 state paper revisions**
-- [x] Notes on chapter 1 of nonlinear book  
+- [ ] Notes on 3.1-3.4 of nonlinear book  
 
 **Cell Ion Models**
 - [ ] Modularize cell ion/calcium transient  
