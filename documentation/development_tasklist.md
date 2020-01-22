@@ -12,7 +12,7 @@ Date Edited:  1/22/2020
 **FEniCS Functionality**  
 - [ ] Organize fenics script so that all existing cases (singe cell isometric, single cell force bc, ellipsoid LV, patient specific mesh LV)  are in one file. Also just organize in general
 - [ ] **Complete json input file so that the above cases can be switched between without changing anything in the fenics script.**  
-- [ ] Generalize Python Myosim  
+- [ ] Generalize Python Myosim schemes  
 
 **Sobol Sensitivity**
 - [x] **Get MRI data from 3 state study**
