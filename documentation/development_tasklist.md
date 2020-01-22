@@ -15,7 +15,7 @@ Date Edited:  1/22/2020
 - [ ] Generalize Python Myosim  
 
 **Sobol Sensitivity**
-- [ ] __**Get MRI data from 3 state study**__
+- [ ] _**Get MRI data from 3 state study**_
 - [ ] **Learn how to create meshes from Hossein**
 - [ ] **Create meshes for rat LV's for three state sensitivity analysis**
 - [ ] Start coding up optimization wrapper
