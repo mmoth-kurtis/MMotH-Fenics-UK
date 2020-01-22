@@ -19,6 +19,7 @@ Date Edited:  1/22/2020
 - [ ] **Learn how to create meshes from Hossein**
 - [ ] **Create meshes for rat LV's for three state sensitivity analysis**
 - [ ] **Start coding up optimization wrapper**
+  - Have messaged Dylan about his optimization repository
 - [ ] Decide on calcium transient to be used (match 3 state paper?)
 - [ ] Optimize parameters for sensitivity analysis
 - [ ] Code up Sobol' indices sensitivity framework
