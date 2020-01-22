@@ -11,12 +11,13 @@ Date Edited:  1/22/2020
 
 **FEniCS Functionality**  
 - [ ] Organize fenics script so that all existing cases (singe cell isometric, single cell force bc, ellipsoid LV, patient specific mesh LV)  are in one file. Also just organize in general
-- [ ] Complete json input file so that the above cases can be switched between without changing anything in the fenics script.  
+- [ ] **Complete json input file so that the above cases can be switched between without changing anything in the fenics script.**  
 - [ ] Generalize Python Myosim  
 
 **Sobol Sensitivity**
-- [ ] Learn how to create meshes from Hossein
-- [ ] Create meshes for rat LV's for three state sensitivity analysis
+- [ ] **Get MRI data from 3 state study**
+- [ ] **Learn how to create meshes from Hossein**
+- [ ] **Create meshes for rat LV's for three state sensitivity analysis**
 - [ ] Start coding up optimization wrapper
 - [ ] Decide on calcium transient to be used (match 3 state paper?)
 - [ ] Optimize parameters for sensitivity analysis
@@ -24,11 +25,11 @@ Date Edited:  1/22/2020
 - [ ] Finalize model inputs and outputs for analysis  
 
 **Miscellaneous**
-- [x] Set up GitHub repository
+- [**x**] Set up GitHub repository
 - [x] Initialize Doxygen documentation
   * To utilize the special commands of Doxygen, ## instead of document strings """ must be used. Going to take a bit, but want to document every file.
-- [ ] Finish paper review
-- [ ] Notes/discuss 3 state paper revisions
+- [ ] **Finish paper review**
+- [ ] **Notes/discuss 3 state paper revisions**
 - [x] Notes on chapter 1 of nonlinear book  
 
 **Cell Ion Models**
