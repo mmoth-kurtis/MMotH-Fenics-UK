@@ -1,0 +1,91 @@
+\hypertarget{classnsolver_1_1_n_solver}{}\doxysection{nsolver.\+N\+Solver Class Reference}
+\label{classnsolver_1_1_n_solver}\index{nsolver.NSolver@{nsolver.NSolver}}
+Inheritance diagram for nsolver.\+N\+Solver\+:\begin{figure}[H]
+\begin{center}
+\leavevmode
+\includegraphics[height=2.000000cm]{classnsolver_1_1_n_solver}
+\end{center}
+\end{figure}
+\doxysubsection*{Public Member Functions}
+\begin{DoxyCompactItemize}
+\item 
+\mbox{\Hypertarget{classnsolver_1_1_n_solver_a9eba38d3a8aad31deb0e1ce1c736893c}\label{classnsolver_1_1_n_solver_a9eba38d3a8aad31deb0e1ce1c736893c}} 
+def {\bfseries \+\_\+\+\_\+init\+\_\+\+\_\+} (self, params)
+\item 
+\mbox{\Hypertarget{classnsolver_1_1_n_solver_aa21d702b74b93dbb3b12bb66880a03de}\label{classnsolver_1_1_n_solver_aa21d702b74b93dbb3b12bb66880a03de}} 
+def {\bfseries default\+\_\+parameters} (self)
+\item 
+\mbox{\Hypertarget{classnsolver_1_1_n_solver_a21ca6a29539f1a20428b0fe949585c3e}\label{classnsolver_1_1_n_solver_a21ca6a29539f1a20428b0fe949585c3e}} 
+def {\bfseries solvenonlinear} (self)
+\end{DoxyCompactItemize}
+\doxysubsection*{Public Attributes}
+\begin{DoxyCompactItemize}
+\item 
+\mbox{\Hypertarget{classnsolver_1_1_n_solver_a0edb4161e7c6f815f8eb4fd52e2cf152}\label{classnsolver_1_1_n_solver_a0edb4161e7c6f815f8eb4fd52e2cf152}} 
+{\bfseries parameters}
+\end{DoxyCompactItemize}
+\doxysubsection*{Static Public Attributes}
+\begin{DoxyCompactItemize}
+\item 
+\mbox{\Hypertarget{classnsolver_1_1_n_solver_ad68f9cde821488fbd64633886d2ca90b}\label{classnsolver_1_1_n_solver_ad68f9cde821488fbd64633886d2ca90b}} 
+{\bfseries w}
+\item 
+\mbox{\Hypertarget{classnsolver_1_1_n_solver_af3dd38244edc0ded2980c9ae2b489c9d}\label{classnsolver_1_1_n_solver_af3dd38244edc0ded2980c9ae2b489c9d}} 
+{\bfseries bcs}
+\item 
+\mbox{\Hypertarget{classnsolver_1_1_n_solver_a0c4e4e3190e9e78f3c90cc67b689afa1}\label{classnsolver_1_1_n_solver_a0c4e4e3190e9e78f3c90cc67b689afa1}} 
+{\bfseries J}
+\item 
+\mbox{\Hypertarget{classnsolver_1_1_n_solver_aa039df8636971875cd4b3f4c00c06801}\label{classnsolver_1_1_n_solver_aa039df8636971875cd4b3f4c00c06801}} 
+{\bfseries form\+\_\+compiler\+\_\+parameters}
+\item 
+\mbox{\Hypertarget{classnsolver_1_1_n_solver_ad627e13e475ac5b8eff77183d3d73d70}\label{classnsolver_1_1_n_solver_ad627e13e475ac5b8eff77183d3d73d70}} 
+int {\bfseries it} = 0
+\item 
+\mbox{\Hypertarget{classnsolver_1_1_n_solver_ac2b07b1b074b848e92ff272d8a2bfe9c}\label{classnsolver_1_1_n_solver_ac2b07b1b074b848e92ff272d8a2bfe9c}} 
+{\bfseries A}
+\item 
+\mbox{\Hypertarget{classnsolver_1_1_n_solver_a969e76cf24450119188b604b4d379da9}\label{classnsolver_1_1_n_solver_a969e76cf24450119188b604b4d379da9}} 
+{\bfseries b}
+\item 
+\mbox{\Hypertarget{classnsolver_1_1_n_solver_aa02e50c8eb7fc089aa445586f9096bfd}\label{classnsolver_1_1_n_solver_aa02e50c8eb7fc089aa445586f9096bfd}} 
+{\bfseries resid0} = b.\+norm(\char`\"{}l2\char`\"{})
+\item 
+\mbox{\Hypertarget{classnsolver_1_1_n_solver_a257518959480c52a4a9fd7972b17e7ae}\label{classnsolver_1_1_n_solver_a257518959480c52a4a9fd7972b17e7ae}} 
+{\bfseries rel\+\_\+res} = b.\+norm(\char`\"{}l2\char`\"{})/resid0
+\item 
+\mbox{\Hypertarget{classnsolver_1_1_n_solver_ab827d024044008aaba86c49df0f57b17}\label{classnsolver_1_1_n_solver_ab827d024044008aaba86c49df0f57b17}} 
+{\bfseries res} = resid0
+\item 
+\mbox{\Hypertarget{classnsolver_1_1_n_solver_a54899e021554f7c56be532ea40f64e08}\label{classnsolver_1_1_n_solver_a54899e021554f7c56be532ea40f64e08}} 
+{\bfseries isfirstiteration}
+\item 
+{\bfseries B}
+\item 
+\mbox{\Hypertarget{classnsolver_1_1_n_solver_aacef2db783eb7185edb0bfa672b24fb7}\label{classnsolver_1_1_n_solver_aacef2db783eb7185edb0bfa672b24fb7}} 
+float {\bfseries rel\+\_\+res} = 1.\+0
+\item 
+\mbox{\Hypertarget{classnsolver_1_1_n_solver_aa263fdd76ff46e37216dac10eca39310}\label{classnsolver_1_1_n_solver_aa263fdd76ff46e37216dac10eca39310}} 
+{\bfseries dww} = w.\+copy(deepcopy=True)
+\end{DoxyCompactItemize}
+
+
+\doxysubsection{Member Data Documentation}
+\mbox{\Hypertarget{classnsolver_1_1_n_solver_a866e998db8cf7b7c569d99d222c7e69d}\label{classnsolver_1_1_n_solver_a866e998db8cf7b7c569d99d222c7e69d}} 
+\index{nsolver.NSolver@{nsolver.NSolver}!B@{B}}
+\index{B@{B}!nsolver.NSolver@{nsolver.NSolver}}
+\doxysubsubsection{\texorpdfstring{B}{B}}
+{\footnotesize\ttfamily nsolver.\+N\+Solver.\+B\hspace{0.3cm}{\ttfamily [static]}}
+
+{\bfseries Initial value\+:}
+\begin{DoxyCode}{0}
+\DoxyCodeLine{=  assemble(Ftotal,\(\backslash\)}
+\DoxyCodeLine{                     m\_compiler\_parameters=\{\textcolor{stringliteral}{"representation"}:\textcolor{stringliteral}{"uflacs"}\}\(\backslash\)}
+\DoxyCodeLine{                                )}
+
+\end{DoxyCode}
+
+
+The documentation for this class was generated from the following file\+:\begin{DoxyCompactItemize}
+\item 
+/\+Users/charlesmann/\+Academic/\+U\+K/fenics/python\+\_\+dev/nsolver.\+py\end{DoxyCompactItemize}
