@@ -6,6 +6,10 @@
     "sim_timestep": [0.5, "s?"]
   },
 
+  "file_inputs": {
+    "dummyvar3": ["this may not be needed"]
+  },
+
   "output_parameters": {
     "output_path": ["/home/fenics/shared/python_dev/results/fenics_test/"]
   },
@@ -67,12 +71,15 @@
   }
 },
 
-"calcium_parameters": {
-  "dummy_param1": 0.0
-},
-
 "electrophys_parameters": {
-  "dummy_param2": 0.0
+
+  "cell_ion_parameters": {
+    "dummy_param1": 0.0
+  },
+
+  "monodomain_parameters": {
+    "dummy_param2": 0.0
+  }
 }
 
 }
