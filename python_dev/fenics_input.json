@@ -7,11 +7,12 @@
   },
 
   "file_inputs": {
-    "dummyvar3": ["this may not be needed"]
+    "input_directory_path": ["/home/fenics/shared/demos/ellipsoid_input/"],
+    "casename": ["ellipsoidal"]
   },
 
   "output_parameters": {
-    "output_path": ["/home/fenics/shared/python_dev/results/fenics_test/"]
+    "output_path": ["/home/fenics/shared/demos/ellipsoid_output/"]
   },
 
   "forms_parameters": {
@@ -74,7 +75,7 @@
 "electrophys_parameters": {
 
   "cell_ion_parameters": {
-    "dummy_param1": 0.0
+    "path_to_calcium": ["/home/fenics/shared/python_dev/calcium_14.npy"]
   },
 
   "monodomain_parameters": {

@@ -1,6 +1,6 @@
 from __future__ import division
 import sys
-sys.path.append("/home/fenics/shared/python_dev/dependencies")
+sys.path.append("/home/fenics/shared/source_code/dependencies")
 import os as os
 from dolfin import *
 import numpy as np
@@ -38,22 +38,26 @@ monodomain_params = input_parameters["electrophys_parameters"]["monodomain_param
 
 ## Assign parameters
 output_path = output_params["output_path"][0]
-filament_compliance_factor = hs_paramscd /["myofilament_parameters"]["filament_compliance_factor"][0]
-no_of_states = hs_paramscd /["myofilament_parameters"]["num_states"][0]
-no_of_attached_states = hs_paramscd /["myofilament_parameters"]["num_attached_states"][0]
+input_path = file_inputs["input_directory_path"][0]
+#casename = file_inputs["casename"][0]
+casename = "ellipsoidal"
+casename.type()
+filament_compliance_factor = hs_params["myofilament_parameters"]["filament_compliance_factor"][0]
+no_of_states = hs_params["myofilament_parameters"]["num_states"][0]
+no_of_attached_states = hs_params["myofilament_parameters"]["num_attached_states"][0]
 no_of_detached_states = no_of_states-no_of_attached_states
-no_of_transitions = hs_paramscd /["myofilament_parameters"]["num_transitions"][0]
-state_attached = hs_paramscd /["myofilament_parameters"]["state_attached"][0]
-cb_extensions = hs_paramscd /["myofilament_parameters"]["cb_extensions"][0]
-k_cb_multiplier = hs_paramscd /["myofilament_parameters"]["k_cb_multiplier"][0]
-k_cb_pos = hs_paramscd /["myofilament_parameters"]["k_cb_pos"][0]
-k_cb_neg = hs_paramscd /["myofilament_parameters"]["k_cb_neg"][0]
-cb_number_density = hs_paramscd /["cb_number_density"][0]
-alpha_value = hs_paramscd /["myofilament_parameters"]["alpha"][0]
-x_bin_min = hs_paramscd /["myofilament_parameters"]["bin_min"][0]
-x_bin_max = hs_paramscd /["myofilament_parameters"]["bin_max"][0]
-x_bin_increment = hs_paramscd /["myofilament_parameters"]["bin_width"][0]
-
+no_of_transitions = hs_params["myofilament_parameters"]["num_transitions"][0]
+state_attached = hs_params["myofilament_parameters"]["state_attached"][0]
+cb_extensions = hs_params["myofilament_parameters"]["cb_extensions"][0]
+k_cb_multiplier = hs_params["myofilament_parameters"]["k_cb_multiplier"][0]
+k_cb_pos = hs_params["myofilament_parameters"]["k_cb_pos"][0]
+k_cb_neg = hs_params["myofilament_parameters"]["k_cb_neg"][0]
+cb_number_density = hs_params["cb_number_density"][0]
+alpha_value = hs_params["myofilament_parameters"]["alpha"][0]
+x_bin_min = hs_params["myofilament_parameters"]["bin_min"][0]
+x_bin_max = hs_params["myofilament_parameters"]["bin_max"][0]
+x_bin_increment = hs_params["myofilament_parameters"]["bin_width"][0]
+calcium_path = cell_ion_params["path_to_calcium"][0]
 # Check that the output path exists. If it does not, create it and let user know
 if not os.path.exists(output_path):
     print "Output path does not exist. Creating it now"
@@ -95,7 +99,7 @@ Ca_flag = 4
 constant_pCa = 6.5
 
 # Loading calcium from previous simulation
-prev_ca = np.load("calcium_14.npy")
+prev_ca = np.load(calcium_path)
 prev_ca = prev_ca[:,0]
 
 deg = 4
@@ -106,9 +110,9 @@ os.system("rm ../python_dev/results/fenics_test/*.pvd")
 os.system("rm ../python_dev/results/fenics_test/*.vtu")
 
 ############################## Insert Mesh ###########################################
-casename = "ellipsoidal"
+#casename = "ellipsoidal"
 meshfilename = casename + ".hdf5"
-
+print meshfilename
 mesh = Mesh()
 
 f = HDF5File(mpi_comm_world(), meshfilename, 'r')
