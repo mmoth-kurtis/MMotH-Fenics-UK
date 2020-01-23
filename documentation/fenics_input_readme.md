@@ -58,7 +58,7 @@ Left Ventricle | Description
 **"cb_number_density":** [7.67e16, "number of cb's/m^2"]  
 **"initial_hs_length":** [1000, "nm"]  
 
-## **"myofilament_parameters":**  
+# **Myofilament Parameters**  
   **"kinetic_scheme":** ["3state_with_SRX"]  
   **"num_states":** [3]  
   **"num_attached_states":** [1]  
