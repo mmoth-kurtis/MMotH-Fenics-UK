@@ -75,7 +75,7 @@
 "electrophys_parameters": {
 
   "cell_ion_parameters": {
-    "path_to_calcium": ["/home/fenics/shared/python_dev/calcium_14.npy"]
+    "path_to_calcium": ["/home/fenics/shared/demos/ellipsoid_input/calcium_14.npy"]
   },
 
   "monodomain_parameters": {
