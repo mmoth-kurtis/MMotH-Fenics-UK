@@ -92,3 +92,7 @@ Left Ventricle | Description
   **"passive_exp_sigma":** [500]  
   **"passive_exp_L":** [80]  
   **"passive_l_slack":** [900, "nm"]  
+
+## Calcium Parameters
+
+## Electrophys Parameters
