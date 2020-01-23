@@ -10,6 +10,7 @@ from forms import Forms
 from nsolver import NSolver as NSolver
 import math
 import json
+import recode_json_strings as rc
 import Python_MyoSim.half_sarcomere.half_sarcomere as half_sarcomere
 import Python_MyoSim.half_sarcomere.implement as implement
 import vtk_py
@@ -37,11 +38,12 @@ cell_ion_params = input_parameters["electrophys_parameters"]["cell_ion_parameter
 monodomain_params = input_parameters["electrophys_parameters"]["monodomain_parameters"]
 
 ## Assign parameters
-output_path = output_params["output_path"][0]
+json_output_path = output_params["output_path"][0]
+output_path = rc._byteify(json_output_path)
 input_path = file_inputs["input_directory_path"][0]
-#casename = file_inputs["casename"][0]
-casename = "ellipsoidal"
-casename.type()
+rc_input_path = rc._byteify(input_path)
+json_casename = file_inputs["casename"][0]
+casename = rc._byteify(json_casename)
 filament_compliance_factor = hs_params["myofilament_parameters"]["filament_compliance_factor"][0]
 no_of_states = hs_params["myofilament_parameters"]["num_states"][0]
 no_of_attached_states = hs_params["myofilament_parameters"]["num_attached_states"][0]
@@ -106,13 +108,13 @@ deg = 4
 parameters["form_compiler"]["quadrature_degree"]=deg
 parameters["form_compiler"]["representation"] = "quadrature"
 
-os.system("rm ../python_dev/results/fenics_test/*.pvd")
-os.system("rm ../python_dev/results/fenics_test/*.vtu")
+os.system("rm " + output_path + "*.pvd")
+os.system("rm " + output_path + "*.vtu")
 
 ############################## Insert Mesh ###########################################
 #casename = "ellipsoidal"
-meshfilename = casename + ".hdf5"
-print meshfilename
+meshfilename = rc_input_path + casename + ".hdf5"
+
 mesh = Mesh()
 
 f = HDF5File(mpi_comm_world(), meshfilename, 'r')
@@ -143,7 +145,7 @@ f.read(f0, casename+"/"+"eF")
 f.read(s0, casename+"/"+"eS")
 f.read(n0, casename+"/"+"eN")
 f.close()
-File("facetboundaries.pvd") << facetboundaries
+File(output_path + "facetboundaries.pvd") << facetboundaries
 topid = 4
 LVendoid = 2
 epiid = 1
@@ -151,9 +153,9 @@ epiid = 1
 
 comm = mesh.mpi_comm()
 
-File("fiber.pvd") << project(f0, VectorFunctionSpace(mesh, "CG", 1))
-File("sheet.pvd") << project(s0, VectorFunctionSpace(mesh, "CG", 1))
-File("sheet-normal.pvd") << project(n0, VectorFunctionSpace(mesh, "CG", 1))
+File(output_path + "fiber.pvd") << project(f0, VectorFunctionSpace(mesh, "CG", 1))
+File(output_path + "sheet.pvd") << project(s0, VectorFunctionSpace(mesh, "CG", 1))
+File(output_path + "sheet-normal.pvd") << project(n0, VectorFunctionSpace(mesh, "CG", 1))
 
 ##############################################################################
 
@@ -313,7 +315,7 @@ print("cavity-vol = ", LVCavityvol.vol)
 #displacementfile = File("./test_14/u_disp.pvd")
 
 if(MPI.rank(comm) == 0):
-    fdataPV = open("/home/fenics/shared/python_dev/results/pm_test14/PV_.txt", "w", 0)
+    fdataPV = open(output_path + "PV_.txt", "w", 0)
 
 
 tstep = 0

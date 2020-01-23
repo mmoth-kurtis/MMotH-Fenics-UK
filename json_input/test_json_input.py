@@ -1,11 +1,13 @@
 import json
 import sys
+sys.path.append("/Users/charlesmann/Academic/UK/fenics/source_code/dependencies")
+import recode_json_strings as rc
 
 def main():
   # Define the file name. If this was in another directory, I would use the os.path.join() function.
   # It's pretty handy.
   input_file_name = sys.argv[1]
-  print input_file_name
+
 
   # Read in the JSON tree structure.
   with open(input_file_name, 'r') as f:
@@ -18,9 +20,12 @@ def main():
   # Print the structure.
   #print (json_tree.keys())
   #print (json_tree)
-
-  temp = json_tree["forms_parameters"]["passive_law_parameters"]["c3"][0]
-  print temp
+  file_inputs = json_tree["file_inputs"]
+  casename = file_inputs["casename"][0]
+  #file_inputs.type()
+  #casename.type()
+  recoded_casename = rc._byteify(casename)
+  #recoded_casename.type()
 
   # Add another optional parameter.
   #json_tree["optional_parameters"]["super_optional"] = "dumb"

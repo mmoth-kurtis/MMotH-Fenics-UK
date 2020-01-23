@@ -1,2 +1,5 @@
 *.pyc
-vtk_py/
+*.npy
+*.pvd
+*.vtu
+*.vtk_py/

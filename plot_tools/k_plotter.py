@@ -24,8 +24,8 @@ Commented out by Kurtis 10/9/2019, hope to get this info from loaded arrays"""
 
 # base_dir should be shared directory with FEniCS container
 # sim_dir should be location of simulation to plot relative to base_dir
-base_dir = '/Users/charlesmann/Academic/UK/fenics/'
-sim_dir = 'python_dev/results/fenics_test/'
+base_dir = '/Users/charlesmann/Academic/UK/fenics/demos/'
+sim_dir = 'ellipsoid_output/'
 lang_flag = 'python'
 #sim_dir = 'cpp_stable/test_17/'
 #lang_flag = 'c++'
