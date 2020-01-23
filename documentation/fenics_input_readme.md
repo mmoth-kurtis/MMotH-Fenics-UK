@@ -2,7 +2,7 @@ This document explains each input in the "fenics_input.json" file. Terms in "" r
 Note: All inputs must be in brackets [], as the code loads in "key"[value][0]. This was to be able to include units next to input values, and standardize input.
 
 Author: Kurtis Mann  
-Date Edited: 1/20/2020  
+Date Edited: 1/23/2020  
 
 
 ## Simulation Parameters
@@ -95,6 +95,6 @@ Left Ventricle | Description
   **"passive_exp_L":** [80]  
   **"passive_l_slack":** [900, "nm"]  
 
-## Calcium Parameters
-
 ## Electrophys Parameters
+#### Cell Ion Parameters
+#### Monodomain Parameters
