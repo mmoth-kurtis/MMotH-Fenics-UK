@@ -5,7 +5,7 @@ Author: Kurtis Mann
 Date Edited: 1/20/2020  
 
 
-## **Simulation Parameters**
+## Simulation Parameters
 **"sim_geometry"**: Choose between [single_cell], [sheet], or [ventricle].  
 [single_cell]: Simulates a unit cube meant to represent a single half sarcomere.  
 [sheet]: A 2D thin sheet of sarcomeres.  
@@ -33,9 +33,11 @@ Left Ventricle | Description
 
 **"sim_timestep":** Time-step to be used in implicit finite element solving.  
 
-## **Output Parameters**  
+## File Inputs
 
-## **Forms Parameters**
+## Output Parameters
+
+## Forms Parameters
 **"passive_law":** Select one of the available passive tissue laws.  
 * [guccione_transverse_isotropy]: Phenomenological model. See "". Must define C, bf, bt, bfs.  
     * [c]:  
@@ -52,13 +54,13 @@ Left Ventricle | Description
 * [full_structural]: Plan to implement a fully structural model.
   "Kappa"
 
-## **MyoSim Parameters**  
+## MyoSim Parameters  
 **""max_rate":** [5000,"s^-1"]  
 **"temperature":** [288, "Kelvin"]  
 **"cb_number_density":** [7.67e16, "number of cb's/m^2"]  
 **"initial_hs_length":** [1000, "nm"]  
 
-#### **Myofilament Parameters**  
+#### Myofilament Parameters  
   **"kinetic_scheme":** ["3state_with_SRX"]  
   **"num_states":** [3]  
   **"num_attached_states":** [1]  
