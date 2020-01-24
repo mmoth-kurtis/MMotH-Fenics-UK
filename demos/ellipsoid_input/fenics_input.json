@@ -1,14 +1,14 @@
 {
   "simulation_parameters": {
-    "sim_geometry": ["single_cell"],
-    "sim_type": ["isometric"],
-    "sim_duration": [100, "s"],
-    "sim_timestep": [0.5, "s?"]
+    "sim_geometry": ["ventricle"],
+    "sim_type": ["beat", 1, "/home/fenics/shared/demos/ellipsoid_input/ellipsoidal.hdf5"],
+    "sim_duration": [100, "ms"],
+    "sim_timestep": [0.5, "ms"]
   },
 
   "file_inputs": {
     "input_directory_path": ["/home/fenics/shared/demos/ellipsoid_input/"],
-    "casename": ["ellipsoidal"]
+    "casename": ["ellipsoidal", 2]
   },
 
   "output_parameters": {
@@ -68,7 +68,6 @@
       "passive_exp_sigma": [500],
       "passive_exp_L": [80],
       "passive_l_slack": [900, "nm"]
-
   }
 },
 
@@ -79,7 +78,7 @@
   },
 
   "monodomain_parameters": {
-    "dummy_param2": 0.0
+    "dummy_param2": [0.0]
   }
 }
 

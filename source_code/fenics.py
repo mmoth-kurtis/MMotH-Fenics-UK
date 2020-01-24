@@ -10,23 +10,27 @@ from forms import Forms
 from nsolver import NSolver as NSolver
 import math
 import json
-import recode_json_strings as rc
+import recode_dictionary
+import load_parameters
 import Python_MyoSim.half_sarcomere.half_sarcomere as half_sarcomere
 import Python_MyoSim.half_sarcomere.implement as implement
 import vtk_py
 
-## Import parameters from json file
+#------------------## Load in all information and set up simulation #-----------------
 # User provides file name
 input_file_name = sys.argv[1]
 
-## Read in the JSON tree structure.
 # Check that the file exists, if not , exit
 if not os.path.exists(input_file_name):
     print "input file does not exist"
     exit()
 
+# Load in JSON dictionary
 with open(input_file_name, 'r') as json_input:
   input_parameters = json.load(json_input)
+
+# Convert any unicode values so they work with some cpp libraries
+recode_dictionary.recode(input_parameters)
 
 ## Parse out the different types of parameters
 sim_params = input_parameters["simulation_parameters"]
@@ -37,13 +41,19 @@ hs_params = input_parameters["myosim_parameters"]
 cell_ion_params = input_parameters["electrophys_parameters"]["cell_ion_parameters"]
 monodomain_params = input_parameters["electrophys_parameters"]["monodomain_parameters"]
 
-## Assign parameters
-json_output_path = output_params["output_path"][0]
-output_path = rc._byteify(json_output_path)
+## Assign input/output parameters
+output_path = output_params["output_path"][0]
 input_path = file_inputs["input_directory_path"][0]
-rc_input_path = rc._byteify(input_path)
-json_casename = file_inputs["casename"][0]
-casename = rc._byteify(json_casename)
+casename = file_inputs["casename"][0]
+#json_casename = file_inputs["casename"][0]
+#casename = rc._byteify(json_casename)
+
+# Check that the output path exists. If it does not, create it and let user know
+if not os.path.exists(output_path):
+    print "Output path does not exist. Creating it now"
+    os.makedirs(output_path)
+
+# Assign parameters for active force calculation
 filament_compliance_factor = hs_params["myofilament_parameters"]["filament_compliance_factor"][0]
 no_of_states = hs_params["myofilament_parameters"]["num_states"][0]
 no_of_attached_states = hs_params["myofilament_parameters"]["num_attached_states"][0]
@@ -59,46 +69,44 @@ alpha_value = hs_params["myofilament_parameters"]["alpha"][0]
 x_bin_min = hs_params["myofilament_parameters"]["bin_min"][0]
 x_bin_max = hs_params["myofilament_parameters"]["bin_max"][0]
 x_bin_increment = hs_params["myofilament_parameters"]["bin_width"][0]
-calcium_path = cell_ion_params["path_to_calcium"][0]
-# Check that the output path exists. If it does not, create it and let user know
-if not os.path.exists(output_path):
-    print "Output path does not exist. Creating it now"
-    os.makedirs(output_path)
 
-# Initialize the half-sarcomere class. Its methods will be used to solve for cell populations
-hs = half_sarcomere.half_sarcomere(hs_params,1)
-
-# The cell active stress calculation is in the fenics file due to the
-# implicit nature of the problem. Active stress and length depend on one another
-
-# As of 1/17/2020, the "3state_with_SRX" scheme is kind of hard coded in Python_MyoSim.
-# Want this force calculation in fenics to be for any arbitrary scheme. The input readme
-# contains information for each of these parameters
-
-
-# Set up x vector
+## Set up information for active force calculation
+# Create x interval for cross-bridges
 xx = np.arange(x_bin_min, x_bin_max + x_bin_increment, x_bin_increment)
 
 # Define number of intervals cross-bridges are defined over
 no_of_x_bins = np.shape(xx)[0]
 
 # Define the length of the populations vector
-n_array_length = no_of_attached_states * no_of_x_bins + no_of_detached_states + 2
-# +2 for binding sites on/off
+n_array_length = no_of_attached_states * no_of_x_bins + no_of_detached_states + 2 # +2 for binding sites on/off
 
-# Work out a general way to set this based on the scheme
+# Need to work out a general way to set this based on the scheme
 n_vector_indices = [[0,0], [1,1], [2,2+no_of_x_bins-1]]
 
+# For now, specify calcium
+calcium_path = cell_ion_params["path_to_calcium"][0]
+
+#----------------------- Start setting up simulation ---------------------------------------------------------
+sim_duration = sim_params["sim_duration"][0]
+step_size = sim_params["sim_timestep"][0]
+
+if sim_params["sim_geometry"][0] == "ventricle":
+    # For ventricle for now, specify number of cardiac cycles
+    cycles = sim_params["sim_type"][1]
+    meshfilename = sim_params["sim_type"][2]
 # Cardiac cycle length and number of cycles will be general
+# This will be tricky since cardiac period may change
+# For now, just including this info in the input file
 BCL = 100 # ms
 cycles = 1
 
-hsl0 = 1000
-step_size = 0.5
+hsl0 = hs_params["initial_hs_length"][0]
+#step_size = 0.5
 no_of_time_steps = int(cycles*BCL/step_size)
+#no_of_time_steps = int(sim_duration/step_size)
 no_of_cell_time_steps = int(BCL/step_size)
-Ca_flag = 4
-constant_pCa = 6.5
+#Ca_flag = 4
+#constant_pCa = 6.5
 
 # Loading calcium from previous simulation
 prev_ca = np.load(calcium_path)
@@ -108,12 +116,12 @@ deg = 4
 parameters["form_compiler"]["quadrature_degree"]=deg
 parameters["form_compiler"]["representation"] = "quadrature"
 
+# Clear out any old results files
 os.system("rm " + output_path + "*.pvd")
 os.system("rm " + output_path + "*.vtu")
 
-############################## Insert Mesh ###########################################
-#casename = "ellipsoidal"
-meshfilename = rc_input_path + casename + ".hdf5"
+#--------------- Load in mesh -------------------------------------
+#meshfilename = rc_input_path + casename + ".hdf5"
 
 mesh = Mesh()
 
@@ -406,6 +414,10 @@ for lmbda_value in range(0, loading_number):
 
 
 # Closed-loop phase
+
+# Initialize the half-sarcomere class. Its methods will be used to solve for cell populations
+hs = half_sarcomere.half_sarcomere(hs_params,1)
+
 dumped_populations = np.zeros((no_of_time_steps+1, no_of_int_points, n_array_length))
 
 
