@@ -1,7 +1,7 @@
 This document shows planned changes/improvements to the FEniCS framework. This will be updated at least weekly to show progress.  
 Author: Kurtis Mann  
 Date Edited:  1/22/2020  
-  
+
 **Documentation**
 - [ ] Finish .md file for JSON input
 - [ ] Create a .md manual/documentation for fenics script
@@ -11,7 +11,8 @@ Date Edited:  1/22/2020
 - [ ] Put all markdown files in doxygen generated documentation
 
 **FEniCS Functionality**  
-- [ ]** Organize fenics script so that all existing cases (singe cell isometric, single cell force bc, ellipsoid LV, patient specific mesh LV)  are in one file. Also just organize in general**
+- [ ]** (1) Organize fenics script so that all existing cases (singe cell isometric, single cell force bc, ellipsoid LV, patient specific mesh LV)  are in one file.**
+  * First, do this for how simulations are coded. **Then** consider how to account for variable cycle period and general number of cycles. Adjust input file as needed
 - [ ] **Complete json input file so that the above cases can be switched between without changing anything in the fenics script.**  
 - [ ] Generalize Python Myosim schemes  
 
@@ -41,4 +42,3 @@ Date Edited:  1/22/2020
 
 **Monodomain**
 - [ ] Look at monodomain (already in FEniCS)  
-
