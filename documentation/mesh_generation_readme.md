@@ -1,5 +1,6 @@
 ## How to Generate Meshes for FEniCS from MRI Data
-* Download MeVisLab, and appropriate files from the 'mesh_generation' directory.
+* Download MeVisLab ver >= 3.1.1, and appropriate files from the 'mesh_generation' directory.
+  * I downloaded verion 2.8 and was missing two required modules
 * Load 'LV_Segmentation_UKY.mlab' in MeVisLab.
 * Using the DicomImport module in MeVisLab, convert raw MRI images to DICOM format.
 * Follow instructions from FEniCS_LV_Segmentation.pdf. This should yield a '.stl' file.
