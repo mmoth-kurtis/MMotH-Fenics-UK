@@ -1,5 +1,11 @@
+# Ignore saved results and compiled folders
 *.pyc
 *.npy
+# Ignore visualization files
 *.pvd
 *.vtu
+# Ignore mevislab file
 *.auto
+# Ignore my working directory. This is where I actually run simulations
+working_directory_untracked/
+
