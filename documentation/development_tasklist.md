@@ -3,7 +3,7 @@ Author: Kurtis Mann
 Date Edited:  1/22/2020  
 
 **Documentation**
-- [ ] Finish .md file for JSON input
+- [ ] Finish .md file for JSON input (need to add descriptions for myosim parameters)
 - [ ] Create a .md manual/documentation for fenics script
 - [ ] Update .md file for creating meshes
 - [ ] Revise/improve instructions for running docker/fenics
@@ -25,7 +25,7 @@ Date Edited:  1/22/2020
   * The raw data is in the "austin_backup" directory on the cluster
 - [x] Learn how to create meshes from Hossein (Friday)
 - [ ] **Create meshes for rat LV's for three state sensitivity analysis**
-    - First one created, has some issues
+    - First one created, ~~has some issues~~ resolved. Create other four now.
 - [ ] Decide on calcium transient to be used (match 3 state paper?)
 - [ ] Optimize parameters for sensitivity analysis
     - Insert parameters from 3 state paper, then tune windkessel

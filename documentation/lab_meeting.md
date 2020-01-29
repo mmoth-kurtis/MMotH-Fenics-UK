@@ -20,5 +20,5 @@ Goals for next week:
 - [ ] Start thinking about calcium transient for sensitivity paper  
   
 Questions:  
-* Hossein: can you help me with the transform world matrix mesh generation step?  
-* General: Tuning Windkessel parameters?   
+- [x] Hossein: can you help me with the transform world matrix mesh generation step?  
+- [x] General: Tuning Windkessel parameters?   
