@@ -5,7 +5,7 @@ Date Edited:  1/22/2020
 **Documentation**
 - [ ] Finish .md file for JSON input
 - [ ] Create a .md manual/documentation for fenics script
-- [ ] Create .md file for creating meshes
+- [x] Create .md file for creating meshes
 - [ ] Revise/improve instructions for running docker/fenics
 - [ ] Comment ALL code and figure out Doxygen  
 - [ ] Put all markdown files in doxygen generated documentation
@@ -13,7 +13,7 @@ Date Edited:  1/22/2020
 **FEniCS Functionality**  
 - [ ] **Organize fenics script so that all existing cases (singe cell isometric, single cell force bc, ellipsoid LV, patient specific mesh LV)  are in one file.** Currently, the user has to specify the cardiac period and number of cycles to simulate. This will work for the sensitivity analyis, but moving forward I need to implement a way to specify a general simulation time and allow for variable period?
 - [ ] **Complete json input file so that the above cases can be switched between without changing anything in the fenics script.**  
-- [ ] **Start coding pu optimization wrapper**
+- [ ] **Start coding up optimization wrapper**
   - Have messaged Dylan about his optimization repository.
   - Dylan has shared his repository with me. This will be a great help. Speaking to him about running jobs in parallel
 - [ ] Generalize Python Myosim schemes  
@@ -24,8 +24,11 @@ Date Edited:  1/22/2020
   * The raw data is in the "austin_backup" directory on the cluster
 - [x] Learn how to create meshes from Hossein (Friday)
 - [ ] **Create meshes for rat LV's for three state sensitivity analysis**
+    - First one created, has some issues
 - [ ] Decide on calcium transient to be used (match 3 state paper?)
 - [ ] Optimize parameters for sensitivity analysis
+    - Insert parameters from 3 state paper, then tune windkessel
+    - Then iterate between optimizing passive and active parameters
 - [ ] Code up Sobol' indices sensitivity framework
 - [ ] Finalize model inputs and outputs for analysis  
 

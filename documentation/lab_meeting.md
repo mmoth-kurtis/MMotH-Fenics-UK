@@ -16,3 +16,8 @@ Goals for next week:
 -[ ] Have made significant progress on coding optimization framework
 -[ ] Significant progress on three state revisions
 -[ ] Finish paper review
+-[ ] Start thinking about calcium transient for sensitivity paper
+
+Questions:
+* Hossein: can you help me with the transform world matrix mesh generation step?
+* General: Tuning Windkessel parameters? 
