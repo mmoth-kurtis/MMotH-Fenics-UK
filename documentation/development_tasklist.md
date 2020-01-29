@@ -14,6 +14,7 @@ Date Edited:  1/22/2020
 - [ ] **Organize fenics script so that all existing cases (singe cell isometric, single cell force bc, ellipsoid LV, patient specific mesh LV)  are in one file.** Currently, the user has to specify the cardiac period and number of cycles to simulate. This will work for the sensitivity analyis, but moving forward I need to implement a way to specify a general simulation time and allow for variable period?
 - [ ] **Complete json input file so that the above cases can be switched between without changing anything in the fenics script.**  
 - [ ] **Have small json input file for mesh generation, be able to specify output directory and mesh name**
+    - [ ] **Test this now**
 - [ ] **Start coding up optimization wrapper**
   - Have messaged Dylan about his optimization repository.
   - Dylan has shared his repository with me. This will be a great help. Speaking to him about running jobs in parallel
