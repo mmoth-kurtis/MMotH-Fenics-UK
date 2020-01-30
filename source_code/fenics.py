@@ -97,8 +97,8 @@ if sim_params["sim_geometry"][0] == "ventricle":
 # Cardiac cycle length and number of cycles will be general
 # This will be tricky since cardiac period may change
 # For now, just including this info in the input file
-BCL = 100 # ms
-cycles = 1
+BCL = sim_duration # ms
+#cycles = 1
 
 hsl0 = hs_params["initial_hs_length"][0]
 #step_size = 0.5
