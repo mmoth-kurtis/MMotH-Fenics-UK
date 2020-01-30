@@ -1,0 +1,85 @@
+{
+  "simulation_parameters": {
+    "sim_geometry": ["ventricle"],
+    "sim_type": ["beat", 1, "/home/fenics/shared/working_directory_untracked/082315/inputs/r082315_mesh.hdf5"],
+    "sim_duration": [170, "ms"],
+    "sim_timestep": [0.5, "ms"]
+  },
+
+  "file_inputs": {
+    "input_directory_path": ["/home/fenics/shared/working_directory_untracked/082315/inputs/"],
+    "casename": ["r082315_mesh", 2]
+  },
+
+  "output_parameters": {
+    "output_path": ["/home/fenics/shared/working_directory_untracked/082315/output/"]
+  },
+
+  "forms_parameters": {
+
+    "passive_law_parameters": {
+      "passive_law": ["semi_structural"],
+      "c": [310],
+      "c2": [400],
+      "c3": [8],
+      "bf": [10.48],
+      "bt": [3.58],
+      "bfs": [1.627]
+    }
+  },
+
+  "myosim_parameters": {
+    "max_rate": [5000,"s^-1"],
+    "temperature": [288, "Kelvin"],
+    "cb_number_density": [6.9e16, "number of cb's/m^2"],
+    "initial_hs_length": [942, "nm"],
+
+    "myofilament_parameters": {
+      "kinetic_scheme": ["3state_with_SRX"],
+      "num_states": [3],
+      "num_attached_states": [1],
+      "num_transitions": [4],
+      "cb_extensions": [[0.0, 0.0, 5], "power-stroke distance in nm"],
+      "state_attached": [[0, 0, 1]],
+      "k_cb_multiplier": [[1.0, 1.0, 1.0]],
+      "k_cb_pos": [0.001, "N*m^-1"],
+      "k_cb_neg": [0.001, "N*m^-1"],
+      "alpha":[1.0],
+      "k_1": [6.02324335, "s^-1"],
+      "k_force": [8e-5, "(N^-1)(m^2)"],
+      "k_2": [61.1816713, "s^-1"],
+      "k_3": [1000, "(nm^-1)(s^-1)"],
+      "k_4_0": [615.492937, "s^-1"],
+      "k_4_1": [1.83527574, "nm^-4"],
+      "k_cb": [0.001, "N*m^-1"],
+      "x_ps": [5, "nm"],
+      "k_on": [5e7, "(M^-1)(s^-1)"],
+      "k_off": [90, "s^-1"],
+      "k_coop": [5],
+      "bin_min": [-10, "nm"],
+      "bin_max": [10, "nm"],
+      "bin_width": [1, "nm"],
+      "filament_compliance_factor": [0.5],
+      "thick_filament_length": [815, "nm"],
+      "thin_filament_length": [1120, "nm"],
+      "bare_zone_length": [80, "nm"],
+      "k_falloff": [0.0024],
+      "passive_mode": ["exponential"],
+      "passive_exp_sigma": [500],
+      "passive_exp_L": [80],
+      "passive_l_slack": [900, "nm"]
+  }
+},
+
+"electrophys_parameters": {
+
+  "cell_ion_parameters": {
+    "path_to_calcium": ["/home/fenics/shared/demos/ellipsoid_input/calcium_14.npy"]
+  },
+
+  "monodomain_parameters": {
+    "dummy_param2": [0.0]
+  }
+}
+
+}

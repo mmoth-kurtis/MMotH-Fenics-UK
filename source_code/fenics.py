@@ -15,6 +15,7 @@ import load_parameters
 import Python_MyoSim.half_sarcomere.half_sarcomere as half_sarcomere
 import Python_MyoSim.half_sarcomere.implement as implement
 import vtk_py
+import cell_ion_module
 
 #------------------## Load in all information and set up simulation #-----------------
 # User provides file name
@@ -84,7 +85,7 @@ n_array_length = no_of_attached_states * no_of_x_bins + no_of_detached_states + 
 n_vector_indices = [[0,0], [1,1], [2,2+no_of_x_bins-1]]
 
 # For now, specify calcium
-calcium_path = cell_ion_params["path_to_calcium"][0]
+#calcium_path = cell_ion_params["path_to_calcium"][0]
 
 #----------------------- Start setting up simulation ---------------------------------------------------------
 sim_duration = sim_params["sim_duration"][0]
@@ -417,6 +418,9 @@ for lmbda_value in range(0, loading_number):
 
 # Initialize the half-sarcomere class. Its methods will be used to solve for cell populations
 hs = half_sarcomere.half_sarcomere(hs_params,1)
+
+# Initialize cell ion module
+cell_ion = cell_ion_module(cell_ion_params)
 
 dumped_populations = np.zeros((no_of_time_steps+1, no_of_int_points, n_array_length))
 
