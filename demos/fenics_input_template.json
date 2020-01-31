@@ -74,12 +74,26 @@
 "electrophys_parameters": {
 
   "cell_ion_parameters": {
+    "model": ["three_state_calcium"],
+    "initial_calcium": [1e-7, "Molar"]
     "path_to_calcium": ["/home/fenics/shared/demos/ellipsoid_input/calcium_14.npy"]
   },
 
   "monodomain_parameters": {
     "dummy_param2": [0.0]
   }
+},
+
+"windkessel_parameters": {
+  "Cao": [2e-5, "need units and description"],
+  "Cven": [2e-3, "need units and description"],
+  "Vart0": [0.0, "need units and description"],
+  "Vven0": [0.0, "need units and description"],
+  "Rao": [1e7, "need units and description"],
+  "Rven": [1e6, "need units and description"],
+  "Rper": [1e7, "need units and and description"],
+  "V_ven": [1.2, "need units and description"],
+  "V_art": [0.25, "need units and description"]
 }
 
 }
