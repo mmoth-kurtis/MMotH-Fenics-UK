@@ -18,6 +18,9 @@ Date Edited:  1/22/2020
 - [ ] **Start coding up optimization wrapper**
   - Have messaged Dylan about his optimization repository.
   - Dylan has shared his repository with me. This will be a great help. Speaking to him about running jobs in parallel
+  - Looking at two approaches:  
+    1) Use NLopt. This is free/open source and allows the user to easily switch between different optimization algorithms. 
+    2) Make FEniCS talk to LS-Opt. We are familiar with this program and it is powerful and flexible. However, it is not open source. Could decrease time to get optimiztaion functional though.
 - [ ] Generalize Python Myosim schemes  
 
 
