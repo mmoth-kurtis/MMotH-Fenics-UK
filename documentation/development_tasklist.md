@@ -11,7 +11,8 @@ Date Edited:  1/22/2020
 - [ ] Put all markdown files in doxygen generated documentation
 
 **FEniCS Functionality**  
-- [ ] **Organize fenics script so that all existing cases (singe cell isometric, single cell force bc, ellipsoid LV, patient specific mesh LV)  are in one file.** Currently, the user has to specify the cardiac period and number of cycles to simulate. This will work for the sensitivity analyis, but moving forward I need to implement a way to specify a general simulation time and allow for variable period?
+- [ ] ~~Organize fenics script so that all existing cases (singe cell isometric, single cell force bc, ellipsoid LV, patient specific mesh LV)  are in one file.** Currently, the user has to specify the cardiac period and number of cycles to simulate. This will work for the sensitivity analyis, but moving forward I need to implement a way to specify a general simulation time and allow for variable period?~~
+- [ ] Write "fenics_driver" where this script runs the appropriate file depending on the simulation you want to run. There are too many differences between running single cell vs. ventricle to put this all in one script.
 - [ ] **Complete json input file so that the above cases can be switched between without changing anything in the fenics script.**  
 - [ ] **Have small json input file for mesh generation, be able to specify output directory and mesh name**
     - [ ] **Test this now**
