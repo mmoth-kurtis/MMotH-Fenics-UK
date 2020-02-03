@@ -41,6 +41,7 @@ passive_params = input_parameters["forms_parameters"]["passive_law_parameters"]
 hs_params = input_parameters["myosim_parameters"]
 cell_ion_params = input_parameters["electrophys_parameters"]["cell_ion_parameters"]
 monodomain_params = input_parameters["electrophys_parameters"]["monodomain_parameters"]
+windkessel_params = input_parameters["windkessel_parameters"]
 
 ## Assign input/output parameters
 output_path = output_params["output_path"][0]
@@ -425,7 +426,7 @@ cell_ion = cell_ion_module(cell_ion_params)
 dumped_populations = np.zeros((no_of_time_steps+1, no_of_int_points, n_array_length))
 
 
-Cao = 0.02/1000.0; #5.0e-5; #Cao = 0.005;
+"""Cao = 0.02/1000.0; #5.0e-5; #Cao = 0.005;
 Cven = 2.0/1000.0 #0.02;#Cven = 0.2*10;
 Vart0 = 0.0#100.0/1000.0#/2000;
 Vven0 = 0.0#1000.0/1000.0#0.001 * 2200.0/1000.0#/2000;
@@ -433,7 +434,17 @@ Rao = 10*1000.0*1000.0#Rao = 10*1000.0;
 Rven = 1000*1000.0#Rven = 1000.0;
 Rper = 200000 * 50 #1000.0;
 V_ven = 1200.0/1000.0#/2000;
-V_art = 250.0/1000.0#/2000;
+V_art = 250.0/1000.0#/2000;"""
+
+Cao = windkessel_params["Cao"]
+Cven = windkessel_params["Cven"]
+Vart0 = windkessel_params["Vart0"]
+Vven0 = windkessel_params["Vven0"]
+Rao = windkessel_params["Rao"]
+Rven = windkessel_params["Rven"]
+Rper = windkessel_params["Rper"]
+V_ven = windkessel_params["V_ven"]
+V_art = windkessel_params["V_art"]
 
 
 counter = 0
