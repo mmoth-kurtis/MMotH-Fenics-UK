@@ -1,6 +1,6 @@
 from __future__ import division
 import sys
-sys.path.append("/home/fenics/shared/python_dev/dependencies/")
+sys.path.append("/home/fenics/shared/source_code/dependencies/")
 import os as os
 from dolfin import *
 import numpy as np
@@ -19,42 +19,62 @@ def fenics(sim_params,file_inputs,output_params,passive_params,hs_params,cell_io
     global i
     global j
 
-    filament_compliance_factor = 0.5
+    filament_compliance_factor = hs_params["myofilament_parameters"]["filament_compliance_factor"][0]
+#    filament_compliance_factor = 0.5
 
-    no_of_states = 3
-    no_of_attached_states = 1
-    no_of_detached_states = 2
-    no_of_transitions = 4
-    state_attached = [0, 0, 1]
-    cb_extensions = [ 0, 0, 4.75642]
-    k_cb_multiplier = [ 1.0, 1.0, 1.0]
-    k_cb_pos = 0.001
-    k_cb_neg = 0.001
-    cb_number_density = 7.67e16
-    alpha_value = 1.0
+    no_of_states = hs_params["myofilament_parameters"]["num_states"][0]
+    #no_of_states = 3
+    #no_of_attached_states = 1
+    #no_of_detached_states = 2
+    no_of_attached_states = hs_params["myofilament_parameters"]["num_attached_states"][0]
+    no_of_detached_states = no_of_states-no_of_attached_states
+    no_of_transitions = hs_params["myofilament_parameters"]["num_transitions"][0]
+    state_attached = hs_params["myofilament_parameters"]["state_attached"][0]
+    cb_extensions = hs_params["myofilament_parameters"]["cb_extensions"][0]
+    k_cb_multiplier = hs_params["myofilament_parameters"]["k_cb_multiplier"][0]
+    k_cb_pos = hs_params["myofilament_parameters"]["k_cb_pos"][0]
+    k_cb_neg = hs_params["myofilament_parameters"]["k_cb_neg"][0]
+    cb_number_density = hs_params["cb_number_density"][0]
+    alpha_value = hs_params["myofilament_parameters"]["alpha"][0]
+    x_bin_min = hs_params["myofilament_parameters"]["bin_min"][0]
+    x_bin_max = hs_params["myofilament_parameters"]["bin_max"][0]
+    x_bin_increment = hs_params["myofilament_parameters"]["bin_width"][0]
+    #no_of_transitions = 4
+    #state_attached = [0, 0, 1]
+    #cb_extensions = [ 0, 0, 4.75642]
+    #k_cb_multiplier = [ 1.0, 1.0, 1.0]
+    #k_cb_pos = 0.001
+    #k_cb_neg = 0.001
+    #cb_number_density = 7.67e16
+    #alpha_value = 1.0
 
-    x_bin_min = -12
-    x_bin_max = +12
-    x_bin_increment = 0.5
+    #x_bin_min = -12
+    #x_bin_max = +12
+    #x_bin_increment = 0.5
     xx = np.arange(x_bin_min, x_bin_max + x_bin_increment, x_bin_increment)
     no_of_x_bins = np.shape(xx)[0]
     n_array_length = no_of_attached_states * no_of_x_bins + no_of_detached_states + 2
     n_vector_indices = [[0,0], [1,1], [2,2+no_of_x_bins-1]]
 
-    hsl0 = 1000
+    #hsl0 = 1000
+    hsl0 = hs_params["initial_hs_length"][0]
     time_steps = 201
     #time_steps = 2
-    step_size = 0.5
+    #step_size = 0.5
+    step_size = sim_params["sim_timestep"][0]
+    sim_duration = sim_params["sim_duration"][0]
+    time_steps = int(sim_duration/step_size +1)
     Ca_flag = 4
     constant_pCa = 6.5
 
-    prev_ca = np.load("calcium_10.npy")
+    #prev_ca = np.load("calcium_10.npy")
     #prev_ca = prev_ca[:,0]
 
-    xml_struct = ut.parse('pm_test10.xml')
-    hs_params = xml_struct.single_circulation_simulation.half_sarcomere
+    #xml_struct = ut.parse('pm_test10.xml')
+    #hs_params = xml_struct.single_circulation_simulation.half_sarcomere
     hs = half_sarcomere.half_sarcomere(hs_params,1)
     cell_ion = cell_ion_driver.cell_ion_driver(cell_ion_params)
+    calcium = np.zeros(time_steps)
     calcium[0] = cell_ion.model.calculate_concentrations(0,0)
     parameters["form_compiler"]["quadrature_degree"]=2
     parameters["form_compiler"]["representation"] = "quadrature"
@@ -120,7 +140,7 @@ def fenics(sim_params,file_inputs,output_params,passive_params,hs_params,cell_io
     #
     isincomp = True#False
     N = FacetNormal (mesh)
-    Cparam = Constant(1.0e2)                                                        #??
+    #Cparam = Constant(1.0e2)                                                        #??
 
 
     TF = TensorFunctionSpace(mesh, 'DG', 1)
@@ -260,7 +280,6 @@ def fenics(sim_params,file_inputs,output_params,passive_params,hs_params,cell_io
     calarray = []
     strarray = []
     pstrarray = []
-    calcium = []
 
 
     y_vec_array = y_vec.vector().get_local()[:]
@@ -276,12 +295,22 @@ def fenics(sim_params,file_inputs,output_params,passive_params,hs_params,cell_io
         y_vec_array[counter+1] = 1
         y_vec_array[counter-2] = 1
 
+    Pff, alpha = uflforms.stress()
+
+    temp_DG = project(Pff, FunctionSpace(mesh, "DG", 1), form_compiler_parameters={"representation":"uflacs"})
+    p_f = interpolate(temp_DG, Quad)
+    p_f_array = p_f.vector().get_local()[:]
+
+    temp_DG_1 = project(alpha, FunctionSpace(mesh, "DG", 1), form_compiler_parameters={"representation":"uflacs"})
+    alphas = interpolate(temp_DG_1, Quad)
+    alpha_array = alphas.vector().get_local()[:]
+
     '''P,S,T = uflforms.stress()
     Pff =  inner(f0,P*f0)
     p_f = project(Pff, Quad)
     p_f_array = p_f.vector().get_local()[:]'''
 
-    p_f = np.load("/home/fenics/shared/python_dev/test_10/passive_forces.npy")
+    #p_f = np.load("/home/fenics/shared/python_dev/test_10/passive_forces.npy")
 
     cb_f_array = project(cb_force, Quad).vector().get_local()[:]
 
@@ -301,8 +330,6 @@ def fenics(sim_params,file_inputs,output_params,passive_params,hs_params,cell_io
 
         y_vec.vector()[:] = y_vec_array # for PDE
 
-        p_f_array = np.ones(no_of_int_points)*p_f[l]
-
         #print p_f[l]
 
         #for k in range(no_of_int_points):
@@ -310,12 +337,13 @@ def fenics(sim_params,file_inputs,output_params,passive_params,hs_params,cell_io
     #    y_vec_array_new = Myosim.apply_time_step(y_vec_array, delta_hsl_array, hsl_array, p_f_array, cb_f_array)
         #y_vec_array_new[k*n_array_length:(k+1)*n_array_length] = pop_holder
 
-        calcium[counter] = cell_ion.model.calculate_concentrations(cycle,tstep)
+        # Right now, not general. The calcium depends on cycle number, just saying 0
+        calcium[l] = cell_ion.model.calculate_concentrations(0,t)
 
         # Looping through integration points within Python Myosim, not here
         # Debugging, checking if y_input matches y_output between steps
         #print y_vec_array[0:53]
-        y_vec_array_new = implement.update_simulation(hs, step_size, delta_hsl_array, hsl_array, y_vec_array, p_f_array, cb_f_array, calcium[counter], n_array_length)
+        y_vec_array_new = implement.update_simulation(hs, step_size, delta_hsl_array, hsl_array, y_vec_array, p_f_array, cb_f_array, calcium[l], n_array_length)
     #    print y_vec_array_new[0:53]
         y_vec_array = y_vec_array_new # for Myosim
     #    print y_vec_array[0:53]
@@ -331,7 +359,6 @@ def fenics(sim_params,file_inputs,output_params,passive_params,hs_params,cell_io
 
         #delta_hsls[l] = delta_hsl_array
 
-        #p_f_array = project(Pff, Quad).vector().get_local()[:]
 
         cb_f_array = project(cb_force, Quad).vector().get_local()[:]
         strarray.append(cb_f_array[0])
@@ -383,7 +410,7 @@ def fenics(sim_params,file_inputs,output_params,passive_params,hs_params,cell_io
     "tarray": tarray,
     "strarray": strarray,
     "pstrarray": pstrarray,
-    "alphaarray": alphaarray,
+    "alphaarray": darray,
     "calarray": calarray,
     "hsl": hslarray
     }

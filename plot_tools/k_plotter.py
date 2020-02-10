@@ -25,7 +25,7 @@ Commented out by Kurtis 10/9/2019, hope to get this info from loaded arrays"""
 # base_dir should be shared directory with FEniCS container
 # sim_dir should be location of simulation to plot relative to base_dir
 base_dir = '/Users/charlesmann/Academic/UK/fenics/working_directory_untracked/'
-sim_dir = 'ellipsoid_output/'
+sim_dir = 'test_singlecell_calcium_driver/output/'
 lang_flag = 'python'
 #sim_dir = 'cpp_stable/test_17/'
 #lang_flag = 'c++'
@@ -42,6 +42,7 @@ num_bins = np.shape(cb_domain)
 # Note, these arrays include info for every Gauss point
 fenics_pop_file = np.load(base_dir + sim_dir + 'dumped_populations.npy')
 tarray = np.load(base_dir + sim_dir + 'tarray.npy')
+tarray = tarray[:-1]
 stress_array = np.load(base_dir + sim_dir + 'stress_array.npy')
 calcium = np.load(base_dir + sim_dir + 'calcium.npy')
 #calcium = calcium[:,0]
@@ -134,7 +135,7 @@ plt.xlabel('time (s)')
 plt.ylabel("Proportions")
 #------------------------------------------------------------------------------
 plt.subplot(426)
-plt.plot(tarray, stress_array[:-1,0])
+plt.plot(tarray, stress_array[:-1])
 #plt.scatter(myosim_summary_data[:,0], myosim_summary_data[:,1],color='r')
 #plt.scatter(myosim_summary_data[::10,0], myosim_summary_data[::10,1],color='r')
 plt.xlabel('time (s)')
@@ -142,13 +143,13 @@ plt.ylabel("Stress (Pa)")
 
 #------------------------------------------------------------------------------
 plt.subplot(428)
-plt.plot(tarray, calcium[:-1,0])
+plt.plot(tarray, calcium[:-1])
 #plt.scatter(myosim_summary_data[:,0], myosim_summary_data[:,1],color='r')
 plt.xlabel('time (s)')
 plt.ylabel("Calcium [M]")
 #------------------------------------------------------------------------------
 ax2 = plt.subplot(421)
-plt.plot(tarray, HSL[:-1,0])
+plt.plot(tarray, HSL[:-1])
 #plt.scatter(myosim_summary_data[:,0], myosim_summary_data[:,1],color='r')
 plt.xlabel('time [s]')
 plt.ylabel("hsl (nm)")
