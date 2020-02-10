@@ -12,7 +12,8 @@
   },
 
   "output_parameters": {
-    "output_path": ["/home/fenics/shared/working_directory_untracked/082315/output/"]
+    "output_path": ["/home/fenics/shared/working_directory_untracked/082315/output/"],
+    "visualize_flag": [1, "1 to generate plots, 0 to not"]
   },
 
   "forms_parameters": {

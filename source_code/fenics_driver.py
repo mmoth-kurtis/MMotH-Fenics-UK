@@ -54,7 +54,7 @@ if sim_params["sim_geometry"][0] == "ventricle":
     print fenics_script
 
 elif sim_params["sim_geometry"][0] == "single_cell":
-    fenics_script = "fenics_single_cell"
+    fenics_script = "fenics_singlecell_isometric"
 
 # For now, going to have to import appropriate script as a module and wrap the whole
 # thing in a function so that inputs and output can be passed
@@ -64,17 +64,17 @@ script_name = __import__(fenics_script)
 output_dictionary = script_name.fenics(sim_params,file_inputs,output_params,passive_params,hs_params,cell_ion_params,monodomain_params,windkessel_params)
 
 # Save the appropriate output information
-np.save(output_path + "rates",output_dictinoary["rates"])
+np.save(output_path + "rates",output_dictionary["rates"])
 np.save(output_path + "dumped_populations",output_dictionary["dumped_populations"])
 np.save(output_path + "tarray",output_dictionary["tarray"])
 np.save(output_path + "stress_array",output_dictionary["strarray"])
 np.save(output_path + "pstress_array",output_dictionary["pstrarray"])
 np.save(output_path + "alpha_array",output_dictionary["alphaarray"])
 np.save(output_path + "calcium",output_dictionary["calarray"])
-np.save(output_path + "HSL",output_dictionary["hslarray"])
+np.save(output_path + "hsl",output_dictionary["hsl"])
 
 # If user wants to visualize, do that here
-if output_params["visualize_flag"] > 0:
+#if output_params["visualize_flag"] > 0:
 
     # call plotting script
-    print "going to visualize"
+ #   print "going to visualize"
