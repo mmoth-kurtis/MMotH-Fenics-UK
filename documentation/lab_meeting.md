@@ -1,4 +1,4 @@
-Kurtis Mann
+Kurtis Mann  
 Edited: 2/12/2020
 
 Goals for 2/12/2020 - 2/19/2020
