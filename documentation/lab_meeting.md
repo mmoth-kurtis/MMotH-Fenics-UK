@@ -1,4 +1,5 @@
-2/12/2020
+Kurtis Mann
+Edited: 2/12/2020
 
 Goals for 2/12/2020 - 2/19/2020
 - [ ] Add all fenics development plans into issue tracker
@@ -11,6 +12,7 @@ Goals for 2/12/2020 - 2/19/2020
 - [ ] Submit paper review tonight!!
 - [ ] Work on 3 state paper revisions
 - [ ] Notes on nonlinear book
+- [ ] Update instruction markdowns
 
 
 
