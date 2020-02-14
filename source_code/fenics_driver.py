@@ -2,11 +2,14 @@ import sys
 import json
 import os
 import dependencies
+import fenics_cases
+from fenics_cases import fenics_singlecell_isometric
+from fenics_cases import fenics_LV
 from dependencies import recode_dictionary
 from dependencies import load_parameters
 import numpy as np
 sys.path.append("/home/fenics/shared/source_code/")
-from pso import pso_driver
+#from pso import pso_driver
 ## This should be running in a FEniCS container, make it easy to import necessary source code
 
 def report_steady_state_force():
