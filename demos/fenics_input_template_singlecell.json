@@ -1,64 +1,65 @@
 {
   "simulation_parameters": {
     "sim_geometry": ["ventricle"],
-    "sim_type": ["beat", 1, "/home/fenics/shared/demos/ellipsoid/ellipsoid_input/ellipsoidal.hdf5"],
-    "sim_duration": [100, "ms"],
+    "sim_type": ["beat", 1, "/home/fenics/shared/working_directory_untracked/082315/inputs/r082315_mesh.hdf5"],
+    "sim_duration": [170, "ms"],
     "sim_timestep": [0.5, "ms"]
   },
 
   "file_inputs": {
-    "input_directory_path": ["/home/fenics/shared/demos/ellipsoid/ellipsoid_input/"],
-    "casename": ["ellipsoidal", 2]
+    "input_directory_path": ["/home/fenics/shared/working_directory_untracked/082315/inputs/"],
+    "casename": ["r082315_mesh", 2]
   },
 
   "output_parameters": {
-    "output_path": ["/home/fenics/shared/demos/ellipsoid/ellipsoid_output/"]
+    "output_path": ["/home/fenics/shared/working_directory_untracked/082315/output/"],
+    "visualize_flag": [0, "1 to generate plots, 0 to not"]
   },
 
   "forms_parameters": {
 
     "passive_law_parameters": {
       "passive_law": ["semi_structural"],
-      "c": [500],
-      "c2": [0.5],
-      "c3": [25.0],
-      "bf": [29.0],
-      "bt": [13.3],
-      "bfs": [26.6]
+      "c": [310],
+      "c2": [400],
+      "c3": [8],
+      "bf": [10.48],
+      "bt": [3.58],
+      "bfs": [1.627]
     }
   },
 
   "myosim_parameters": {
     "max_rate": [5000,"s^-1"],
     "temperature": [288, "Kelvin"],
-    "cb_number_density": [7.67e16, "number of cb's/m^2"],
-    "initial_hs_length": [1000, "nm"],
+    "cb_number_density": [6.9e16, "number of cb's/m^2"],
+    "initial_hs_length": [942, "nm"],
 
     "myofilament_parameters": {
       "kinetic_scheme": ["3state_with_SRX"],
       "num_states": [3],
       "num_attached_states": [1],
       "num_transitions": [4],
-      "cb_extensions": [[0.0, 0.0, 4.75642], "power-stroke distance in nm"],
+      "cb_extensions": [[0.0, 0.0, 5], "power-stroke distance in nm"],
       "state_attached": [[0, 0, 1]],
       "k_cb_multiplier": [[1.0, 1.0, 1.0]],
       "k_cb_pos": [0.001, "N*m^-1"],
       "k_cb_neg": [0.001, "N*m^-1"],
       "alpha":[1.0],
-      "k_1": [9.623166, "s^-1"],
-      "k_force": [1.96345e-4, "(N^-1)(m^2)"],
-      "k_2": [1000, "s^-1"],
-      "k_3": [5435.531288, "(nm^-1)(s^-1)"],
-      "k_4_0": [2543.864648, "s^-1"],
-      "k_4_1": [0.18911849, "nm^-4"],
+      "k_1": [6.02324335, "s^-1"],
+      "k_force": [8e-5, "(N^-1)(m^2)"],
+      "k_2": [61.1816713, "s^-1"],
+      "k_3": [1000, "(nm^-1)(s^-1)"],
+      "k_4_0": [615.492937, "s^-1"],
+      "k_4_1": [1.83527574, "nm^-4"],
       "k_cb": [0.001, "N*m^-1"],
-      "x_ps": [4.75642, "nm"],
-      "k_on": [1.5291356e8, "(M^-1)(s^-1)"],
-      "k_off": [100, "s^-1"],
-      "k_coop": [6.38475],
-      "bin_min": [-12, "nm"],
-      "bin_max": [12, "nm"],
-      "bin_width": [0.5, "nm"],
+      "x_ps": [5, "nm"],
+      "k_on": [5e7, "(M^-1)(s^-1)"],
+      "k_off": [90, "s^-1"],
+      "k_coop": [5],
+      "bin_min": [-10, "nm"],
+      "bin_max": [10, "nm"],
+      "bin_width": [1, "nm"],
       "filament_compliance_factor": [0.5],
       "thick_filament_length": [815, "nm"],
       "thin_filament_length": [1120, "nm"],
@@ -74,6 +75,8 @@
 "electrophys_parameters": {
 
   "cell_ion_parameters": {
+    "model": ["three_state_calcium"],
+    "initial_calcium": [1e-7, "Molar"]
     "path_to_calcium": ["/home/fenics/shared/demos/ellipsoid_input/calcium_14.npy"]
   },
 

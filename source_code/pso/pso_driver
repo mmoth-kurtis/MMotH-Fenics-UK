@@ -1,0 +1,36 @@
+import sys
+import json
+sys.path.append("/home/fenics/shared/pyswarms_test")
+
+
+## Load in optimization json file
+instruction_file = sys.argv[1]
+
+with open(instruction_file, 'r') as json_input:
+  input_parameters = json.load(json_input)
+
+
+# Assign optimization parameters
+max_iterations = input_parameters["max_iterations"]
+num_particles = input_parameters["num_particles"]
+dimensionality = input_parameters["num_params"]
+
+
+# Assign particle swarm parameters
+w = input_parameters["w"] # Velocity inertial parameter
+c1 = input_parameters["c1"] # Weight for particle position
+c2 = input_parameters["c2"] # Weight for best swarm position
+
+
+# Initialize best global error and best global position
+best_global_error = -1
+best_global_position = []
+
+
+# Initialize swarm
+swarm = []
+for i in range (0,num_particles):
+    temp_particle = fenicsParticle()
+    swarm.append(temp_particle)
+
+    

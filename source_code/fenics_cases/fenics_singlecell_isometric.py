@@ -9,7 +9,6 @@ from matplotlib import pylab as plt
 from forms import Forms
 from nsolver import NSolver as NSolver
 import math
-import untangle as ut
 import Python_MyoSim.half_sarcomere.half_sarcomere as half_sarcomere
 import Python_MyoSim.half_sarcomere.implement as implement
 from cell_ion_module import cell_ion_driver
