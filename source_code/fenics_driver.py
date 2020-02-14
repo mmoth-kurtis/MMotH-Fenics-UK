@@ -1,23 +1,19 @@
 import sys
+sys.path.append("/home/fenics/shared/source_code/")
+sys.path.append("/home/fenics/shared/source_code/fenics_cases")
 import json
 import os
 import dependencies
 import fenics_cases
+import pso
+from pso import pso_driver
 from fenics_cases import fenics_singlecell_isometric
 from fenics_cases import fenics_LV
 from dependencies import recode_dictionary
 from dependencies import load_parameters
 import numpy as np
-sys.path.append("/home/fenics/shared/source_code/")
 #from pso import pso_driver
 ## This should be running in a FEniCS container, make it easy to import necessary source code
-
-def report_steady_state_force():
-
-    # Just reporting steady state for now
-    ss_force = output_dictionary["strarray"][-1]
-
-    return ss_force
 
 
 def sim_driver(input_file_name):
@@ -49,6 +45,7 @@ def sim_driver(input_file_name):
     cell_ion_params = input_parameters["electrophys_parameters"]["cell_ion_parameters"]
     monodomain_params = input_parameters["electrophys_parameters"]["monodomain_parameters"]
     windkessel_params = input_parameters["windkessel_parameters"]
+    optimization_params = input_parameters["optimization_parameters"]
 
     ## Assign input/output parameters
     output_path = output_params["output_path"][0]
@@ -75,7 +72,12 @@ def sim_driver(input_file_name):
     script_name = __import__(fenics_script)
 
     # Call the "fenics" function within the script
-    output_dictionary = script_name.fenics(sim_params,file_inputs,output_params,passive_params,hs_params,cell_ion_params,monodomain_params,windkessel_params)
+    if optimization_params["num_variables"][0] > 0:
+        final_inputs, output_dictionary, best_global_error = pso_driver.particle_swarm_optimization(optimization_params,sim_params,file_inputs,output_params,passive_params,hs_params,cell_ion_params,monodomain_params,windkessel_params,script_name)
+        print best_global_error
+        print final_inputs
+    else:
+        output_dictionary = script_name.fenics(sim_params,file_inputs,output_params,passive_params,hs_params,cell_ion_params,monodomain_params,windkessel_params)
 
     # Save the appropriate output information
     np.save(output_path + "rates",output_dictionary["rates"])
@@ -93,10 +95,6 @@ def sim_driver(input_file_name):
         # call plotting script
         print "going to visualize"
 
-    # If this is an optimization, take care of that here (for now)
-    if output_params["optimize_flag"][0] > 0:
-
-        report_steady_state_force()
 
 if np.shape(sys.argv) > 0:
     sim_driver(sys.argv[1])
