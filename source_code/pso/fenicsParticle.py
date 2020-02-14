@@ -106,7 +106,7 @@ class fenicsParticle:
 
             # Keep the particle within bounds
             # UPDATE FOR GENERAL NUMBER OF BOUNDS
-            if self.position[i] > self.bounds[1]:
+            if self.position[i] > self.bounds[i][1]:
                 self.position[i] = self.bounds[1]
 
             if self.position[i] < self.bounds[0]:
