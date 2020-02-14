@@ -3,18 +3,14 @@ Edited: 2/12/2020
 
 Goals for 2/12/2020 - 2/19/2020
 - [ ] Add all fenics development plans into issue tracker
+    * Show lab this for PSO during lab meeting!
 - [ ] Put development_tasklist into github project planner
-- [ ] Code own python swarm optimization?
-  - [ ] Look more into SMT (python surrogate modeling toolbox)- derivatives
+- [x] Code own python swarm optimization?
+  - [x] Look more into SMT (python surrogate modeling toolbox)- derivatives
 - [ ] Run rat specific mesh with fewer elements
 - [ ] Get containers working on Amir's old computer/get Newton working
 - [ ] Work with Russel to get Singularity on cluster
 - [x] Submit paper review tonight!!
-:q
-:q
-:w
-:q
-
 - [ ] Work on 3 state paper revisions
 - [ ] Notes on nonlinear book
 - [ ] Update instruction markdowns
