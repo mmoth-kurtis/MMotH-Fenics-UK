@@ -6,6 +6,7 @@ from dependencies import recode_dictionary
 from dependencies import load_parameters
 import numpy as np
 sys.path.append("/home/fenics/shared/source_code/")
+from pso import pso_driver
 ## This should be running in a FEniCS container, make it easy to import necessary source code
 
 def report_steady_state_force():
