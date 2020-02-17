@@ -1,18 +1,26 @@
 Kurtis Mann  
 Edited: 2/12/2020
 
-Goals for 2/12/2020 - 2/19/2020
-- [ ] Add all fenics development plans into issue tracker
+Goals for 2/17/2020 - 2/24/2020
+- [ ] Make projects on Github for fenics development and sobol sensitivity
+- [ ] Really work on 3 state revisions
+- [ ] Run rat specific mesh with fewer elements, especially on lab machine
+- [ ] Tune windkessel parameters for rat mesh
+- [ ] Keep in touch with Russel about singularity on cluster
+- [ ] Work on PSO generalization (specifics on Github)
+- [ ] Nonlinear notes
+
+Goals for 2/12/2020 - 2/17/2020
+- [ ] Add fenics development plans into issue tracker
     * Show lab this for PSO during lab meeting!
-- [ ] Put development_tasklist into github project planner
 - [x] Code own python swarm optimization?
   - [x] Look more into SMT (python surrogate modeling toolbox)- derivatives
 - [ ] Run rat specific mesh with fewer elements
 - [ ] Get containers working on Amir's old computer/get Newton working
-- [ ] Work with Russel to get Singularity on cluster
+- [x] Work with Russel to get Singularity on cluster
 - [x] Submit paper review tonight!!
-- [ ] Work on 3 state paper revisions
-- [ ] Notes on nonlinear book
+- [x] Work on 3 state paper revisions
+- [x] Notes on nonlinear book
 - [ ] Update instruction markdowns
 
 
