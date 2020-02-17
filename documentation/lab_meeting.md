@@ -9,6 +9,7 @@ Goals for 2/17/2020 - 2/24/2020
 - [ ] Keep in touch with Russel about singularity on cluster
 - [ ] Work on PSO generalization (specifics on Github)
 - [ ] Nonlinear notes
+- [ ] Work on documentation (Doxygen) and instruction markdowns
 
 Goals for 2/12/2020 - 2/17/2020
 - [ ] Add fenics development plans into issue tracker
