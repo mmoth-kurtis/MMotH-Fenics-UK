@@ -54,16 +54,16 @@ class fenicsParticle:
         # initialize position to x0, to come from pso_driver
         #self.position.append(x0)
 
-        # initialize random velocity
+        # initialize zero velocity
         for key in self.working_dict.keys():
 
             # Generalize for more than one variable
-            dim_ub = self.working_dict[key][0][1]
-            dim_lb = self.working_dict[key][0][0]
-            dim_range = dim_ub - dim_lb
+            #dim_ub = self.working_dict[key][0][1]
+            #dim_lb = self.working_dict[key][0][0]
+            #dim_range = dim_ub - dim_lb
 
-            # Should this be zero?
-            self.working_dict[key][2] = random.uniform(-dim_range,dim_range)
+            # Should this be zero? - Yes
+            self.working_dict[key][2] = 0.0
 
             # For now, creating random starting position
             self.working_dict[key][1] = random.uniform(self.working_dict[key][0][0],self.working_dict[key][0][1])
