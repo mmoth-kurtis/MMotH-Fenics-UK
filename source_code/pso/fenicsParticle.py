@@ -86,7 +86,7 @@ class fenicsParticle:
         self.windkessel_params)
 
         predicted_force = self.output_dict["strarray"][-1]
-        self.current_error = np.abs(self.target-predicted_force)
+        self.current_error = np.power(self.target-predicted_force,2)
 
         # Need to map self.position to keyword dictionary for inputs
         # Will need something like

@@ -77,8 +77,8 @@ def sim_driver(input_file_name):
         #print opt_history["best_global_error"]
         print final_inputs
         with open(output_path + 'opt_final_inputs.json', 'w') as fp2:
-            json.dump(final_inputs, fp2)
-            json.dump(opt_history, fp2)
+            json.dump(final_inputs, fp2,indent=2, separators=(',', ': '))
+            json.dump(opt_history, fp2, indent=2, separators=(',', ': '))
 
     else:
         output_dictionary = script_name.fenics(sim_params,file_inputs,output_params,passive_params,hs_params,cell_ion_params,monodomain_params,windkessel_params)

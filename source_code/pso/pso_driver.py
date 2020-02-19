@@ -94,7 +94,8 @@ def particle_swarm_optimization(pso_params,sim_params,file_inputs,output_params,
                 best_global_position = swarm[j].working_dict
                 best_global_error = float(swarm[j].current_error)
                 output_dictionary = swarm[j].output_dict
-                opt_history["global_error_history"].append(best_global_error)
+
+        opt_history["global_error_history"].append(best_global_error)
 
         ## Update velocities and position (start new loop to make sure
         # we are using the best global position after objective is evaluated for
