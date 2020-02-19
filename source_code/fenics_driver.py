@@ -73,9 +73,13 @@ def sim_driver(input_file_name):
 
     # Call the "fenics" function within the script
     if optimization_params["num_variables"][0] > 0:
-        final_inputs, output_dictionary, best_global_error = pso_driver.particle_swarm_optimization(optimization_params,sim_params,file_inputs,output_params,passive_params,hs_params,cell_ion_params,monodomain_params,windkessel_params,script_name)
-        print best_global_error
+        final_inputs, output_dictionary, opt_history = pso_driver.particle_swarm_optimization(optimization_params,sim_params,file_inputs,output_params,passive_params,hs_params,cell_ion_params,monodomain_params,windkessel_params,script_name)
+        #print opt_history["best_global_error"]
         print final_inputs
+        with open(output_path + 'opt_final_inputs.json', 'w') as fp2:
+            json.dump(final_inputs, fp2)
+            json.dump(opt_history, fp2)
+
     else:
         output_dictionary = script_name.fenics(sim_params,file_inputs,output_params,passive_params,hs_params,cell_ion_params,monodomain_params,windkessel_params)
 
