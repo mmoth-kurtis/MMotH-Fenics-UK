@@ -6,6 +6,9 @@ Edited: 2/12/2020
 - [ ] Run rat mesh with fewer elements with new windkessel parameters (today)
 - [ ] Follow up e-mail to Russel about Singularity (today)
 - [ ] Documentation for 30 minutes daily
+  - [ ] Instruction markdowns
+  - [ ] Doxygen
+  - [ ] Compile markdowns onto Github site
 - [ ] Add stopping criteria for optimization
 - [ ] Implement way to output data from each opt simulation (useful for SOBOL)
 
