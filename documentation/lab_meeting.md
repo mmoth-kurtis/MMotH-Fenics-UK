@@ -1,7 +1,7 @@
 Kurtis Mann  
 Edited: 2/24/2020
 
-## Goals for 2/24/2020 - 3/2/2020  
+### Goals for 2/24/2020 - 3/2/2020  
 - [ ] Get three state revisions to Dr. Wenk by Friday
 - [ ] Run rat mesh with fewer elements with new windkessel parameters (today)
 - [ ] Follow up e-mail to Russel about Singularity (today)
@@ -17,12 +17,12 @@ Edited: 2/24/2020
 - [x] Really work on 3 state revisions
 - [ ] Run rat specific mesh with fewer elements, especially on lab machine
 - [ ] Tune windkessel parameters for rat mesh
-- [ ] Keep in touch with Russel about singularity on cluster
+- [x] Keep in touch with Russel about singularity on cluster
 - [x] Work on PSO generalization (specifics on Github)
 - [ ] Work on documentation (Doxygen) and instruction markdowns
 
 ## Goals for 2/12/2020 - 2/17/2020
-- [ ] Add fenics development plans into issue tracker
+- [x] Add fenics development plans into issue tracker
     * Show lab this for PSO during lab meeting!
 - [x] Code own python swarm optimization?
   - [x] Look more into SMT (python surrogate modeling toolbox)- derivatives
@@ -35,7 +35,7 @@ Edited: 2/24/2020
 - [ ] Update instruction markdowns
 
 ## Goals for 2/5/2020 - 2/12/2020:
-- [ ] Add all fenics development plans into issue tracker
+- [x] Add all fenics development plans into issue tracker
 - [x] Investigate github project planner capability
 - [x] Update some documentation daily
 - [x] Begin coding optimization framework (Ask them about LS Opt vs NLopt)
