@@ -1,7 +1,7 @@
 Kurtis Mann  
 Edited: 2/24/2020
 
-### Goals for 2/24/2020 - 3/2/2020  
+### *Task List: 2/24/2020 - 3/2/2020*
 - [ ] Get three state revisions to Dr. Wenk by Friday
 - [ ] Run rat mesh with fewer elements with new windkessel parameters (today)
 - [ ] Follow up e-mail to Russel about Singularity (today)
