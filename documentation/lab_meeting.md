@@ -1,7 +1,8 @@
 Kurtis Mann  
 Edited: 2/12/2020
 
-#Goals for 2/24/2020 - 3/2/2020#
+# Goals for 2/24/2020 - 3/2/2020  
+- [ ]
 
 
 #Goals for 2/17/2020 - 2/24/2020
