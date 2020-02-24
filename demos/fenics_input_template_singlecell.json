@@ -17,7 +17,20 @@
   },
 
   "optimization_parameters": {
-    "optimize_flag": [1, "1 if optimizing, 0 otherwise"]
+    "num_particles": [10],
+    "max_iterations": [10],
+    "num_variables": [1, "number to optimize, if > 0 triggers optimization"],
+    "singlecell_target_force": [150694.0, "hard coding for now to test pso"],
+    "w": [0.3],
+    "c1": [0.5],
+    "c2": [0.5],
+    "point_generation": ["uniform"],
+
+    "variables_and_bounds": {
+      "k_3": [[2000, 6000], 0.0, 0.0],
+      "k_4_0": [[501, 4000], 0.0, 0.0],
+      "k_force": [[1e-5, 1e-3], 0.0, 0.0]
+    }
   },
 
   "forms_parameters": {

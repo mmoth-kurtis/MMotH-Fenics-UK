@@ -2,7 +2,6 @@ import numpy as np
 import random
 
 
-
 ## Class for particles in the particle swarm optimization
 class fenicsParticle:
 
@@ -66,9 +65,10 @@ class fenicsParticle:
             self.working_dict[key][2] = 0.0
 
             # For now, creating random starting position
-            self.working_dict[key][1] = random.uniform(self.working_dict[key][0][0],self.working_dict[key][0][1])
+            #self.working_dict[key][1] = random.uniform(self.working_dict[key][0][0],self.working_dict[key][0][1])
             # Need to randomly/uniformly assign positions. Hard coding for now
             #self.position.append(np.random.uniform(dim_lb,dim_ub))
+
 
 # Methods ______________________________________________________________________
 

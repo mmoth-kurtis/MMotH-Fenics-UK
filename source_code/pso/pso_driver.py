@@ -5,6 +5,7 @@ sys.path.append("/home/fenics/shared/source_code/fenics_cases")
 import fenicsParticle
 import matplotlib.pyplot as plt
 import numpy as np
+import generate_initial_position as g
 
 ## Call this from fenics_driver? Pass in parameters?
 def particle_swarm_optimization(pso_params,sim_params,file_inputs,output_params,passive_params,hs_params,cell_ion_params,monodomain_params,windkessel_params,objFunction):
@@ -18,6 +19,7 @@ def particle_swarm_optimization(pso_params,sim_params,file_inputs,output_params,
     w = pso_params["w"][0] # Velocity inertial parameter
     c1 = pso_params["c1"][0] # Weight for particle position
     c2 = pso_params["c2"][0] # Weight for best swarm position
+    point_generation_scheme = pso_params["point_generation"]
 
     # initalize individual particle error holder
     particle_errors = np.zeros((max_iterations,num_particles))
@@ -40,8 +42,12 @@ def particle_swarm_optimization(pso_params,sim_params,file_inputs,output_params,
     # Initialize swarm
     swarm = []
     for i in range(0,num_particles):
-        x0 = []
 
+        # Modify variables_and_bounds to set initial position
+        initialized_vars_dict = g.generate_initial_position(i,point_generation_scheme,variables_and_bounds,num_particles)
+
+        print 'particle ' + str(i) + ' ' + str(initialized_vars_dict) + '\n'
+        #print 'k40 particle ' + str(i) + str(initialized_vars_dict["k_4_0"][1])
         # Initialize position for particle
         #for j in range(0,dimensionality):
 
@@ -52,7 +58,7 @@ def particle_swarm_optimization(pso_params,sim_params,file_inputs,output_params,
             # and pass these to the fenicsParticle class?
 
         # Right now, x0 initialization is within the particle class
-        temp_particle = fenicsParticle.fenicsParticle(dimensionality, target_force, variables_and_bounds, params)
+        temp_particle = fenicsParticle.fenicsParticle(dimensionality, target_force, initialized_vars_dict, params)
         swarm.append(temp_particle)
 
 
