@@ -1,5 +1,5 @@
 Kurtis Mann  
-Edited: 2/12/2020
+Edited: 2/24/2020
 
 ## Goals for 2/24/2020 - 3/2/2020  
 - [ ] Get three state revisions to Dr. Wenk by Friday
