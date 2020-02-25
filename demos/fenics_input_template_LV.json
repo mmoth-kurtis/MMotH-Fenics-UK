@@ -7,7 +7,6 @@
   },
 
   "file_inputs": {
-    "input_directory_path": ["/home/fenics/shared/working_directory_untracked/082315/inputs/"],
     "casename": ["r082315_mesh", 2]
   },
 

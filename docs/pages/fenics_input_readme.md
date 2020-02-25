@@ -1,5 +1,5 @@
 This document explains each input in the "fenics_input.json" file. Terms in "" represent the parameter name, and terms in [] represent the possible values.
-Note: All inputs must be in brackets [], as the code loads in "key"[value][0]. This was to be able to include units next to input values, and standardize input.
+Note: All inputs must be in brackets [] (making it a Python list), as the code loads in the first value in the list. This was to be able to include units next to input values, and standardize input.
 
 Author: Kurtis Mann  
 Date Edited: 2/25/2020  
@@ -7,9 +7,9 @@ Date Edited: 2/25/2020
 
 ## Simulation Parameters
 **"sim_geometry"**: Choose between [single_cell], [sheet], or [ventricle].  
-[single_cell]: Simulates a unit cube meant to represent a single half sarcomere.  
-[sheet]: A 2D thin sheet of sarcomeres.  
-[ventricle]: Full ventricle simulations. Can choose specific meshes or use ellipsoidal.  
+  +[single_cell]: Simulates a unit cube meant to represent a single half sarcomere.  
+  +[sheet]: A 2D thin sheet of sarcomeres.  
+  +[ventricle]: Full ventricle simulations. Can choose specific meshes or use ellipsoidal.  
 
 **"sim_type"**: For the given geometry, choose what type of simulation.  
 
@@ -29,13 +29,17 @@ Left Ventricle | Description
 [beat, "path/to/mesh"]:| Supply the (relative?) path to the desired mesh and it will "beat" for "sim_duration"  
 [vena_cava_occlusion, "path/to/mesh"]:| Use the specified mesh and simulate a vena cava occlusion. Useful for calculating ESPVR.  
 
-**"sim_duration":** Enter an *integer* time for the simulation in seconds.  
+**"sim_duration":** Enter an **integer** time for the simulation in milliseconds.  
 
-**"sim_timestep":** Time-step to be used in implicit finite element solving.  
+**"sim_timestep":** Time-step to be used in implicit finite element solver.  
 
 ## File Inputs
+**"input_directory_path":** Specify the path to the inputs for the simulation. Do we need this? Is the path specified in the input file for the mesh? Don't even need to specify a mesh for single cell stuff.  
 
-## Output Parameters
+**"casename":** I think this is only needed to differentiate between the ellipsoidal case, and all patient specific meshes are "New Mesh" unless I modify the script that creates the mesh. That means the user has to know the casename for a mesh they are using, which may not always be the case.  
+
+## Output Parameters  
+**"output_path":** Specify path where the outputs of the simulation are to be saved.  
 
 ## Forms Parameters
 **"passive_law":** Select one of the available passive tissue laws.  
@@ -95,6 +99,21 @@ Left Ventricle | Description
   **"passive_exp_L":** [80]  
   **"passive_l_slack":** [900, "nm"]  
 
-## Electrophys Parameters
-#### Cell Ion Parameters
+## Electrophys Parameters  
+
+#### Cell Ion Parameters  
+  **"model":** Choose from ["three_state_calcium"], ... Include info about each model (as they become available, do this in a table?)
+  **initial_calcium":** Set an initial calcium value.
+  **path_to_calcium":** If another calcium transient needs to be loaded in. This should be deprecated, as you cannot control the time-step or even know there are enough calcium values to use.
+
 #### Monodomain Parameters
+
+#### Windkessel Parameters
+  **"Cao":**
+  **"Cven":**
+  **"Vart0":**
+  **"Vven0":**
+  **"Rao":**
+  **"Rven":**
+  **"V_ven":**
+  **"V_art":**
