@@ -98,7 +98,7 @@ Left Ventricle | Description
   **"passive_exp_L":** [80]  
   **"passive_l_slack":** [900, "nm"]  
 
-## Electrophys Parameters  
+## Electrophysiology Parameters  
 
 #### Cell Ion Parameters  
   **"model":** Choose from ["three_state_calcium"], ... Include info about each model (as they become available, do this in a table?)
@@ -109,7 +109,7 @@ Left Ventricle | Description
 
 ## Circulatory Parameters  
 
-#### Windkessel Parameters  
+This code currently uses a 3 compartment Windkessel model. The three compartments are the left ventricle, arteries, and veins? The parameters needed for this model are listed below:  
   **"Cao":**  
   **"Cven":**  
   **"Vart0":**  
