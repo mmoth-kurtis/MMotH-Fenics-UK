@@ -1,4 +1,4 @@
-theme: jekyll-theme-slate
+theme: minima
 sidebar:
     - title: "Overview"
       children:
