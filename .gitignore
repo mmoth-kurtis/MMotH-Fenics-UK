@@ -9,5 +9,4 @@
 # Ignore my working directory. This is where I actually run simulations
 working_directory_untracked/
 # Ignore config file for github website
-_config.yml
-
+#_config.yml
