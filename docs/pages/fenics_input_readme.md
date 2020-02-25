@@ -2,7 +2,7 @@ This document explains each input in the "fenics_input.json" file. Terms in "" r
 Note: All inputs must be in brackets [], as the code loads in "key"[value][0]. This was to be able to include units next to input values, and standardize input.
 
 Author: Kurtis Mann  
-Date Edited: 1/23/2020  
+Date Edited: 2/25/2020  
 
 
 ## Simulation Parameters
@@ -21,6 +21,7 @@ Date Edited: 1/23/2020
 [ktr]:| Tension recovery experiment.  
 [force]:| Unit cube where a given force boundary condition is enforced.  
 [single_cell_custom]:| Allows for a combination of length and force controlled simulations. Also allows for length changes.  
+
 </div>
 
 Tissue Sheet | Description
