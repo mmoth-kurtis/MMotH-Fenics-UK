@@ -1,7 +1,6 @@
 ---
 layout: page
-title: "Getting Started"
-permalink: https://mmoth-kurtis.github.io/MMotH-Fenics-UK/getting_started/
+title: "Main Page"
 ---
 This repository consists of code to simulate left-ventricle mechanics using the finite element method (FEM).  
 
