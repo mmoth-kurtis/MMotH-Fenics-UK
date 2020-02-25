@@ -1,4 +1,4 @@
-remote_theme: minimum
+remote_theme: minima
 sidebar:
     - title: "Overview"
       children:
