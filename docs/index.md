@@ -1,4 +1,4 @@
-Simulating left-ventricle mechanics using the finite element method (FEM) with an embedded cell mechanics model
+Simulating left-ventricle mechanics using the finite element method with an embedded cell mechanics model and coupled circulatory model.
 
 
 
