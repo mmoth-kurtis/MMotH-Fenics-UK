@@ -2,4 +2,5 @@ theme: minima
 
 
 minima:
-  skin: solarized-dark
+  header_pages:
+    - /pages/getting_started.md 
