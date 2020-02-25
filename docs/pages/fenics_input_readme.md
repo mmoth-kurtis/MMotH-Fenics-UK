@@ -58,7 +58,7 @@ Left Ventricle | Description
   "Kappa"
 
 ## MyoSim Parameters  
-**""max_rate":** [5000,"s^-1"]  
+**"max_rate":** [5000,"s^-1"]  
 **"temperature":** [288, "Kelvin"]  
 **"cb_number_density":** [7.67e16, "number of cb's/m^2"]  
 **"initial_hs_length":** [1000, "nm"]  
@@ -106,6 +106,8 @@ Left Ventricle | Description
   **path_to_calcium":** If another calcium transient needs to be loaded in. This should be deprecated, as you cannot control the time-step or even know there are enough calcium values to use.
 
 #### Monodomain Parameters
+
+## Circulatory Parameters
 
 #### Windkessel Parameters
   **"Cao":**
