@@ -1,3 +1,10 @@
+---
+layout: home
+title: MMotH FEniCS UK
+description: Simulating left-ventricle mechanics using the finite element method with an embedded cell mechanics model
+permalink: /
+---
+
 This repository consists of code to simulate left-ventricle mechanics using the finite element method (FEM).  
 
 
