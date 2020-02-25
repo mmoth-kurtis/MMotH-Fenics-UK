@@ -1,6 +1,4 @@
 remote_theme: minima
-sidebar:
-    - title: "Overview"
-      children:
-        - title: "Tissue Mechanics"
-          url: /pages/overview_of_models/tissue_mechanics.md
+
+minima:
+    skin: sunrise
