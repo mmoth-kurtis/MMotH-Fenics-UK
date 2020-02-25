@@ -1,6 +1,1 @@
 theme: minima
-
-
-minima:
-  header_pages:
-    - /pages/getting_started.md 
