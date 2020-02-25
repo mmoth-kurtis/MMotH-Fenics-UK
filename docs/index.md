@@ -9,8 +9,8 @@ This code features a multi-scale model of the left-ventricle. Below is a figure 
 **insert figure here**
 For more detail about the formulations of each scale, see below:  
   [Tissue Mechanics](/pages/mechanics_overview/tissue_mechanics.md)  
-  [Cell Mechanics](/pages/mechanics/cell_mechanics.md)
+  [Cell Mechanics](/pages/mechanics_overview/cell_mechanics.md)
   * Hemodynamics  
 
 # Getting Started  
-[Click here to read how to run this code on your local machine.](/pages/getting_started.md)
+Click [here](/pages/getting_started.md) to read how to run this code on your local machine.
