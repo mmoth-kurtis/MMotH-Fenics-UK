@@ -18,11 +18,11 @@ Date Edited: 2/25/2020
 [isometric]:| Unit cube where length is fixed.
 [ktr]:| Tension recovery experiment.  
 [force]:| Unit cube where a given force boundary condition is enforced.  
-[single_cell_custom]:&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;| Allows for a combination of length and force controlled simulations. Also allows for length changes.  
+[single_cell_custom]:&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;| Allows for a combination of length and force controlled simulations. Also allows for length changes.  
 
 Tissue Sheet | Description
 -------------|---------------
-[sheet]:&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;| Place-holder for now. Will use this for fiber splay simulations or spiral dynamics.  
+[sheet]:&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;| Place-holder for now. Will use this for fiber splay simulations or spiral dynamics.  
 
 Left Ventricle | Description
 ---------------|--------------
