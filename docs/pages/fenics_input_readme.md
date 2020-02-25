@@ -13,12 +13,12 @@ Date Edited: 2/25/2020
 
 **"sim_type"**: For the given geometry, choose what type of simulation.  
 
-**Single Cell**&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;| Description   
+**Single Cell** | Description   
 ----------------|-------  
 [isometric]:| Unit cube where length is fixed.
 [ktr]:| Tension recovery experiment.  
 [force]:| Unit cube where a given force boundary condition is enforced.  
-[single_cell_custom]:| Allows for a combination of length and force controlled simulations. Also allows for length changes.  
+[single_cell_custom]:&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;| Allows for a combination of length and force controlled simulations. Also allows for length changes.  
 
 Tissue Sheet | Description
 -------------|---------------
