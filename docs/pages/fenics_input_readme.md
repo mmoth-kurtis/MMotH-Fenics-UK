@@ -105,16 +105,16 @@ Left Ventricle | Description
   **initial_calcium":** Set an initial calcium value.
   **path_to_calcium":** If another calcium transient needs to be loaded in. This should be deprecated, as you cannot control the time-step or even know there are enough calcium values to use.
 
-#### Monodomain Parameters
+#### Monodomain Parameters  
 
-## Circulatory Parameters
+## Circulatory Parameters  
 
-#### Windkessel Parameters
-  **"Cao":**
-  **"Cven":**
-  **"Vart0":**
-  **"Vven0":**
-  **"Rao":**
-  **"Rven":**
-  **"V_ven":**
-  **"V_art":**
+#### Windkessel Parameters  
+  **"Cao":**  
+  **"Cven":**  
+  **"Vart0":**  
+  **"Vven0":**  
+  **"Rao":**  
+  **"Rven":**  
+  **"V_ven":**  
+  **"V_art":**  
