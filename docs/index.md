@@ -1,5 +1,3 @@
-## MMotH FEniCS UK
-
 Simulating left-ventricle mechanics using the finite element method (FEM) with an embedded cell mechanics model
 
 
