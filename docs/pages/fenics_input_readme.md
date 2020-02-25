@@ -1,7 +1,6 @@
 This document explains each input in the "fenics_input.json" file. Terms in "" represent the parameter name, and terms in [] represent the possible values.
 Note: All inputs must be in brackets [] (making it a Python list), as the code loads in the first value in the list. This was to be able to include units next to input values, and standardize input.
 
-Author: Kurtis Mann  
 Date Edited: 2/25/2020  
 
 
