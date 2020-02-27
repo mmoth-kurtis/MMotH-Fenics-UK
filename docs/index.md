@@ -6,9 +6,9 @@ Simulating left-ventricle mechanics using the finite element method with an embe
 This code features a multi-scale model of the left-ventricle. Below is a figure showing the flow of information within the simulation.  
 **insert figure here**  
 For more detail about individual model formulations, see below:  
-  [Tissue Mechanics](/pages/overview_of_models/tissue_mechanics.md)  
-  [Cell Mechanics](/pages/overview_of_models/cell_mechanics.md)  
-  [Hemodynamics](/pages/overview_of_models/hemodynamics.md)  
+  * [Tissue Mechanics](/pages/overview_of_models/tissue_mechanics.md)  
+  * [Cell Mechanics](/pages/overview_of_models/cell_mechanics.md)  
+  * [Hemodynamics](/pages/overview_of_models/hemodynamics.md)  
 
 # Getting Started  
   * [Installation](/pages/installation.md)
