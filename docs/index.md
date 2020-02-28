@@ -14,3 +14,4 @@ For more detail about individual model formulations, see below:
   * [Installation](/pages/installation.md)
   * [Running a demo](/pages/running_demo.md)
   * [Modifying an input file](/pages/fenics_input_readme.md)
+  * [Building a mesh](/pages/mesh_generation_readme.md)
