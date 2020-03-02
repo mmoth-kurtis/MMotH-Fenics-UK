@@ -1,5 +1,5 @@
 ---
-page.title: Building a Meshe
+page.title: Building a Mesh
 ---
 
 * Download MeVisLab ver >= 3.1.1, and appropriate files from the 'mesh_generation' directory.
