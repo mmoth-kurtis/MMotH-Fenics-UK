@@ -1,4 +1,6 @@
-## How to Generate Meshes for FEniCS from MRI Data  
+---
+page.title: Building a Meshe
+---
 
 * Download MeVisLab ver >= 3.1.1, and appropriate files from the 'mesh_generation' directory.
   * I downloaded verion 2.8 and was missing two required modules
