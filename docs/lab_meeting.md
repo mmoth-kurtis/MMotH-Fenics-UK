@@ -1,14 +1,23 @@
 Kurtis Mann  
-Edited: 2/24/2020
+Edited: 3/2/2020
+
+### Task List: 3/2/2020 - 3/9/2020
+- [ ] Meet with Dr. Wenk for 3 state revisions today
+  - [ ] Finish draft of this today/tomorrow
+- [ ] Finish mesh generation instruction markdown
+- [ ] Work on fenics website
+- [ ] Rat windkessel parameters and mesh sensitivity
+- [ ] PSO project as time allows
+- [ ] Keep reading finite element growth implementation papers
 
 ### Task List: 2/24/2020 - 3/2/2020
 - [ ] Get three state revisions to Dr. Wenk by Friday
 - [ ] Run rat mesh with fewer elements with new windkessel parameters (today)
-- [ ] Follow up e-mail to Russel about Singularity (today)
-- [ ] Documentation for 30 minutes daily
-  - [ ] Instruction markdowns
+- [x] Follow up e-mail to Russel about Singularity (today)
+- [x] Documentation for 30 minutes daily
+  - [x] Instruction markdowns
   - [ ] Doxygen
-  - [ ] Compile markdowns onto Github site
+  - [x] Compile markdowns onto Github site
 - [ ] Add stopping criteria for optimization
 - [ ] Implement way to output data from each opt simulation (useful for SOBOL)
 
@@ -19,7 +28,7 @@ Edited: 2/24/2020
 - [ ] Tune windkessel parameters for rat mesh
 - [x] Keep in touch with Russel about singularity on cluster
 - [x] Work on PSO generalization (specifics on Github)
-- [ ] Work on documentation (Doxygen) and instruction markdowns
+- [x] Work on documentation (Doxygen) and instruction markdowns
 
 ### Task List: 2/12/2020 - 2/17/2020
 - [x] Add fenics development plans into issue tracker
