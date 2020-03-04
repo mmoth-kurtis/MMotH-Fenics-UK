@@ -14,4 +14,8 @@ page.title: Building a Mesh
 
 Trying to embed a pdf here:  
 
-[embed]https://github.com/mmoth-kurtis/MMotH-Fenics-UK/blob/master/mesh_generation/FEniCS_LV_segmentation.pdf?raw=true[/embed]
+<object data="https://github.com/mmoth-kurtis/MMotH-Fenics-UK/blob/master/mesh_generation/FEniCS_LV_segmentation.pdf?raw=true" type="application/pdf" width="700px" height="700px">
+    <embed src="https://github.com/mmoth-kurtis/MMotH-Fenics-UK/blob/master/mesh_generation/FEniCS_LV_segmentation.pdf?raw=true">
+        <p>This browser does not support PDFs. Please download the PDF to view it: <a href="https://github.com/mmoth-kurtis/MMotH-Fenics-UK/tree/master/mesh_generation/FEniCS_LV_segmentation.pdf?raw=true">Download PDF</a>.</p>
+    </embed>
+</object>
