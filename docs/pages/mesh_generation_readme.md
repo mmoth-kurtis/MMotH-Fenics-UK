@@ -14,4 +14,4 @@ page.title: Building a Mesh
 
 Trying to embed a pdf here:  
 
-[embed]https://github.com/mmoth-kurtis/MMotH-Fenics-UK/blob/master/mesh_generation/FEniCS_LV_segmentation.pdf[/embed]
+[embed]https://github.com/mmoth-kurtis/MMotH-Fenics-UK/blob/master/mesh_generation/FEniCS_LV_segmentation.pdf?raw=true[/embed]
