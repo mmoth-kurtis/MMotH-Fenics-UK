@@ -12,10 +12,6 @@ page.title: Building a Mesh
 * Run LV_Test.py on the New_Mesh files to yield the HDF5 file. This is what is needed for FEniCS. This step creates the mesh and assigns fiber angles, as well as the local coordinate system for each element.
 * The mesh needs the top to be cropped out.
 
-Trying to embed a pdf here:  
+Trying to embed images here:  
 
-<object data="https://github.com/mmoth-kurtis/MMotH-Fenics-UK/blob/master/mesh_generation/FEniCS_LV_segmentation.pdf?raw=true" type="application/pdf" width="700px" height="700px">
-    <embed src="https://github.com/mmoth-kurtis/MMotH-Fenics-UK/blob/master/mesh_generation/FEniCS_LV_segmentation.pdf?raw=true">
-        <p>This browser does not support PDFs. Please download the PDF to view it: <a href="https://github.com/mmoth-kurtis/MMotH-Fenics-UK/tree/master/mesh_generation/FEniCS_LV_segmentation.pdf?raw=true">Download PDF</a>.</p>
-    </embed>
-</object>
+![introduction to mesh generation](/pages/images/FEniCS_LV_segmentation_Page_01.jpg)
