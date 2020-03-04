@@ -14,4 +14,4 @@ page.title: Building a Mesh
 
 Trying to embed images here:  
 
-![introduction to mesh generation](/pages/images/FEniCS_LV_segmentation_Page_01.jpg)
+![introduction to mesh generation](https://github.com/mmoth-kurtis/MMotH-Fenics-UK/blob/master/docs/pages/images/FEniCS_LV_segmentation_Page_01.jpg)
