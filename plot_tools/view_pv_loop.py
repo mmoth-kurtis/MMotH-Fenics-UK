@@ -4,7 +4,7 @@ import sys
 import numpy as np
 
 pv_file_input = sys.argv[1]
-time, pressure, volume = np.loadtxt(pv_file_input, skiprows=1, unpack=True)
+time, pressure, volume, temp = np.loadtxt(pv_file_input, skiprows=3, unpack=True)
 
 #time = data[:,0]
 #pressure = data[:,1]
