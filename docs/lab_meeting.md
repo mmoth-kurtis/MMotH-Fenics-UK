@@ -2,11 +2,12 @@ Kurtis Mann
 Edited: 3/2/2020
 
 ### Task List: 3/2/2020 - 3/9/2020
-- [ ] Meet with Dr. Wenk for 3 state revisions today
+- [x] Meet with Dr. Wenk for 3 state revisions today
   - [ ] Finish draft of this today/tomorrow
-- [ ] Finish mesh generation instruction markdown
-- [ ] Work on fenics website
-- [ ] Rat windkessel parameters and mesh sensitivity
+- [x] Update mesh generation instruction markdown
+- [x] Work on fenics website
+- [x] Work on Rat windkessel parameters and mesh sensitivity
+  * Tried to use rat parameters, solver failed
 - [ ] PSO project as time allows
 - [ ] Keep reading finite element growth implementation papers
 
