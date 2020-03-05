@@ -9,8 +9,8 @@ One of the strengths of the finite element method is the ability to solve proble
   * LV_Test.py  
   * LV_Segmentation_UKY.mlab  
 * Open MeVisLab and load "LV_Segmentation_UKY.mlab". The screen should appear as follows:  
-<img src="https://github.com/mmoth-kurtis/MMotH-Fenics-UK/blob/master/docs/pages/images/mesh_image_01.png?raw=true" alt="titlepage" width="800"/>  
-<img src="https://github.com/mmoth-kurtis/MMotH-Fenics-UK/blob/master/docs/pages/images/mesh_image_01.png?raw=true" alt="titlepage" width="800"/>  
+<img src="https://github.com/mmoth-kurtis/MMotH-Fenics-UK/blob/master/docs/pages/images/mesh_image_01.png?raw=true" alt="titlepage" width="1000"/>  
+<img src="https://github.com/mmoth-kurtis/MMotH-Fenics-UK/blob/master/docs/pages/images/mesh_image_02.png?raw=true" alt="titlepage" width="800"/>  
 
 
 Go ahead and exit out of the "Panel WEMSave" box if it appears.
