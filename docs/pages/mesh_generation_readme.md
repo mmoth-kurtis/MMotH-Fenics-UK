@@ -1,15 +1,14 @@
 ---
 page.title: Building a Mesh
 ---
+One of the strengths of the finite element method is the ability to solve problems over complex geometries. Given cardiac MRI data, ventricle specific meshes can be generated via the following steps.
 
-* Download MeVisLab ver >= 3.1.1, and appropriate files from the 'mesh_generation' directory.  
-  * I downloaded verion 2.8 and was missing two required modules  
+* Download MeVisLab version >= 3.1.1.  
 * The following files from the MMotH-Fenics-UK repository are needed to generated meshes, and can be found in the [mesh_generation](https://github.com/mmoth-kurtis/MMotH-Fenics-UK/tree/master/mesh_generation) subdirectory:  
   * 1.createLV.py  
   * LV_Test.py  
   * LV_Segmentation_UKY.mlab  
-
-* Load 'LV_Segmentation_UKY.mlab' in MeVisLab.
+* Open MeVisLab and load "LV_Segmentation_UKY.mlab".  
 * Using the DicomImport module in MeVisLab, convert raw MRI images to DICOM format.
 * Follow instructions from FEniCS_LV_Segmentation.pdf. This should yield a '.stl' file. Do this for epi and endo volumes.
     * Some clarification for the Transform World Matrix: Change the entries in the last column so that the contours are in the center of the viewing volume. **Make sure to use the same transformation for both endo and epi volumes.**  
