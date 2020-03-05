@@ -20,7 +20,7 @@ First, we need to convert the raw CMR data to the DICOM format:
   * Specify the folder to save the converted images in the "Target Path" dialogue box.
   * Click "Import". A window should open as the images are converted, and upon finishing will display the text "Finished, exit status 0".
 
-* Follow the remaining instructions set out in FEniCS_LV_Segmentation.pdf (currently shown as a sequence of .jpg files here until formatting can be improved). This should yield a .stl file defining the endocardium surface. The steps should be repeated to also create an epicardium surface.
+Follow the remaining instructions set out in FEniCS_LV_Segmentation.pdf (currently shown as a sequence of .jpg files here until formatting can be improved). This should yield a .stl file defining the endocardium surface. The steps should be repeated to also create an epicardium surface.
 
 <img src="https://github.com/mmoth-kurtis/MMotH-Fenics-UK/blob/master/docs/pages/images/FEniCS_LV_segmentation_Page_03.jpg?raw=true" alt="titlepage" width="800"/>
 
