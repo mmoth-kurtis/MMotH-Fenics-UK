@@ -12,14 +12,15 @@ Open MeVisLab and load "LV_Segmentation_UKY.mlab". The following screen should a
 
 <img src="https://github.com/mmoth-kurtis/MMotH-Fenics-UK/blob/master/docs/pages/images/mesh_image_02.png?raw=true" alt="titlepage" width="800"/>  
 
-Go ahead and exit out of the "Panel WEMSave" box if it appears. MeVisLab saves the state the last time this file was opened, and the WEMSave module is the last to be called before exiting.  
+Go ahead and exit out of the "Panel WEMSave" box if it appears. MeVisLab saves the last current state of the file previous to closing. Since the WEMSave module is the last to be called before exiting, this module appears upon opening.  
 
 First, we need to convert the raw CMR data to the DICOM format:  
 
-* Convert the raw CMR data to the DICOM format:  
   * Double click the DicomImport module to open it. Navigate to the directory containing the raw CMR images.
   * Specify the folder to save the converted images in the "Target Path" dialogue box.
-* Follow instructions from FEniCS_LV_Segmentation.pdf. This should yield a '.stl' file. Do this for epi and endo volumes.
+  * Click "Import". A window should open as the images are converted, and upon finishing will display the text "Finished, exit status 0".
+
+* Follow the remaining instructions set out in FEniCS_LV_Segmentation.pdf (currently shown as a sequence of .jpg files here until formatting can be improved). This should yield a .stl file defining the endocardium surface. The steps should be repeated to also create an epicardium surface.
 
 <img src="https://github.com/mmoth-kurtis/MMotH-Fenics-UK/blob/master/docs/pages/images/FEniCS_LV_segmentation_Page_03.jpg?raw=true" alt="titlepage" width="800"/>
 
