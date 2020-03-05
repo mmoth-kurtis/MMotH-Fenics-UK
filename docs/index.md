@@ -15,3 +15,7 @@ For more detail about individual model formulations, see below:
   * [Running a demo](/pages/running_demo.md)
   * [Modifying an input file](/pages/fenics_input_readme.md)
   * [Building a mesh](/pages/mesh_generation_readme.md)
+
+# Optimization
+  * [Particle Swarm Optimization](/pages/pso_overview.md)
+  * [Running an optimization](/pages/running_pso.md)
