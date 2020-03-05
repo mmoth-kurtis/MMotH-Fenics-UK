@@ -8,7 +8,8 @@ One of the strengths of the finite element method is the ability to solve proble
   * 1.createLV.py  
   * LV_Test.py  
   * LV_Segmentation_UKY.mlab  
-* Open MeVisLab and load "LV_Segmentation_UKY.mlab".  
+* Open MeVisLab and load "LV_Segmentation_UKY.mlab". The screen should appear as follows:  
+
 * Using the DicomImport module in MeVisLab, convert raw MRI images to DICOM format.
 * Follow instructions from FEniCS_LV_Segmentation.pdf. This should yield a '.stl' file. Do this for epi and endo volumes.
     * Some clarification for the Transform World Matrix: Change the entries in the last column so that the contours are in the center of the viewing volume. **Make sure to use the same transformation for both endo and epi volumes.**  
@@ -17,7 +18,6 @@ One of the strengths of the finite element method is the ability to solve proble
 * The mesh needs the top to be cropped out.
 
 
-Testing html for image embedding full path with raw=true
 
 <img src="https://github.com/mmoth-kurtis/MMotH-Fenics-UK/blob/master/docs/pages/images/FEniCS_LV_segmentation_Page_01.jpg?raw=true" alt="titlepage" width="800"/>
 
