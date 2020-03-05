@@ -52,4 +52,4 @@ First, we need to convert the raw CMR data to the DICOM format:
 
 * Run the 1.createLV.py script on the stl files (creating json input for this now to be able to specify output directory and mesh name). This creates .vtk files.
 * Run LV_Test.py on the New_Mesh files to yield the HDF5 file. This is what is needed for FEniCS. This step creates the mesh and assigns fiber angles, as well as the local coordinate system for each element.
-* The mesh needs the top to be cropped out.
+* Crop the top of the volumes out in Paraview.
