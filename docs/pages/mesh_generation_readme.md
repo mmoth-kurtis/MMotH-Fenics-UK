@@ -13,9 +13,9 @@ page.title: Building a Mesh
 * The mesh needs the top to be cropped out.
 
 
-Trying to embed the pdf first test2
+Testing html for image embedding
 
-![embedding pdf](https://github.com/mmoth-kurtis/MMotH-Fenics-UK/blob/master/docs/pages/FEniCS_LV_segmentation.pdf?raw=true)
+<img src="/pages/images/FEniCS_LV_segmentation_Page_01.jpg" alt="titlepage" width="200"/>
 
 ![intro  generation](https://github.com/mmoth-kurtis/MMotH-Fenics-UK/blob/master/docs/pages/images/FEniCS_LV_segmentation_Page_01.jpg?raw=true)  
 
