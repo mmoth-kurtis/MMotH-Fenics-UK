@@ -7,11 +7,14 @@ First, download [MeVisLab](https://www.mevislab.de/download/) version >= 3.1.1. 
   * 1.createLV.py  
   * LV_Test.py  
   * LV_Segmentation_UKY.mlab  
-* Open MeVisLab and load "LV_Segmentation_UKY.mlab". The screen should appear as follows:  
+
+Open MeVisLab and load "LV_Segmentation_UKY.mlab". The following screen should appear:
 
 <img src="https://github.com/mmoth-kurtis/MMotH-Fenics-UK/blob/master/docs/pages/images/mesh_image_02.png?raw=true" alt="titlepage" width="800"/>  
 
-Go ahead and exit out of the "Panel WEMSave" box if it appears.
+Go ahead and exit out of the "Panel WEMSave" box if it appears. MeVisLab saves the state the last time this file was opened, and the WEMSave module is the last to be called before exiting.  
+
+First, we need to convert the raw CMR data to the DICOM format:  
 
 * Convert the raw CMR data to the DICOM format:  
   * Double click the DicomImport module to open it. Navigate to the directory containing the raw CMR images.
