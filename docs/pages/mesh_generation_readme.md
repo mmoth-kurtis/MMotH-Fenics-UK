@@ -22,6 +22,8 @@ First, we need to convert the raw CMR data to the DICOM format:
 
 Follow the remaining instructions set out in FEniCS_LV_Segmentation.pdf (currently shown as a sequence of .jpg files here until formatting can be improved). This should yield a .stl file defining the endocardium surface. The steps should be repeated to also create an epicardium surface.
 
+**Note, for rat meshes, instead of using black_blood_3SA_C2h images for the short axis, use "Dense_newFS_6SA_AveMag_Slc0" for the short axis slices, and "Dense_newFS_2LA_AveMag_Slc0" & "Dense_newFS_2LA_AveMag_Slc1" for the long axis images.**
+
 <img src="https://github.com/mmoth-kurtis/MMotH-Fenics-UK/blob/master/docs/pages/images/FEniCS_LV_segmentation_Page_03.jpg?raw=true" alt="titlepage" width="800"/>
 
 <img src="https://github.com/mmoth-kurtis/MMotH-Fenics-UK/blob/master/docs/pages/images/FEniCS_LV_segmentation_Page_04.jpg?raw=true" alt="titlepage" width="800"/>
