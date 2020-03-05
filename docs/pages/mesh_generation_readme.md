@@ -2,9 +2,13 @@
 page.title: Building a Mesh
 ---
 
-* Download MeVisLab ver >= 3.1.1, and appropriate files from the 'mesh_generation' directory.
-* Download <a id="raw-url" href="https://github.com/mmoth-kurtis/MMotH-Fenics-UK/blob/master/mesh_generation/1.createLV.py?raw=true">Download FILE</a>
-  * I downloaded verion 2.8 and was missing two required modules
+* Download MeVisLab ver >= 3.1.1, and appropriate files from the 'mesh_generation' directory.  
+  * I downloaded verion 2.8 and was missing two required modules  
+* The following files from the MMotH-Fenics-UK repository are needed to generated meshes, and can be found in the [mesh_generation](https://github.com/mmoth-kurtis/MMotH-Fenics-UK/tree/master/mesh_generation) subdirectory:  
+  * 1.createLV.py  
+  * LV_Test.py  
+  * LV_Segmentation_UKY.mlab  
+
 * Load 'LV_Segmentation_UKY.mlab' in MeVisLab.
 * Using the DicomImport module in MeVisLab, convert raw MRI images to DICOM format.
 * Follow instructions from FEniCS_LV_Segmentation.pdf. This should yield a '.stl' file. Do this for epi and endo volumes.
