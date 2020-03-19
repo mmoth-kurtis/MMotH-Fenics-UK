@@ -10,7 +10,7 @@ def calculate_concentrations(cycle,time):
     # Time is passed in as ms, not seconds
     t = time/1000
     # Don't plan on using this transient much, hard coding some stuff
-    t_act = 0.08
+    t_act = 0.0
     cardiac_period = .17
     t_p = cardiac_period*cycle + t_act+0.01
     fCa = 25

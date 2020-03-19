@@ -139,7 +139,7 @@ def fenics(sim_params,file_inputs,output_params,passive_params,hs_params,cell_io
         loading_number = 2;
         #don't need to do the vtk_py mesh stuff
     else: #assuming we are using a patient specific mesh
-        loading_number = 1;
+        loading_number = 29;
         ugrid = vtk_py.convertXMLMeshToUGrid(mesh)
         ugrid = vtk_py.rotateUGrid(ugrid, sx=0.1, sy=0.1, sz=0.1)
         mesh = vtk_py.convertUGridToXMLMesh(ugrid)
@@ -414,7 +414,7 @@ def fenics(sim_params,file_inputs,output_params,passive_params,hs_params,cell_io
 
         if(MPI.rank(comm) == 0):
 
-            print >>fdataPV, 0.0, p_cav*0.0075 , V_cav, 0.0
+            print >>fdataPV, 0.0, p_cav*0.0075 , 0.0, 0.0, V_cav, 0.0, 0.0, 0.0
             #displacementfile << w.sub(0)
         print("cavity-vol = ", LVCavityvol.vol)
         print("p_cav = ", uflforms.LVcavitypressure())
@@ -475,14 +475,14 @@ def fenics(sim_params,file_inputs,output_params,passive_params,hs_params,cell_io
 
             print "Cycle number = ", cycle, " cell time = ", cell_time, " tstep = ", tstep, " step_size = ", step_size
             #print >>fdataPV, tstep, p_cav*0.0075 , V_cav, Myosim.Get_Ca()
-            print >>fdataPV, tstep, p_cav*0.0075 , V_cav
+
 
         Part = 1.0/Cao*(V_art - Vart0);
         Pven = 1.0/Cven*(V_ven - Vven0);
         PLV = p_cav;
 
         if(MPI.rank(comm) == 0):
-
+            print >>fdataPV, tstep, p_cav*0.0075 , Part*.0075, Pven*.0075, V_cav, V_ven, V_art, calcium[counter]
             print "P_ven = ",Pven;
             print "P_LV = ", PLV;
             print "P_art = ", Part;
