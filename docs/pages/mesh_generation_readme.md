@@ -53,5 +53,11 @@ Follow the remaining instructions set out in FEniCS_LV_Segmentation.pdf (current
 <img src="https://github.com/mmoth-kurtis/MMotH-Fenics-UK/blob/master/docs/pages/images/FEniCS_LV_segmentation_Page_15.jpg?raw=true" alt="titlepage" width="800"/>
 
 * Run the 1.createLV.py script on the stl files (creating json input for this now to be able to specify output directory and mesh name). This creates .vtk files.
+  * Note: in the 1.createLV.py file, line 51, the user can control mesh refinement  
+    ```python
+    vtk_py.createLVmesh(filename, 0.5, "clipped_epi_tmp.stl", "clipped_endo_tmp.stl")
+    ```
+    The `0.5` is the mesh size, which is later an input for the vtk_py function createLVmesh. The smaller this number, the more refined the mesh is. 0.5 is the default.
+
 * Run LV_Test.py on the New_Mesh files to yield the HDF5 file. This is what is needed for FEniCS. This step creates the mesh and assigns fiber angles, as well as the local coordinate system for each element.
 * Crop the top of the volumes out in Paraview.

@@ -139,7 +139,7 @@ def fenics(sim_params,file_inputs,output_params,passive_params,hs_params,cell_io
         loading_number = 2;
         #don't need to do the vtk_py mesh stuff
     else: #assuming we are using a patient specific mesh
-        loading_number = 29;
+        loading_number = 35;
         ugrid = vtk_py.convertXMLMeshToUGrid(mesh)
         ugrid = vtk_py.rotateUGrid(ugrid, sx=0.1, sy=0.1, sz=0.1)
         mesh = vtk_py.convertUGridToXMLMesh(ugrid)
@@ -331,7 +331,8 @@ def fenics(sim_params,file_inputs,output_params,passive_params,hs_params,cell_io
 
     if(MPI.rank(comm) == 0):
         fdataPV = open(output_path + "PV_.txt", "w", 0)
-
+        fdataCa = open(output_path + "calcium_.txt", "w", 0)
+        #fdataPops = open(output_path + "populations", "w", 0)
 
     tstep = 0
     t = 0
@@ -429,7 +430,7 @@ def fenics(sim_params,file_inputs,output_params,passive_params,hs_params,cell_io
     cell_ion = cell_ion_driver.cell_ion_driver(cell_ion_params)
 
     # Initialize calcium
-    calcium[0] = cell_ion.model.calculate_concentrations(0,0)
+    calcium[0] = cell_ion.model.calculate_concentrations(0,0,fdataCa)
 
     dumped_populations = np.zeros((no_of_time_steps+1, no_of_int_points, n_array_length))
 
@@ -477,12 +478,11 @@ def fenics(sim_params,file_inputs,output_params,passive_params,hs_params,cell_io
             #print >>fdataPV, tstep, p_cav*0.0075 , V_cav, Myosim.Get_Ca()
 
 
-        Part = 1.0/Cao*(V_art - Vart0);
-        Pven = 1.0/Cven*(V_ven - Vven0);
+        Part = (1.0/Cao)*(V_art - Vart0);
+        Pven = (1.0/Cven)*(V_ven - Vven0);
         PLV = p_cav;
 
         if(MPI.rank(comm) == 0):
-            print >>fdataPV, tstep, p_cav*0.0075 , Part*.0075, Pven*.0075, V_cav, V_ven, V_art, calcium[counter]
             print "P_ven = ",Pven;
             print "P_LV = ", PLV;
             print "P_art = ", Part;
@@ -573,7 +573,13 @@ def fenics(sim_params,file_inputs,output_params,passive_params,hs_params,cell_io
         #print np.shape(y_vec_array_new)
 
         # Update calcium
-        calcium[counter] = cell_ion.model.calculate_concentrations(cycle,tstep)
+        calcium[counter] = cell_ion.model.calculate_concentrations(cycle,tstep,fdataCa)
+
+        # Now print out volumes, pressures, calcium
+        if(MPI.rank(comm) == 0):
+            print >>fdataPV, tstep, p_cav*0.0075 , Part*.0075, Pven*.0075, V_cav, V_ven, V_art, calcium[counter]
+
+
 
     # Going to try to loop through integration points in python, not in fenics script
         y_vec_array_new = implement.update_simulation(hs, step_size, delta_hsl_array, hsl_array, y_vec_array, p_f_array, cb_f_array, calcium[counter], n_array_length)
@@ -634,6 +640,8 @@ def fenics(sim_params,file_inputs,output_params,passive_params,hs_params,cell_io
 
     if(MPI.rank(comm) == 0):
         fdataPV.close()
+        fdataCa.close()
+        #fdataPops.close()
 
     #rate_constants = np.zeros((no_of_x_bins,no_of_transitions + 1))
 
