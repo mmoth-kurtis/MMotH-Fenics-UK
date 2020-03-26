@@ -1,6 +1,3 @@
----
-page.title: Getting Started
----
 This page provides instructions for running this code on a local machine.  
 
 ### Requirements  
