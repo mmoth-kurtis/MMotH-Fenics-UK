@@ -22,15 +22,15 @@ def calculate_concentrations(cycle,time,file):
     if t <= t_act:
         pCa = 7
         calcium_value = 10**(-1*pCa)
-        print >>file, 'first loop'
+        print >>file, 'first if'
     elif ((cardiac_period*cycle+t_act) < t) and (t < (t_p)):
         pCa = (t - (cardiac_period*cycle+t_act))/0.02
-        calcium_value = (0.1 + 1000 * np.sin(3.14*pCa)) * 1E-9
+        calcium_value = (1 + 9*np.sin(3.14*pCa))*1E-7
         print >>file, 'second if'
     elif (t >= t_p):
         pCa = 0.5*np.exp(-np.power((t - t_p)*fCa, fCa_2))
         print >>file, 'third if'
-        calcium_value = (0.1 + 1000 * np.sin(3.14*pCa)) * 1E-9
+        calcium_value = (1+9*np.sin(3.14*pCa))*1E-7
 
     print >>file, t, calcium_value
     return calcium_value
