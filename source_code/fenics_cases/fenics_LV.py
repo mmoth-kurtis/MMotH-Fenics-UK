@@ -96,7 +96,7 @@ def fenics(sim_params,file_inputs,output_params,passive_params,hs_params,cell_io
     #----------------------- Start setting up simulation ---------------------------------------------------------
     sim_duration = sim_params["sim_duration"][0]
     step_size = sim_params["sim_timestep"][0]
-
+    loading_number = sim_params["loading_number"][0]
     if sim_params["sim_geometry"][0] == "ventricle":
         # For ventricle for now, specify number of cardiac cycles
         cycles = sim_params["sim_type"][1]
@@ -124,8 +124,8 @@ def fenics(sim_params,file_inputs,output_params,passive_params,hs_params,cell_io
     parameters["form_compiler"]["representation"] = "quadrature"
 
     # Clear out any old results files
-    #os.system("rm " + output_path + "*.pvd")
-    #os.system("rm " + output_path + "*.vtu")
+    os.system("rm " + output_path + "*.pvd")
+    os.system("rm " + output_path + "*.vtu")
 
     #--------------- Load in mesh -------------------------------------
     #meshfilename = rc_input_path + casename + ".hdf5"
@@ -139,7 +139,7 @@ def fenics(sim_params,file_inputs,output_params,passive_params,hs_params,cell_io
         loading_number = 2;
         #don't need to do the vtk_py mesh stuff
     else: #assuming we are using a patient specific mesh
-        loading_number = 35;
+        loading_number = 1;
         ugrid = vtk_py.convertXMLMeshToUGrid(mesh)
         ugrid = vtk_py.rotateUGrid(ugrid, sx=0.1, sy=0.1, sz=0.1)
         mesh = vtk_py.convertUGridToXMLMesh(ugrid)
@@ -178,7 +178,7 @@ def fenics(sim_params,file_inputs,output_params,passive_params,hs_params,cell_io
     isincomp = True#False
     N = FacetNormal (mesh)
     Press = Expression(("P"), P=0.0, degree=0)
-    Kspring = Constant(100)
+    Kspring = Constant(10)
     LVCavityvol = Expression(("vol"), vol=0.0, degree=2)
     #C2 = Constant(0.5)
     #C3 = Constant(25.0)
@@ -327,7 +327,7 @@ def fenics(sim_params,file_inputs,output_params,passive_params,hs_params,cell_io
 
     print("cavity-vol = ", LVCavityvol.vol)
 
-    #displacementfile = File("./test_14/u_disp.pvd")
+    displacementfile = File(output_path + "u_disp.pvd")
 
     if(MPI.rank(comm) == 0):
         fdataPV = open(output_path + "PV_.txt", "w", 0)
@@ -416,7 +416,7 @@ def fenics(sim_params,file_inputs,output_params,passive_params,hs_params,cell_io
         if(MPI.rank(comm) == 0):
 
             print >>fdataPV, 0.0, p_cav*0.0075 , 0.0, 0.0, V_cav, 0.0, 0.0, 0.0
-            #displacementfile << w.sub(0)
+            displacementfile << w.sub(0)
         print("cavity-vol = ", LVCavityvol.vol)
         print("p_cav = ", uflforms.LVcavitypressure())
 
@@ -578,7 +578,9 @@ def fenics(sim_params,file_inputs,output_params,passive_params,hs_params,cell_io
         # Now print out volumes, pressures, calcium
         if(MPI.rank(comm) == 0):
             print >>fdataPV, tstep, p_cav*0.0075 , Part*.0075, Pven*.0075, V_cav, V_ven, V_art, calcium[counter]
-
+            np.save(output_path +"dumped_populations", dumped_populations)
+            np.save(output_path + "tarray", tarray)
+            np.save(output_path + "strarray", strarray)
 
 
     # Going to try to loop through integration points in python, not in fenics script
@@ -628,7 +630,7 @@ def fenics(sim_params,file_inputs,output_params,passive_params,hs_params,cell_io
         calarray[counter,:] = hs.Ca_conc * np.ones(no_of_int_points)
 
         counter += 1
-        #displacementfile << w.sub(0)
+        displacementfile << w.sub(0)
 
         tarray.append(tstep)
 

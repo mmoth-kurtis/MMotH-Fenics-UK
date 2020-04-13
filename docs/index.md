@@ -1,7 +1,5 @@
 Simulating left-ventricle mechanics using the finite element method with an embedded cell mechanics model and coupled circulatory model.
 
-
-
 # Overview  
 This code features a multi-scale model of the left-ventricle. Below is a figure showing the flow of information within the simulation.  
 **insert figure here**  
