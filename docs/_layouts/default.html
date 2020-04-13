@@ -12,17 +12,7 @@
         {{ content }}
       </div>
     </main>
-    <main class="page-content sidebar-container" aria-label="Content">
-    {% if page.sidebar %}
-      <div class="sidebar">
-          <b>Outline</b>
-          {% include toc.html html=content sanitize=true class="inline_toc" id="my_toc" h_min=2 h_max=page.sidebar %}
-      </div>
-    {% endif %}
-      <div class="wrapper">
-        {{ content }}
-      </div>
-    </main>
+    
 
     {%- include footer.html -%}
 

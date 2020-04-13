@@ -139,7 +139,6 @@ def fenics(sim_params,file_inputs,output_params,passive_params,hs_params,cell_io
         loading_number = 2;
         #don't need to do the vtk_py mesh stuff
     else: #assuming we are using a patient specific mesh
-        loading_number = 1;
         ugrid = vtk_py.convertXMLMeshToUGrid(mesh)
         ugrid = vtk_py.rotateUGrid(ugrid, sx=0.1, sy=0.1, sz=0.1)
         mesh = vtk_py.convertUGridToXMLMesh(ugrid)
