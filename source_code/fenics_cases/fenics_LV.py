@@ -177,7 +177,7 @@ def fenics(sim_params,file_inputs,output_params,passive_params,hs_params,cell_io
     isincomp = True#False
     N = FacetNormal (mesh)
     Press = Expression(("P"), P=0.0, degree=0)
-    Kspring = Constant(10)
+    Kspring = Constant(100)
     LVCavityvol = Expression(("vol"), vol=0.0, degree=2)
     #C2 = Constant(0.5)
     #C3 = Constant(25.0)
@@ -211,8 +211,10 @@ def fenics(sim_params,file_inputs,output_params,passive_params,hs_params,cell_io
 
     Quad_vectorized_Fspace = FunctionSpace(mesh, MixedElement(n_array_length*[Quadelem]))
 
+    bctop1 = DirichletBC(W.sub(0).sub(0), Expression(("0.0"), degree = 2), facetboundaries, topid)
+    bctop2 = DirichletBC(W.sub(0).sub(1), Expression(("0.0"), degree = 2), facetboundaries, topid)
     bctop = DirichletBC(W.sub(0).sub(2), Expression(("0.0"), degree = 2), facetboundaries, topid)
-    bcs = [bctop]
+    bcs = [bctop1, bctop2, bctop]
 
     w = Function(W)
     dw = TrialFunction(W)
@@ -280,12 +282,15 @@ def fenics(sim_params,file_inputs,output_params,passive_params,hs_params,cell_io
             cb_ext = cb_extensions[jj]
 
             for k in range(no_of_x_bins):
+                temp_holder = Constant(0.0)
 
                 dxx = xx[k] + delta_hsl * filament_compliance_factor
 
                 n_pop = y_vec_split[n_vector_indices[jj][0] + k]
 
-                f_holder = f_holder + n_pop * k_cb_multiplier[jj] * (dxx + cb_ext) * conditional(dxx + cb_ext > 0.0, k_cb_pos, k_cb_neg)
+                temp_holder = n_pop * k_cb_multiplier[jj] * (dxx + cb_ext) * conditional(dxx + cb_ext > 0.0, k_cb_pos, k_cb_neg)
+
+                f_holder = f_holder + conditional(temp_holder < 0.0, 0.0, temp_holder)
 
             f_holder = f_holder * cb_number_density * 1e-9
 
@@ -327,7 +332,6 @@ def fenics(sim_params,file_inputs,output_params,passive_params,hs_params,cell_io
     print("cavity-vol = ", LVCavityvol.vol)
 
     displacementfile = File(output_path + "u_disp.pvd")
-
     if(MPI.rank(comm) == 0):
         fdataPV = open(output_path + "PV_.txt", "w", 0)
         fdataCa = open(output_path + "calcium_.txt", "w", 0)
@@ -387,7 +391,8 @@ def fenics(sim_params,file_inputs,output_params,passive_params,hs_params,cell_io
 
         p_cav = uflforms.LVcavitypressure()
         V_cav = uflforms.LVcavityvol()
-
+        print "LV Pressure" + str(p_cav)
+        print "LV Volume" + str(V_cav)
         hsl_array_old = hsl_array
 
         #solver.solvenonlinear()
@@ -577,9 +582,15 @@ def fenics(sim_params,file_inputs,output_params,passive_params,hs_params,cell_io
         # Now print out volumes, pressures, calcium
         if(MPI.rank(comm) == 0):
             print >>fdataPV, tstep, p_cav*0.0075 , Part*.0075, Pven*.0075, V_cav, V_ven, V_art, calcium[counter]
-            np.save(output_path +"dumped_populations", dumped_populations)
+            #np.save(output_path +"dumped_populations", dumped_populations)
             np.save(output_path + "tarray", tarray)
             np.save(output_path + "strarray", strarray)
+            np.save(output_path + "hslarray", hslarray)
+            np.save(output_path + "dumped_populations",dumped_populations)
+            np.save(output_path + "pstress_array",pstrarray)
+            np.save(output_path + "alpha_array",alphaarray)
+            np.save(output_path + "calcium",calarray)
+            np.save(output_path + "HSL",hslarray)
 
 
     # Going to try to loop through integration points in python, not in fenics script
@@ -630,7 +641,6 @@ def fenics(sim_params,file_inputs,output_params,passive_params,hs_params,cell_io
 
         counter += 1
         displacementfile << w.sub(0)
-
         tarray.append(tstep)
 
 

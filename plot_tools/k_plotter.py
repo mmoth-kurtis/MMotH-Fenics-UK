@@ -6,7 +6,7 @@ Created on Wed Oct  9 12:40:00 PM 2019
 Modifying Amir's plotter to hopefully plot generic LV simulation
 Currently, IPython only works using python 2.7
 """
-
+import os as os
 import numpy as np
 import matplotlib.pyplot as plt
 from IPython import get_ipython
@@ -24,15 +24,16 @@ Commented out by Kurtis 10/9/2019, hope to get this info from loaded arrays"""
 
 # base_dir should be shared directory with FEniCS container
 # sim_dir should be location of simulation to plot relative to base_dir
-base_dir = '/Users/charlesmann/Academic/UK/MMotH-Fenics-UK/working_directory_untracked/'
-sim_dir = '082315/coarse/mouse_wk_params/output/'
+#base_dir = '/Users/charlesmann/Academic/UK/MMotH-Fenics-UK/working_directory_untracked/'
+#sim_dir = '082315/mouse_wk_params/fixed_fibers/angle_60/more_refined/timestep_small/k3_1000/'
+sim_dir = os.getcwd()
 lang_flag = 'python'
 #sim_dir = 'cpp_stable/test_17/'
 #lang_flag = 'c++'
 
 # For now, hard coding bin discretization information
-xmin = -10
-xmax = 10
+xmin = -12
+xmax = 12
 bin_width = 1.0
 cb_domain = np.arange(xmin,xmax+bin_width,bin_width)
 num_bins = np.shape(cb_domain)
@@ -40,22 +41,21 @@ num_bins = np.shape(cb_domain)
 
 # Assuming the dumped npy files from FEniCS always take these names
 # Note, these arrays include info for every Gauss point
-fenics_pop_file = np.load(base_dir + sim_dir + 'dumped_populations.npy')
-tarray = np.load(base_dir + sim_dir + 'tarray.npy')
+fenics_pop_file = np.load(sim_dir + '/dumped_populations.npy')
+tarray = np.load(sim_dir + '/tarray.npy')
 tarray = tarray[:-1]
-stress_array = np.load(base_dir + sim_dir + 'stress_array.npy')
-calcium = np.load(base_dir + sim_dir + 'calcium.npy')
+stress_array = np.load(sim_dir + '/strarray.npy')
+calcium = np.load(sim_dir + '/calcium.npy')
 #calcium = calcium[:,0]
-HSL = np.load(base_dir + sim_dir + 'HSL.npy')
-#pstress = np.load(base_dir + sim_dir + 'pstress_array.npy')
+HSL = np.load(sim_dir + '/hslarray.npy')
+pstress = np.load(sim_dir + '/pstress_array.npy')
 # Define number of time steps and array length here
 sim_info = fenics_pop_file.shape
 num_timesteps = sim_info[0]
 num_int_points = sim_info[1]
 array_length = sim_info[2]
-gauss_point = 0
+gauss_point = 998
 data_range = np.shape(tarray)[0]
-print data_range
 # Look at how info is dumped from FEniCS. For now, hard code number of detached and attached states, and bins
 # Want to be able to visualize distributions, will need this info to set up arrays.
 #num_d_states
@@ -73,8 +73,8 @@ for i in range(num_timesteps):
     fenics_pop_data[i,0] = fenics_pop_file[i,gauss_point,0] # state 1 pops
     fenics_pop_data[i,1] = fenics_pop_file[i,gauss_point,1] # state 2 pops
     fenics_pop_data[i,2] = np.sum(fenics_pop_file[i,gauss_point,2:array_length-3]) # state 3
-    #fenics_pop_data[i,3] = fenics_pop_file[i,0,n_array_length-1]
-    #fenics_pop_data[i,4:] = fenics_pop_file[i,0,4:n_array_length]
+    fenics_pop_data[i,3] = fenics_pop_file[i,0,array_length-1]
+    fenics_pop_data[i,4:] = fenics_pop_file[i,0,4:array_length]
 
 """ Not interested in myosim information at the moment
 myosim_pop_file = 'C:\\ProgramData\\Myosim\\MyoSim_output\\populations.txt'
@@ -123,7 +123,7 @@ plt.ylabel("Proportions")
 
 #------------------------------------------------------------------------------
 plt.subplot(424)
-#state_3_pops_fenics, = plt.plot(tarray, np.sum(fenics_pop_data[:,2:array_length-2],1), 'r')
+#state_3_pops_fenics, = plt.plot(tarray, np.sum(fenics_pop_data[0:data_range,2:array_length-2]), 'r')
 state_3_pops_fenics, = plt.plot(tarray, fenics_pop_data[0:data_range,2])
 binding_sites, = plt.plot(tarray, fenics_pop_file[0:data_range,gauss_point,array_length-1])
 
@@ -135,28 +135,29 @@ plt.xlabel('time (s)')
 plt.ylabel("Proportions")
 #------------------------------------------------------------------------------
 plt.subplot(426)
-plt.plot(tarray, stress_array[0:data_range])
+plt.plot(tarray, stress_array[0:data_range,gauss_point])
 #plt.scatter(myosim_summary_data[:,0], myosim_summary_data[:,1],color='r')
 #plt.scatter(myosim_summary_data[::10,0], myosim_summary_data[::10,1],color='r')
 plt.xlabel('time (s)')
 plt.ylabel("Stress (Pa)")
 
-"""#------------------------------------------------------------------------------
+#------------------------------------------------------------------------------
 plt.subplot(428)
-plt.plot(tarray, calcium[:-1])
+plt.plot(tarray, calcium[0:data_range,0])
 #plt.scatter(myosim_summary_data[:,0], myosim_summary_data[:,1],color='r')
 plt.xlabel('time (s)')
-plt.ylabel("Calcium [M]")"""
+plt.ylabel("Calcium [M]")
 #------------------------------------------------------------------------------
-"""ax2 = plt.subplot(421)
-plt.plot(tarray, HSL[:-1])
+ax2 = plt.subplot(421)
+plt.plot(tarray, HSL[0:data_range,:])
 #plt.scatter(myosim_summary_data[:,0], myosim_summary_data[:,1],color='r')
 plt.xlabel('time [s]')
-plt.ylabel("hsl (nm)")"""
+plt.ylabel("hsl (nm)")
 
 #---------------------------------------------------------------------------------
-#plt.subplot(429)
-#plt.plot(tarray, pstress[0:201])
+plt.subplot(423)
+print np.shape(pstress)
+plt.plot(tarray, pstress[0:data_range,:])
 #------------------------------------------------------------------------------
 #plt.subplot(423)
 #plt.scatter(myosim_rates[:,0], myosim_rates[:,1],color='k')
