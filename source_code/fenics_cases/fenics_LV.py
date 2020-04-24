@@ -211,10 +211,10 @@ def fenics(sim_params,file_inputs,output_params,passive_params,hs_params,cell_io
 
     Quad_vectorized_Fspace = FunctionSpace(mesh, MixedElement(n_array_length*[Quadelem]))
 
-    bctop1 = DirichletBC(W.sub(0).sub(0), Expression(("0.0"), degree = 2), facetboundaries, topid)
-    bctop2 = DirichletBC(W.sub(0).sub(1), Expression(("0.0"), degree = 2), facetboundaries, topid)
+    #bctop1 = DirichletBC(W.sub(0).sub(0), Expression(("0.0"), degree = 2), facetboundaries, topid)
+    #bctop2 = DirichletBC(W.sub(0).sub(1), Expression(("0.0"), degree = 2), facetboundaries, topid)
     bctop = DirichletBC(W.sub(0).sub(2), Expression(("0.0"), degree = 2), facetboundaries, topid)
-    bcs = [bctop1, bctop2, bctop]
+    bcs = [bctop]
 
     w = Function(W)
     dw = TrialFunction(W)
@@ -583,14 +583,14 @@ def fenics(sim_params,file_inputs,output_params,passive_params,hs_params,cell_io
         if(MPI.rank(comm) == 0):
             print >>fdataPV, tstep, p_cav*0.0075 , Part*.0075, Pven*.0075, V_cav, V_ven, V_art, calcium[counter]
             #np.save(output_path +"dumped_populations", dumped_populations)
-            np.save(output_path + "tarray", tarray)
-            np.save(output_path + "strarray", strarray)
-            np.save(output_path + "hslarray", hslarray)
-            np.save(output_path + "dumped_populations",dumped_populations)
-            np.save(output_path + "pstress_array",pstrarray)
-            np.save(output_path + "alpha_array",alphaarray)
-            np.save(output_path + "calcium",calarray)
-            np.save(output_path + "HSL",hslarray)
+            #np.save(output_path + "tarray", tarray)
+            #np.save(output_path + "strarray", strarray)
+            #np.save(output_path + "hslarray", hslarray)
+            #np.save(output_path + "dumped_populations",dumped_populations)
+            #np.save(output_path + "pstress_array",pstrarray)
+            #np.save(output_path + "alpha_array",alphaarray)
+            #np.save(output_path + "calcium",calarray)
+            #np.save(output_path + "HSL",hslarray)
 
 
     # Going to try to loop through integration points in python, not in fenics script
