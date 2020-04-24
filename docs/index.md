@@ -1,6 +1,12 @@
 ---
 page.title = MMotH-Fenics-UK
 ---
+
+<div class="notice--warning">
+  <h4>Message</h4>
+  <p>This site is outdated. Please go to https://mmoth-kurtis.github.io/mmoth-vent/ instead.</p>
+</div>
+
 Simulating left-ventricle mechanics using the finite element method with an embedded cell mechanics model and coupled circulatory model.
 
 # Overview  
