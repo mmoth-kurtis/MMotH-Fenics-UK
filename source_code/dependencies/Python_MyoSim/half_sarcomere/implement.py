@@ -3,7 +3,7 @@ import numpy as np
 import pandas as pd
 
 
-def update_simulation(self, time_step, delta_hsl, hsl, y0, pf, cbf, calcium, n_array_length, set_data = 0):
+def update_simulation(self, time_step, delta_hsl, hsl, y0, pf, cbf, calcium, n_array_length, cell_time,set_data = 0):
 
     # Need to do some kinetics stuff
     time_step = time_step/1000
@@ -31,7 +31,7 @@ def update_simulation(self, time_step, delta_hsl, hsl, y0, pf, cbf, calcium, n_a
         #if i==1:
             #print self.myof.y
         # Myofilaments
-        self.myof.evolve_kinetics(time_step, self.Ca_conc)
+        self.myof.evolve_kinetics(time_step, self.Ca_conc, cell_time)
         #if i==1:
             #print self.myof.y
         if (np.abs(delta_hsl[i]) > 0.0):

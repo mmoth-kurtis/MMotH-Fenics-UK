@@ -54,7 +54,7 @@ sim_info = fenics_pop_file.shape
 num_timesteps = sim_info[0]
 num_int_points = sim_info[1]
 array_length = sim_info[2]
-gauss_point = 998
+gauss_point = 64
 data_range = np.shape(tarray)[0]
 # Look at how info is dumped from FEniCS. For now, hard code number of detached and attached states, and bins
 # Want to be able to visualize distributions, will need this info to set up arrays.
@@ -65,7 +65,7 @@ data_range = np.shape(tarray)[0]
 #bin_max
 
 fenics_pop_data = np.zeros((num_timesteps,array_length))
-for i in range(num_timesteps):
+"""for i in range(num_timesteps):
 
     # Reading in information from just one Gauss point [i = timestep, 0 = gauss point, : is all pop info]
     # Which element is it from?
@@ -74,7 +74,7 @@ for i in range(num_timesteps):
     fenics_pop_data[i,1] = fenics_pop_file[i,gauss_point,1] # state 2 pops
     fenics_pop_data[i,2] = np.sum(fenics_pop_file[i,gauss_point,2:array_length-3]) # state 3
     fenics_pop_data[i,3] = fenics_pop_file[i,0,array_length-1]
-    fenics_pop_data[i,4:] = fenics_pop_file[i,0,4:array_length]
+    fenics_pop_data[i,4:] = fenics_pop_file[i,0,4:array_length]"""
 
 """ Not interested in myosim information at the moment
 myosim_pop_file = 'C:\\ProgramData\\Myosim\\MyoSim_output\\populations.txt'
@@ -149,7 +149,7 @@ plt.xlabel('time (s)')
 plt.ylabel("Calcium [M]")
 #------------------------------------------------------------------------------
 ax2 = plt.subplot(421)
-plt.plot(tarray, HSL[0:data_range,:])
+plt.plot(tarray, HSL[0:data_range,gauss_point])
 #plt.scatter(myosim_summary_data[:,0], myosim_summary_data[:,1],color='r')
 plt.xlabel('time [s]')
 plt.ylabel("hsl (nm)")
@@ -157,7 +157,7 @@ plt.ylabel("hsl (nm)")
 #---------------------------------------------------------------------------------
 plt.subplot(423)
 print np.shape(pstress)
-plt.plot(tarray, pstress[0:data_range,:])
+plt.plot(tarray, pstress[0:data_range,gauss_point])
 #------------------------------------------------------------------------------
 #plt.subplot(423)
 #plt.scatter(myosim_rates[:,0], myosim_rates[:,1],color='k')

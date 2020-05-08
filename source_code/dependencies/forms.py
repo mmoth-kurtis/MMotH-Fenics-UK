@@ -7,6 +7,7 @@ Created on Thu Apr 25 15:06:26 2019
 
 from dolfin import *
 import sys
+import numpy as np
 
 class Forms(object):
 
@@ -129,6 +130,13 @@ class Forms(object):
 
         return pressure
 
+    def TempActiveStress(self,time):
+        print "inside tempactivestress"
+        f0 = self.parameters["fiber"]
+        cbforce = Expression('A*(B+sin((B/C)*time + D))', A=15000., B=1., C=16., D=80.2, time = time, degree=0)
+
+        Pactive = cbforce * as_tensor(f0[i]*f0[j], (i,j))
+        return Pactive, cbforce
 
     def PassiveMatSEF(self):
 
@@ -285,4 +293,4 @@ class Forms(object):
         T = F*S*F.T
 
         #return  P,S,T, alpha
-        return  Pff, alpha
+        return  T, Pff, alpha

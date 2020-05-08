@@ -16,39 +16,18 @@ import Python_MyoSim.half_sarcomere.half_sarcomere as half_sarcomere
 import Python_MyoSim.half_sarcomere.implement as implement
 import vtk_py
 from cell_ion_module import cell_ion_driver
-
+import homogeneous_stress
 
 def fenics(sim_params,file_inputs,output_params,passive_params,hs_params,cell_ion_params,monodomain_params,windkessel_params):
     global i
     global j
+
+    ispressurectrl = False
     #------------------## Load in all information and set up simulation #-----------------
-    # User provides file name
-    #input_file_name = sys.argv[1]
-
-    # Check that the file exists, if not , exit
-    #if not os.path.exists(input_file_name):
-    #    print "input file does not exist"
-    #    exit()
-
-    # Load in JSON dictionary
-    #with open(input_file_name, 'r') as json_input:
-    #  input_parameters = json.load(json_input)
-
-    # Convert any unicode values so they work with some cpp libraries
-    #recode_dictionary.recode(input_parameters)
-
-    ## Parse out the different types of parameters
-    #sim_params = input_parameters["simulation_parameters"]
-    #file_inputs = input_parameters["file_inputs"]
-    #output_params = input_parameters["output_parameters"]
-    #passive_params = input_parameters["forms_parameters"]["passive_law_parameters"]
-    #hs_params = input_parameters["myosim_parameters"]
-    #cell_ion_params = input_parameters["electrophys_parameters"]["cell_ion_parameters"]
-    #monodomain_params = input_parameters["electrophys_parameters"]["monodomain_parameters"]
-    #windkessel_params = input_parameters["windkessel_parameters"]
 
     ## Assign input/output parameters
-    output_path = output_params["output_path"][0]
+    #output_path = output_params["output_path"][0]
+    output_path = "./"
     #input_path = file_inputs["input_directory_path"][0]
     casename = file_inputs["casename"][0]
     #casename = "New_mesh"
@@ -95,6 +74,7 @@ def fenics(sim_params,file_inputs,output_params,passive_params,hs_params,cell_io
 
     #----------------------- Start setting up simulation ---------------------------------------------------------
     sim_duration = sim_params["sim_duration"][0]
+    save_output = sim_params["save_output"][0]
     step_size = sim_params["sim_timestep"][0]
     loading_number = sim_params["loading_number"][0]
     if sim_params["sim_geometry"][0] == "ventricle":
@@ -150,14 +130,21 @@ def fenics(sim_params,file_inputs,output_params,passive_params,hs_params,cell_io
     VQuadelem._quad_scheme = 'default'
     fiberFS = FunctionSpace(mesh, VQuadelem)
 
-    f0 = Function(fiberFS)
-    s0 = Function(fiberFS)
-    n0 = Function(fiberFS)
+    f00 = Function(fiberFS)
+    s00 = Function(fiberFS)
+    n00 = Function(fiberFS)
     f.read(facetboundaries, casename+"/"+"facetboundaries")
 
-    f.read(f0, casename+"/"+"eF")
-    f.read(s0, casename+"/"+"eS")
-    f.read(n0, casename+"/"+"eN")
+    f.read(f00, casename+"/"+"eF")
+    f0 = project(f00, VectorFunctionSpace(mesh, "CG", 1))
+    f0 = f0/sqrt(inner(f0,f0))
+    f.read(s00, casename+"/"+"eS")
+    s0 = project(s00, VectorFunctionSpace(mesh, "CG", 1))
+    s0 = s0/sqrt(inner(s0,s0))
+    f.read(n00, casename+"/"+"eN")
+    n0 = project(n00, VectorFunctionSpace(mesh, "CG", 1))
+    n0 = n0/sqrt(inner(n0,n0))
+
     f.close()
     File(output_path + "facetboundaries.pvd") << facetboundaries
     topid = 4
@@ -176,6 +163,7 @@ def fenics(sim_params,file_inputs,output_params,passive_params,hs_params,cell_io
 
     isincomp = True#False
     N = FacetNormal (mesh)
+    X = SpatialCoordinate (mesh)
     Press = Expression(("P"), P=0.0, degree=0)
     Kspring = Constant(100)
     LVCavityvol = Expression(("vol"), vol=0.0, degree=2)
@@ -206,23 +194,42 @@ def fenics(sim_params,file_inputs,output_params,passive_params,hs_params,cell_io
     Telem4._quad_scheme = 'default'
     for e in Telem4.sub_elements():
         e._quad_scheme = 'default'
-    W = FunctionSpace(mesh, MixedElement([Velem,Qelem,Relem]))
+    # From L.C. Lee
+    ####### Mixed element for rigid body motion #####################################
+    VRelem = MixedElement([Relem, Relem, Relem, Relem, Relem])
+    #################################################################################
+    if(ispressurectrl):
+        W = FunctionSpace(mesh, MixedElement([Velem,Qelem,VRelem]))
+    else:
+        W = FunctionSpace(mesh, MixedElement([Velem,Qelem,Relem,VRelem]))
     Quad = FunctionSpace(mesh, Quadelem)
 
     Quad_vectorized_Fspace = FunctionSpace(mesh, MixedElement(n_array_length*[Quadelem]))
 
-    #bctop1 = DirichletBC(W.sub(0).sub(0), Expression(("0.0"), degree = 2), facetboundaries, topid)
-    #bctop2 = DirichletBC(W.sub(0).sub(1), Expression(("0.0"), degree = 2), facetboundaries, topid)
+    # Trying to set base to expand radially
+    # only information I can get right now in vector form seems to be sheet direction
+    # The x & y components of the sheet direction should give expansion in the radial direction (mostly)
+
+    #bctop1 = DirichletBC(W.sub(0).sub(0), s0(), facetboundaries, topid)
+    #bctop2 = DirichletBC(W.sub(0).sub(1), W.sub(0).sub(0), facetboundaries, topid)
     bctop = DirichletBC(W.sub(0).sub(2), Expression(("0.0"), degree = 2), facetboundaries, topid)
     bcs = [bctop]
 
     w = Function(W)
     dw = TrialFunction(W)
     wtest = TestFunction(W)
-    du,dp,dpendo = TrialFunctions(W)
-    (u,p, pendo) = split(w)
-    (v,q, qendo) = TestFunctions(W)
 
+    if(ispressurectrl):
+        du,dp,dc11 = TrialFunctions(W)
+    	(u,p,c11) = split(w)
+    	(v,q,v11) = TestFunctions(W)
+    else:
+        du,dp,dpendo,dc11 = TrialFunctions(W)
+      	(u,p, pendo,c11) = split(w)
+      	(v,q, qendo,v11) = TestFunctions(W)
+
+    if(ispressurectrl):
+    	pendo = []
     #dt = Expression(("dt"), dt=0.0, degree=1)
 
     params= {"mesh": mesh,
@@ -260,7 +267,6 @@ def fenics(sim_params,file_inputs,output_params,passive_params,hs_params,cell_io
 
     Ematrix = project(Emat, TF)
     Wp = uflforms.PassiveMatSEF()
-    Wvol = uflforms.LVV0constrainedE()
 
     #Active force calculation------------------------------------------------------
     y_vec = Function(Quad_vectorized_Fspace)
@@ -269,8 +275,8 @@ def fenics(sim_params,file_inputs,output_params,passive_params,hs_params,cell_io
     delta_hsl = hsl - hsl_old
 
     #f_holder = Constant(0.0)
+    #k_time = 0.0
     cb_force = Constant(0.0)
-
     y_vec_split = split(y_vec)
 
     for jj in range(no_of_states):
@@ -298,13 +304,31 @@ def fenics(sim_params,file_inputs,output_params,passive_params,hs_params,cell_io
 
         cb_force = cb_force + f_holder
 
-    Pactive = cb_force * as_tensor(f0[i]*f0[j], (i,j))
+    Pactive = cb_force * as_tensor(f0[i]*f0[j], (i,j)) #+ 0.25*cb_force * as_tensor(s0[i]*s0[j], (i,j))+ 0.25*cb_force * as_tensor(n0[i]*n0[j], (i,j))
+    #Pactive, cb_force = uflforms.TempActiveStress(af_time.af_time)
+
+    # Trying to save a stress file to view stress field on mesh
+    #stressfile << project(Pactive,TensorFunctionSpace(mesh, 'DG',0))
+    #trying to save cauchy stress
+    #cauchy_stress, Pff, alpha = project(uflforms.Stress(),TF, form_compiler_parameters={"representation":"uflacs"})
+
 
     # Automatic differentiation  #####################################################################################################
     F1 = derivative(Wp, w, wtest)*dx
     F2 = inner(Pactive, grad(v))*dx
-    F3 = derivative(Wvol, w, wtest)
-    F4 = -Kspring*inner(dot(u,n)*n,v)*ds(epiid)  # traction applied as Cauchy stress!, Pactive is 1PK
+    if(ispressurectrl):
+        pressure = Expression(("p"), p=0.0, degree=2)
+        F3 = inner(pressure*n, v)*ds(LVendoid)
+    else:
+        Wvol = uflforms.LVV0constrainedE()
+        F3 = derivative(Wvol, w, wtest)
+    #F4 = -Kspring*inner(dot(u,n)*n,v)*ds(epiid)  # traction applied as Cauchy stress!, Pactive is 1PK
+    L4 = inner(as_vector([c11[0], c11[1], 0.0]), u)*dx + \
+    	 inner(as_vector([0.0, 0.0, c11[2]]), cross(X, u))*dx + \
+    	 inner(as_vector([c11[3], 0.0, 0.0]), cross(X, u))*dx + \
+    	 inner(as_vector([0.0, c11[4], 0.0]), cross(X, u))*dx
+    F4 = derivative(L4, w, wtest)
+
     Ftotal = F1 + F2 + F3 + F4
 
     Jac1 = derivative(F1, w, dw)
@@ -320,7 +344,7 @@ def fenics(sim_params,file_inputs,output_params,passive_params,hs_params,cell_io
                     "boundary_conditions": bcs,
                     "Type": 0,
                     "mesh": mesh,
-                    "mode": 0
+                    "mode": 1
                     }
 
 
@@ -332,6 +356,10 @@ def fenics(sim_params,file_inputs,output_params,passive_params,hs_params,cell_io
     print("cavity-vol = ", LVCavityvol.vol)
 
     displacementfile = File(output_path + "u_disp.pvd")
+    stressfile = File(output_path + "Stress.pvd")
+    #cauchystressfile = File(output_path + "cauchystress.pvd")
+    hsl_file = File(output_path + "hsl_mesh.pvd")
+    alpha_file = File(output_path + "alpha_mesh.pvd")
     if(MPI.rank(comm) == 0):
         fdataPV = open(output_path + "PV_.txt", "w", 0)
         fdataCa = open(output_path + "calcium_.txt", "w", 0)
@@ -366,7 +394,7 @@ def fenics(sim_params,file_inputs,output_params,passive_params,hs_params,cell_io
         # Initialize all binding sites to off state
         y_vec_array[counter-2] = 1
 
-    Pff, alpha = uflforms.stress()
+    cauchy_stress, Pff, alpha = uflforms.stress()
 
     temp_DG = project(Pff, FunctionSpace(mesh, "DG", 1), form_compiler_parameters={"representation":"uflacs"})
     p_f = interpolate(temp_DG, Quad)
@@ -382,6 +410,9 @@ def fenics(sim_params,file_inputs,output_params,passive_params,hs_params,cell_io
     alphas = interpolate(temp_DG_1, Quad)
 
 
+############ TO DO ###########
+#     PRINT OUT F TERMS IN NEWTON ITERATION
+#     RENAME STRESS SO EACH TIMESTEP IS COLORED
     # Loading phase
     print("cavity-vol = ", LVCavityvol.vol)
     for lmbda_value in range(0, loading_number):
@@ -395,8 +426,21 @@ def fenics(sim_params,file_inputs,output_params,passive_params,hs_params,cell_io
         print "LV Volume" + str(V_cav)
         hsl_array_old = hsl_array
 
-        #solver.solvenonlinear()
-        solve(Ftotal == 0, w, bcs, J = Jac, form_compiler_parameters={"representation":"uflacs"})
+
+        #Trying to save before any loading to look at hsl
+        """displacementfile << w.sub(0)
+        stresstemp = project(Pactive,TensorFunctionSpace(mesh,'DG',0))
+        stresstemp.rename("Pactive","Pactive")
+        stressfile << stresstemp
+        hsl_temp = project(hsl,FunctionSpace(mesh,'DG',0))
+        hsl_temp.rename("hsl_temp","hsl")
+        hsl_file << hsl_temp
+        alpha_temp = project(alphas,FunctionSpace(mesh,'DG',0))
+        alpha_temp.rename("alpha_temp","alpha_temp")
+        alpha_file << alpha_temp"""
+
+        solver.solvenonlinear()
+        #solve(Ftotal == 0, w, bcs, J = Jac, form_compiler_parameters={"representation":"uflacs"})
         hsl_old.vector()[:] = project(hsl, Quad).vector().get_local()[:] # for active stress
 
         hsl_array = project(hsl, Quad).vector().get_local()[:]           # for Myosim
@@ -421,6 +465,16 @@ def fenics(sim_params,file_inputs,output_params,passive_params,hs_params,cell_io
 
             print >>fdataPV, 0.0, p_cav*0.0075 , 0.0, 0.0, V_cav, 0.0, 0.0, 0.0
             displacementfile << w.sub(0)
+            stresstemp = project(Pactive,TensorFunctionSpace(mesh,'DG',0))
+            stresstemp.rename("Pactive","Pactive")
+            stressfile << stresstemp
+            hsl_temp = project(hsl,FunctionSpace(mesh,'DG',0))
+            hsl_temp.rename("hsl_temp","hsl")
+            hsl_file << hsl_temp
+            alpha_temp = project(alphas,FunctionSpace(mesh,'DG',0))
+            alpha_temp.rename("alpha_temp","alpha_temp")
+            alpha_file << alpha_temp
+
         print("cavity-vol = ", LVCavityvol.vol)
         print("p_cav = ", uflforms.LVcavitypressure())
 
@@ -434,7 +488,7 @@ def fenics(sim_params,file_inputs,output_params,passive_params,hs_params,cell_io
     cell_ion = cell_ion_driver.cell_ion_driver(cell_ion_params)
 
     # Initialize calcium
-    calcium[0] = cell_ion.model.calculate_concentrations(0,0,fdataCa)
+    calcium[0] = cell_ion.model_class.calculate_concentrations(0,0,fdataCa)
 
     dumped_populations = np.zeros((no_of_time_steps+1, no_of_int_points, n_array_length))
 
@@ -570,6 +624,7 @@ def fenics(sim_params,file_inputs,output_params,passive_params,hs_params,cell_io
 
         # Initialize MyoSim solution holder
         y_vec_array_new = np.zeros(no_of_int_points*n_array_length)
+
        # Checking size of things passed if __name__ == '__main__':
         #print np.shape(hsl_array)
         #print np.shape(delta_hsl_array)
@@ -577,43 +632,70 @@ def fenics(sim_params,file_inputs,output_params,passive_params,hs_params,cell_io
         #print np.shape(y_vec_array_new)
 
         # Update calcium
-        calcium[counter] = cell_ion.model.calculate_concentrations(cycle,tstep,fdataCa)
+        calcium[counter] = cell_ion.model_class.calculate_concentrations(cycle,tstep,fdataCa)
+        #cb_force = homogeneous_stress.calculate_force(tstep)
+        #Pactive = cb_force * as_tensor(f0[i]*f0[j], (i,j))
+        #k_time = tstep
 
         # Now print out volumes, pressures, calcium
         if(MPI.rank(comm) == 0):
             print >>fdataPV, tstep, p_cav*0.0075 , Part*.0075, Pven*.0075, V_cav, V_ven, V_art, calcium[counter]
-            #np.save(output_path +"dumped_populations", dumped_populations)
-            #np.save(output_path + "tarray", tarray)
-            #np.save(output_path + "strarray", strarray)
-            #np.save(output_path + "hslarray", hslarray)
-            #np.save(output_path + "dumped_populations",dumped_populations)
-            #np.save(output_path + "pstress_array",pstrarray)
-            #np.save(output_path + "alpha_array",alphaarray)
-            #np.save(output_path + "calcium",calarray)
-            #np.save(output_path + "HSL",hslarray)
+            if save_output:
+                print "saving output"
+                np.save(output_path +"dumped_populations", dumped_populations)
+                np.save(output_path + "tarray", tarray)
+                np.save(output_path + "strarray", strarray)
+                np.save(output_path + "hslarray", hslarray)
+                #np.save(output_path + "dumped_populations",dumped_populations)
+                np.save(output_path + "pstress_array",pstrarray)
+                #np.save(output_path + "alpha_array",alphaarray)
+                np.save(output_path + "calcium",calarray)
+                np.save(output_path + "HSL",hslarray)
 
 
     # Going to try to loop through integration points in python, not in fenics script
-        y_vec_array_new = implement.update_simulation(hs, step_size, delta_hsl_array, hsl_array, y_vec_array, p_f_array, cb_f_array, calcium[counter], n_array_length)
-
-    #    y_vec_array = y_vec_array_new
-    #    print no_of_int_points
-    #    for k in range(no_of_int_points):
-    #        pop_holder = implement.update_simulation(hs, step_size, a_delta_hsl[counter], amir_hsl[counter], y_vec_array[k*n_array_length:(k+1)*n_array_length], p_f_array[k], cb_f_array[k], prev_ca[counter])
-
-    #        pop_holder = implement.update_simulation(hs, step_size, delta_hsl_array[k], hsl_array[k], y_vec_array[k*n_array_length:(k+1)*n_array_length], p_f_array[k], cb_f_array[k], prev_ca[counter])
-
-
-
-    #        y_vec_array_new[k*n_array_length:(k+1)*n_array_length] = pop_holder
+        y_vec_array_new = implement.update_simulation(hs, step_size, delta_hsl_array, hsl_array, y_vec_array, p_f_array, cb_f_array, calcium[counter], n_array_length, cell_time)
 
         y_vec_array = y_vec_array_new # for Myosim
 
         hsl_array_old = hsl_array
 
-        #solver.solvenonlinear()
+###########################################################################
+###########################################################################
+        # Trying to assemble before solving
+        #print "assembling F values"
+        #F1_values = assemble(F1, form_compiler_parameters={"representation":"uflacs"})
+        #F2_values = assemble(F2, form_compiler_parameters={"representation":"uflacs"})
+        #F3_values = assemble(F3, form_compiler_parameters={"representation":"uflacs"})
+        #F4_values = assemble(F4, form_compiler_parameters={"representation":"uflacs"})
+        #jac1_values = assemble(Jac1)
+        #jac2_values = assemble(Jac2)
+        #jac3_values = assemble(Jac3)
+        #jac4_values = assemble(Jac4)
+        #print "checking F values"
+        #if np.isnan(y_vec_array).any():
+        #    print "nan in populations array"
+        #if np.isnan(F1_values.array().astype(float)).any():
+        #    print "nan found in F1 assembly"
+        #if np.isnan(F2_values.array().astype(float)).any():
+        #    print "nan found in F2 assembly"
+        #if np.isnan(F3_values.array().astype(float)).any():
+        #    print "nan found in F3 assembly"
+        #if np.isnan(F4_values.array().astype(float)).any():
+        #    print "nan found in F4 assembly"
+        #if np.isnan(F4_values.array().astype(float)).any():
+        #    print "nan found in F4 assembly"
+        #if np.isnan(F4_values.array().astype(float)).any():
+        #    print "nan found in F4 assembly"
+        #if np.isnan(F4_values.array().astype(float)).any():
+        #    print "nan found in F4 assembly"
+        #if np.isnan(F4_values.array().astype(float)).any():
+        #    print "nan found in F4 assembly"
+###########################################################################
+###########################################################################
+        solver.solvenonlinear()
         #++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++
-        solve(Ftotal == 0, w, bcs, J = Jac, form_compiler_parameters={"representation":"uflacs"})
+        #solve(Ftotal == 0, w, bcs, J = Jac, form_compiler_parameters={"representation":"uflacs"})
         #++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++
         cb_f_array = project(cb_force, Quad).vector().get_local()[:]
 
@@ -641,6 +723,17 @@ def fenics(sim_params,file_inputs,output_params,passive_params,hs_params,cell_io
 
         counter += 1
         displacementfile << w.sub(0)
+        stresstemp = project(Pactive,TensorFunctionSpace(mesh,'DG',0))
+        stresstemp.rename("Pactive","Pactive")
+        stressfile << stresstemp
+        hsl_temp = project(hsl,FunctionSpace(mesh,'DG',0))
+        hsl_temp.rename("hsl_temp","hsl")
+        hsl_file << hsl_temp
+        alpha_temp = project(alphas,FunctionSpace(mesh,'DG',0))
+        alpha_temp.rename("alpha_temp","alpha_temp")
+        alpha_file << alpha_temp
+
+
         tarray.append(tstep)
 
 

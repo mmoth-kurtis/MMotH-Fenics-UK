@@ -4,10 +4,10 @@ import scipy.constants as scipy_constants
 from scipy.integrate import solve_ivp
 
 
-def evolve_kinetics(self, time_step, Ca_conc):
+def evolve_kinetics(self, time_step, Ca_conc, cell_time):
     """Updates kinetics, switches to different sub-functions as required"""
     if (self.kinetic_scheme == '3state_with_SRX'):
-        update_3state_with_SRX(self, time_step, Ca_conc)
+        update_3state_with_SRX(self, time_step, Ca_conc,cell_time)
 
 
 def return_fluxes(self, y, Ca_conc):
@@ -70,7 +70,7 @@ def return_fluxes(self, y, Ca_conc):
         return fluxes, rates
 
 
-def update_3state_with_SRX(self, time_step, Ca_conc):
+def update_3state_with_SRX(self, time_step, Ca_conc, cell_time):
     """ Updates kinetics for thick and thin filaments """
 
     # Pull out the myofilaments vector
@@ -98,6 +98,8 @@ def update_3state_with_SRX(self, time_step, Ca_conc):
     # Evolve the system
 
     sol = solve_ivp(derivs, [0, time_step], y, method='RK23')
+    #self.y[13] = 0.01*(1+np.sin((1.0/16.0)*cell_time+80.2))
+    #print self.y[13]
     self.y = sol.y[:, -1]
     self.n_on = y[-1]
     self.n_bound = np.sum(self.y[2 + np.arange(0, self.no_of_x_bins)])
