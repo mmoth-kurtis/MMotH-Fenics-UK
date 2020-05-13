@@ -6,7 +6,7 @@ import pandas as pd
 def update_simulation(self, time_step, delta_hsl, hsl, y0, pf, cbf, calcium, n_array_length, cell_time,set_data = 0):
 
     # Need to do some kinetics stuff
-    time_step = time_step/1000
+    time_step = time_step/1000.0
     # Update calcium
     #self.membr.evolve_kinetics(time_step, activation)
     #self.Ca_conc = self.membr.myofilament_Ca_conc

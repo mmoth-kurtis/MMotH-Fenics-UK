@@ -293,4 +293,4 @@ class Forms(object):
         T = F*S*F.T
 
         #return  P,S,T, alpha
-        return  T, Pff, alpha
+        return   Pff, alpha

@@ -11,6 +11,7 @@ import numpy as np
 import matplotlib.pyplot as plt
 from IPython import get_ipython
 from matplotlib.animation import FuncAnimation
+import time
 plt.style.use('seaborn-pastel')
 
 #(Commented out by Kurtis 10/9/2019, not sure what this does or if needed)
@@ -34,7 +35,7 @@ lang_flag = 'python'
 # For now, hard coding bin discretization information
 xmin = -12
 xmax = 12
-bin_width = 1.0
+bin_width = 0.5
 cb_domain = np.arange(xmin,xmax+bin_width,bin_width)
 num_bins = np.shape(cb_domain)
 
@@ -43,18 +44,21 @@ num_bins = np.shape(cb_domain)
 # Note, these arrays include info for every Gauss point
 fenics_pop_file = np.load(sim_dir + '/dumped_populations.npy')
 tarray = np.load(sim_dir + '/tarray.npy')
-tarray = tarray[:-1]
+#tarray = tarray[:-1]
 stress_array = np.load(sim_dir + '/strarray.npy')
+#stress_array = np.load(sim_dir + '/stress_array.npy')
+
 calcium = np.load(sim_dir + '/calcium.npy')
 #calcium = calcium[:,0]
 HSL = np.load(sim_dir + '/hslarray.npy')
+#HSL = np.load(sim_dir + '/HSL.npy')
 pstress = np.load(sim_dir + '/pstress_array.npy')
 # Define number of time steps and array length here
 sim_info = fenics_pop_file.shape
 num_timesteps = sim_info[0]
 num_int_points = sim_info[1]
 array_length = sim_info[2]
-gauss_point = 64
+gauss_point = 0
 data_range = np.shape(tarray)[0]
 # Look at how info is dumped from FEniCS. For now, hard code number of detached and attached states, and bins
 # Want to be able to visualize distributions, will need this info to set up arrays.
@@ -65,7 +69,7 @@ data_range = np.shape(tarray)[0]
 #bin_max
 
 fenics_pop_data = np.zeros((num_timesteps,array_length))
-"""for i in range(num_timesteps):
+for i in range(data_range):
 
     # Reading in information from just one Gauss point [i = timestep, 0 = gauss point, : is all pop info]
     # Which element is it from?
@@ -74,7 +78,7 @@ fenics_pop_data = np.zeros((num_timesteps,array_length))
     fenics_pop_data[i,1] = fenics_pop_file[i,gauss_point,1] # state 2 pops
     fenics_pop_data[i,2] = np.sum(fenics_pop_file[i,gauss_point,2:array_length-3]) # state 3
     fenics_pop_data[i,3] = fenics_pop_file[i,0,array_length-1]
-    fenics_pop_data[i,4:] = fenics_pop_file[i,0,4:array_length]"""
+    fenics_pop_data[i,4:] = fenics_pop_file[i,0,4:array_length]
 
 """ Not interested in myosim information at the moment
 myosim_pop_file = 'C:\\ProgramData\\Myosim\\MyoSim_output\\populations.txt'
@@ -86,10 +90,10 @@ myosim_summary_data = np.zeros((no_of_time_steps,2))
 myosim_summary_data[:,0:2] = np.loadtxt(myosim_summary_file, skiprows = 5, usecols = (0,2))
 myosim_rates = np.zeros((n_array_length-3,5))
 myosim_rates[:,0:5] = np.loadtxt(myosim_rates_file, skiprows = 1, usecols = (0,1,2,3,4))
-"""
 
-#fenics_rates_file = base_dir + sim_dir + 'rates.npy'
-"""
+
+fenics_rates_file = sim_dir + '/rates.npy'
+
 if lang_flag=='python':
     rates = np.load(fenics_rates_file, allow_pickle=True)
     r1 = rates.item().get('R1')
@@ -99,9 +103,9 @@ if lang_flag=='python':
 fenics_rates = np.zeros((array_length-3,5))
 #fenics_rates[:,0:5] = np.loadtxt(fenics_rates_file, skiprows = 1, usecols = (0,1,2,3,4))
 if lang_flag=='c++':
-    fenics_rates[:,0:5] = np.load(fenics_rates_file)"""
+    fenics_rates[:,0:5] = np.load(fenics_rates_file)
 #get_ipython().run_line_magic('matplotlib', 'qt')
-#get_ipython().run_line_magic('matplotlib', 'inline')
+#get_ipython().run_line_magic('matplotlib', 'inline')"""
 
 fig = plt.figure()
 #------------------------------------------------------------------------------
@@ -158,6 +162,7 @@ plt.ylabel("hsl (nm)")
 plt.subplot(423)
 print np.shape(pstress)
 plt.plot(tarray, pstress[0:data_range,gauss_point])
+plt.ylabel('Passive Stress (Pa)')
 #------------------------------------------------------------------------------
 #plt.subplot(423)
 #plt.scatter(myosim_rates[:,0], myosim_rates[:,1],color='k')
@@ -193,7 +198,7 @@ else:
 
 #------------------------------------------------------------------------------
 # Animate cross-bridges during simulation
-"""ax1 = plt.subplot(427,xlim=(xmin-1,xmax+1),ylim=(0-.001,0.01))
+ax1 = plt.subplot(427,xlim=(xmin-1,xmax+1),ylim=(-.001,0.3))
 #ax = plt.axes(xlim=(xmin,xmax),ylim=(0,1))
 line1, = ax1.plot([],[],lw=3)
 line2, = ax2.plot([],[])
@@ -207,15 +212,19 @@ def init():
 t, m = [], []
 y = np.zeros(np.shape(cb_domain))
 def animate(i):
-    y = fenics_pop_file[i,gauss_point,2:array_length-1]
-    m.append(HSL)
+    # array_length -1 for cpp, -2 for python
+    y = fenics_pop_file[i,gauss_point,2:array_length-2]
+    m.append(HSL[i,gauss_point])
+    print np.shape(cb_domain)
     t.append(tarray[i])
+    print np.shape(y)
     line[0].set_data(cb_domain,y)
     line[1].set_data(t,m)
-    return line"""
+    time.sleep(0.1)
+    return line
 
 
-#anim = FuncAnimation(fig, animate, init_func=init, frames = num_timesteps-1, interval = 1, blit=True)
+anim = FuncAnimation(fig, animate, init_func=init, frames = num_timesteps-1, interval = 1, blit=True)
 
 #mng = plt.get_current_fig_manager()
 #mng.frame.Maximize(True)

@@ -26,8 +26,8 @@ def fenics(sim_params,file_inputs,output_params,passive_params,hs_params,cell_io
     #------------------## Load in all information and set up simulation #-----------------
 
     ## Assign input/output parameters
-    #output_path = output_params["output_path"][0]
-    output_path = "./"
+    output_path = output_params["output_path"][0]
+    #output_path = "./"
     #input_path = file_inputs["input_directory_path"][0]
     casename = file_inputs["casename"][0]
     #casename = "New_mesh"
@@ -69,9 +69,6 @@ def fenics(sim_params,file_inputs,output_params,passive_params,hs_params,cell_io
     # Need to work out a general way to set this based on the scheme
     n_vector_indices = [[0,0], [1,1], [2,2+no_of_x_bins-1]]
 
-    # For now, specify calcium
-    #calcium_path = cell_ion_params["path_to_calcium"][0]
-
     #----------------------- Start setting up simulation ---------------------------------------------------------
     sim_duration = sim_params["sim_duration"][0]
     save_output = sim_params["save_output"][0]
@@ -88,16 +85,9 @@ def fenics(sim_params,file_inputs,output_params,passive_params,hs_params,cell_io
     #cycles = 1
 
     hsl0 = hs_params["initial_hs_length"][0]
-    #step_size = 0.5
     no_of_time_steps = int(cycles*BCL/step_size)
-    #no_of_time_steps = int(sim_duration/step_size)
     no_of_cell_time_steps = int(BCL/step_size)
-    #Ca_flag = 4
-    #constant_pCa = 6.5
 
-    # Loading calcium from previous simulation
-    #prev_ca = np.load(calcium_path)
-    #prev_ca = prev_ca[:,0]
 
     deg = 4
     parameters["form_compiler"]["quadrature_degree"]=deg
@@ -130,20 +120,26 @@ def fenics(sim_params,file_inputs,output_params,passive_params,hs_params,cell_io
     VQuadelem._quad_scheme = 'default'
     fiberFS = FunctionSpace(mesh, VQuadelem)
 
-    f00 = Function(fiberFS)
-    s00 = Function(fiberFS)
-    n00 = Function(fiberFS)
+    #f00 = Function(fiberFS)
+    #s00 = Function(fiberFS)
+    #n00 = Function(fiberFS)
+    f0 = Function(fiberFS)
+    s0 = Function(fiberFS)
+    n0 = Function(fiberFS)
     f.read(facetboundaries, casename+"/"+"facetboundaries")
 
-    f.read(f00, casename+"/"+"eF")
-    f0 = project(f00, VectorFunctionSpace(mesh, "CG", 1))
-    f0 = f0/sqrt(inner(f0,f0))
-    f.read(s00, casename+"/"+"eS")
-    s0 = project(s00, VectorFunctionSpace(mesh, "CG", 1))
-    s0 = s0/sqrt(inner(s0,s0))
-    f.read(n00, casename+"/"+"eN")
-    n0 = project(n00, VectorFunctionSpace(mesh, "CG", 1))
-    n0 = n0/sqrt(inner(n0,n0))
+    #f.read(f00, casename+"/"+"eF")
+    f.read(f0, casename+"/"+"eF")
+    #f0 = project(f00, VectorFunctionSpace(mesh, "CG", 1))
+    #f0 = f0/sqrt(inner(f0,f0))
+    #f.read(s00, casename+"/"+"eS")
+    f.read(s0, casename+"/"+"eS")
+    #s0 = project(s00, VectorFunctionSpace(mesh, "CG", 1))
+    #s0 = s0/sqrt(inner(s0,s0))
+    #f.read(n00, casename+"/"+"eN")
+    f.read(n0, casename+"/"+"eN")
+    #n0 = project(n00, VectorFunctionSpace(mesh, "CG", 1))
+    #n0 = n0/sqrt(inner(n0,n0))
 
     f.close()
     File(output_path + "facetboundaries.pvd") << facetboundaries
@@ -322,12 +318,12 @@ def fenics(sim_params,file_inputs,output_params,passive_params,hs_params,cell_io
     else:
         Wvol = uflforms.LVV0constrainedE()
         F3 = derivative(Wvol, w, wtest)
-    #F4 = -Kspring*inner(dot(u,n)*n,v)*ds(epiid)  # traction applied as Cauchy stress!, Pactive is 1PK
-    L4 = inner(as_vector([c11[0], c11[1], 0.0]), u)*dx + \
-    	 inner(as_vector([0.0, 0.0, c11[2]]), cross(X, u))*dx + \
-    	 inner(as_vector([c11[3], 0.0, 0.0]), cross(X, u))*dx + \
-    	 inner(as_vector([0.0, c11[4], 0.0]), cross(X, u))*dx
-    F4 = derivative(L4, w, wtest)
+    F4 = -Kspring*inner(dot(u,n)*n,v)*ds(epiid)  # traction applied as Cauchy stress!, Pactive is 1PK
+    #L4 = inner(as_vector([c11[0], c11[1], 0.0]), u)*dx + \
+    #	 inner(as_vector([0.0, 0.0, c11[2]]), cross(X, u))*dx + \
+    #	 inner(as_vector([c11[3], 0.0, 0.0]), cross(X, u))*dx + \
+    #	 inner(as_vector([0.0, c11[4], 0.0]), cross(X, u))*dx
+    #F4 = derivative(L4, w, wtest)
 
     Ftotal = F1 + F2 + F3 + F4
 
@@ -344,7 +340,7 @@ def fenics(sim_params,file_inputs,output_params,passive_params,hs_params,cell_io
                     "boundary_conditions": bcs,
                     "Type": 0,
                     "mesh": mesh,
-                    "mode": 1
+                    "mode": 0
                     }
 
 
@@ -394,7 +390,7 @@ def fenics(sim_params,file_inputs,output_params,passive_params,hs_params,cell_io
         # Initialize all binding sites to off state
         y_vec_array[counter-2] = 1
 
-    cauchy_stress, Pff, alpha = uflforms.stress()
+    Pff, alpha = uflforms.stress()
 
     temp_DG = project(Pff, FunctionSpace(mesh, "DG", 1), form_compiler_parameters={"representation":"uflacs"})
     p_f = interpolate(temp_DG, Quad)
@@ -409,10 +405,6 @@ def fenics(sim_params,file_inputs,output_params,passive_params,hs_params,cell_io
     temp_DG_1 = project(alpha, FunctionSpace(mesh, "DG", 1), form_compiler_parameters={"representation":"uflacs"})
     alphas = interpolate(temp_DG_1, Quad)
 
-
-############ TO DO ###########
-#     PRINT OUT F TERMS IN NEWTON ITERATION
-#     RENAME STRESS SO EACH TIMESTEP IS COLORED
     # Loading phase
     print("cavity-vol = ", LVCavityvol.vol)
     for lmbda_value in range(0, loading_number):
@@ -439,8 +431,8 @@ def fenics(sim_params,file_inputs,output_params,passive_params,hs_params,cell_io
         alpha_temp.rename("alpha_temp","alpha_temp")
         alpha_file << alpha_temp"""
 
-        solver.solvenonlinear()
-        #solve(Ftotal == 0, w, bcs, J = Jac, form_compiler_parameters={"representation":"uflacs"})
+        #solver.solvenonlinear()
+        solve(Ftotal == 0, w, bcs, J = Jac, form_compiler_parameters={"representation":"uflacs"})
         hsl_old.vector()[:] = project(hsl, Quad).vector().get_local()[:] # for active stress
 
         hsl_array = project(hsl, Quad).vector().get_local()[:]           # for Myosim
@@ -536,8 +528,8 @@ def fenics(sim_params,file_inputs,output_params,passive_params,hs_params,cell_io
             #print >>fdataPV, tstep, p_cav*0.0075 , V_cav, Myosim.Get_Ca()
 
 
-        Part = (1.0/Cao)*(V_art - Vart0);
-        Pven = (1.0/Cven)*(V_ven - Vven0);
+        Part = 1.0/Cao*(V_art - Vart0);
+        Pven = 1.0/Cven*(V_ven - Vven0);
         PLV = p_cav;
 
         if(MPI.rank(comm) == 0):
@@ -693,9 +685,9 @@ def fenics(sim_params,file_inputs,output_params,passive_params,hs_params,cell_io
         #    print "nan found in F4 assembly"
 ###########################################################################
 ###########################################################################
-        solver.solvenonlinear()
+        #solver.solvenonlinear()
         #++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++
-        #solve(Ftotal == 0, w, bcs, J = Jac, form_compiler_parameters={"representation":"uflacs"})
+        solve(Ftotal == 0, w, bcs, J = Jac, form_compiler_parameters={"representation":"uflacs"})
         #++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++
         cb_f_array = project(cb_force, Quad).vector().get_local()[:]
 
