@@ -318,12 +318,12 @@ def fenics(sim_params,file_inputs,output_params,passive_params,hs_params,cell_io
     else:
         Wvol = uflforms.LVV0constrainedE()
         F3 = derivative(Wvol, w, wtest)
-    F4 = -Kspring*inner(dot(u,n)*n,v)*ds(epiid)  # traction applied as Cauchy stress!, Pactive is 1PK
-    #L4 = inner(as_vector([c11[0], c11[1], 0.0]), u)*dx + \
-    #	 inner(as_vector([0.0, 0.0, c11[2]]), cross(X, u))*dx + \
-    #	 inner(as_vector([c11[3], 0.0, 0.0]), cross(X, u))*dx + \
-    #	 inner(as_vector([0.0, c11[4], 0.0]), cross(X, u))*dx
-    #F4 = derivative(L4, w, wtest)
+    #F4 = -Kspring*inner(dot(u,n)*n,v)*ds(epiid)  # traction applied as Cauchy stress!, Pactive is 1PK
+    L4 = inner(as_vector([c11[0], c11[1], 0.0]), u)*dx + \
+    	 inner(as_vector([0.0, 0.0, c11[2]]), cross(X, u))*dx + \
+    	 inner(as_vector([c11[3], 0.0, 0.0]), cross(X, u))*dx + \
+    	 inner(as_vector([0.0, c11[4], 0.0]), cross(X, u))*dx
+    F4 = derivative(L4, w, wtest)
 
     Ftotal = F1 + F2 + F3 + F4
 

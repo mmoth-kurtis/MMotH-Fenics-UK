@@ -58,7 +58,7 @@ sim_info = fenics_pop_file.shape
 num_timesteps = sim_info[0]
 num_int_points = sim_info[1]
 array_length = sim_info[2]
-gauss_point = 0
+gauss_point = 1000
 data_range = np.shape(tarray)[0]
 # Look at how info is dumped from FEniCS. For now, hard code number of detached and attached states, and bins
 # Want to be able to visualize distributions, will need this info to set up arrays.
