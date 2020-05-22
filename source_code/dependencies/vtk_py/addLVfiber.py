@@ -2,7 +2,7 @@ from dolfin import *
 import vtk as vtk
 from vtk_py import *
 
-def addLVfiber(mesh, V, casename, endo_angle, epi_angle,  casedir, isepiflip, isendoflip, isapexflip=False):
+def addLVfiber(mesh, V, F, casename, endo_angle, epi_angle, hsl0_endo, hsl0_epi, casedir, isepiflip, isendoflip, isapexflip=False):
 
 
 	fiberV = Function(V)
@@ -11,11 +11,12 @@ def addLVfiber(mesh, V, casename, endo_angle, epi_angle,  casedir, isepiflip, is
 	cV = Function(V)
 	lV = Function(V)
 	rV = Function(V)
+	hs = Function(F)
 
 	ugrid=vtk_py.convertXMLMeshToUGrid(mesh)
-	
+
 	pdata = vtk_py.convertUGridtoPdata(ugrid)
-	
+
         C = vtk_py.getcentroid(pdata)
 	if(isapexflip):
 	    ztop = pdata.GetBounds()[4]
@@ -50,20 +51,21 @@ def addLVfiber(mesh, V, casename, endo_angle, epi_angle,  casedir, isepiflip, is
 		pdata_epi = temp
 		pdata_epi = pdata_endo
 		pdata_endo = temp
-		
+
 
 	# Quad points
 	gdim = mesh.geometry().dim()
 	xdofmap = V.sub(0).dofmap().dofs()
 	ydofmap = V.sub(1).dofmap().dofs()
 	zdofmap = V.sub(2).dofmap().dofs()
+	hsldofmap = F.dofmap()
 
 	if(dolfin.dolfin_version() != '1.6.0'):
 		xq = V.tabulate_dof_coordinates().reshape((-1, gdim))
-		xq0 = xq[xdofmap]  
+		xq0 = xq[xdofmap]
 	else:
 		xq = V.dofmap().tabulate_all_coordinates(mesh).reshape((-1, gdim))
-		xq0 = xq[xdofmap]  
+		xq0 = xq[xdofmap]
 
 	# Create an unstructured grid of Gauss Points
 	points = vtk.vtkPoints()
@@ -82,16 +84,18 @@ def addLVfiber(mesh, V, casename, endo_angle, epi_angle,  casedir, isepiflip, is
 
 	CreateVertexFromPoint(ugrid)
 	addLocalProlateSpheroidalDirections(ugrid, pdata_endo, pdata_epi, type_of_support="cell", epiflip=isepiflip, endoflip=isendoflip, apexflip=isapexflip)
-	addLocalFiberOrientation(ugrid, endo_angle, epi_angle)
+	addLocalFiberOrientation(ugrid, endo_angle, epi_angle, hsl0_endo, hsl0_epi)
 
 	fiber_vector =  ugrid.GetCellData().GetArray("fiber vectors")
 	sheet_vector =  ugrid.GetCellData().GetArray("sheet vectors")
 	sheetnorm_vector =  ugrid.GetCellData().GetArray("sheet normal vectors")
-	
+	hsl_array = ugrid.GetCellData().GetArray("hsl0 values")
+	#print hsl_array
+
 	eCC_vector =  ugrid.GetCellData().GetArray("eCC")
 	eLL_vector =  ugrid.GetCellData().GetArray("eLL")
 	eRR_vector =  ugrid.GetCellData().GetArray("eRR")
- 
+	#print hsl_array
 	cnt = 0
 	for pt in xq0:
 
@@ -102,6 +106,9 @@ def addLVfiber(mesh, V, casename, endo_angle, epi_angle,  casedir, isepiflip, is
 		cvec = eCC_vector.GetTuple(cnt)
 		lvec = eLL_vector.GetTuple(cnt)
 		rvec = eRR_vector.GetTuple(cnt)
+
+		hsl_array_assignment = hsl_array.GetTuple(cnt)
+		#print hsl_array_assignment[0]
 
 		fvecnorm = sqrt(fvec[0]**2 + fvec[1]**2 + fvec[2]**2)
 		svecnorm = sqrt(svec[0]**2 + svec[1]**2 + svec[2]**2)
@@ -117,16 +124,15 @@ def addLVfiber(mesh, V, casename, endo_angle, epi_angle,  casedir, isepiflip, is
 		sheetV.vector()[xdofmap[cnt]] = svec[0]; sheetV.vector()[ydofmap[cnt]] = svec[1]; sheetV.vector()[zdofmap[cnt]] = svec[2];
 		sheetnormV.vector()[xdofmap[cnt]] = nvec[0]; sheetnormV.vector()[ydofmap[cnt]] = nvec[1]; sheetnormV.vector()[zdofmap[cnt]] = nvec[2];
 
-		cV.vector()[xdofmap[cnt]] = cvec[0];  cV.vector()[ydofmap[cnt]] = cvec[1]; cV.vector()[zdofmap[cnt]] = cvec[2]; 
-		lV.vector()[xdofmap[cnt]] = lvec[0];  lV.vector()[ydofmap[cnt]] = lvec[1]; lV.vector()[zdofmap[cnt]] = lvec[2]; 
-		rV.vector()[xdofmap[cnt]] = rvec[0];  rV.vector()[ydofmap[cnt]] = rvec[1]; rV.vector()[zdofmap[cnt]] = rvec[2]; 
-
-
+		cV.vector()[xdofmap[cnt]] = cvec[0];  cV.vector()[ydofmap[cnt]] = cvec[1]; cV.vector()[zdofmap[cnt]] = cvec[2];
+		lV.vector()[xdofmap[cnt]] = lvec[0];  lV.vector()[ydofmap[cnt]] = lvec[1]; lV.vector()[zdofmap[cnt]] = lvec[2];
+		rV.vector()[xdofmap[cnt]] = rvec[0];  rV.vector()[ydofmap[cnt]] = rvec[1]; rV.vector()[zdofmap[cnt]] = rvec[2];
+		#print cnt
+		#print hs.str()
+		#print fiberV.str()
+		hs.vector()[cnt] = hsl_array_assignment[0]
 		cnt += 1
-
 
 	writeXMLUGrid(ugrid, "fiber.vtu")
 
-	return fiberV, sheetV, sheetnormV, cV, lV, rV
-
-
+	return hs, fiberV, sheetV, sheetnormV, cV, lV, rV

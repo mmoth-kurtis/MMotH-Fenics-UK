@@ -294,3 +294,14 @@ class Forms(object):
 
         #return  P,S,T, alpha
         return   Pff, alpha
+
+    def return_radial_vec_ratio(self):
+
+        mesh = self.parameters["mesh"]
+        s0 = self.parameters["sheet"]
+        print s0[0]
+
+        X = SpatialCoordinate(mesh)
+        ratio = s0_evaluated.y()/s0_evaluated.x()
+
+        return ratio

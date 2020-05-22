@@ -27,17 +27,7 @@ def fenics(sim_params,file_inputs,output_params,passive_params,hs_params,cell_io
 
     ## Assign input/output parameters
     output_path = output_params["output_path"][0]
-    #output_path = "./"
-    #input_path = file_inputs["input_directory_path"][0]
     casename = file_inputs["casename"][0]
-    #casename = "New_mesh"
-    #json_casename = file_inputs["casename"][0]
-    #casename = rc._byteify(json_casename)
-
-    # Check that the output path exists. If it does not, create it and let user know
-    #if not os.path.exists(output_path):
-    #    print "Output path does not exist. Creating it now"
-    #    os.makedirs(output_path)
 
     # Assign parameters for active force calculation
     filament_compliance_factor = hs_params["myofilament_parameters"]["filament_compliance_factor"][0]
@@ -78,16 +68,12 @@ def fenics(sim_params,file_inputs,output_params,passive_params,hs_params,cell_io
         # For ventricle for now, specify number of cardiac cycles
         cycles = sim_params["sim_type"][1]
         meshfilename = sim_params["sim_type"][2]
-    # Cardiac cycle length and number of cycles will be general
-    # This will be tricky since cardiac period may change
-    # For now, just including this info in the input file
+
     BCL = sim_duration # ms
-    #cycles = 1
 
     hsl0 = hs_params["initial_hs_length"][0]
     no_of_time_steps = int(cycles*BCL/step_size)
     no_of_cell_time_steps = int(BCL/step_size)
-
 
     deg = 4
     parameters["form_compiler"]["quadrature_degree"]=deg
@@ -98,15 +84,16 @@ def fenics(sim_params,file_inputs,output_params,passive_params,hs_params,cell_io
     os.system("rm " + output_path + "*.vtu")
 
     #--------------- Load in mesh -------------------------------------
-    #meshfilename = rc_input_path + casename + ".hdf5"
-
     mesh = Mesh()
 
     f = HDF5File(mpi_comm_world(), meshfilename, 'r')
     f.read(mesh, casename, False)
 
     if casename == "ellipsoidal":
-        loading_number = 2;
+        loading_number = 26;
+        ugrid = vtk_py.convertXMLMeshToUGrid(mesh)
+        ugrid = vtk_py.rotateUGrid(ugrid, sx=0.1, sy=0.1, sz=0.1)
+        mesh = vtk_py.convertUGridToXMLMesh(ugrid)
         #don't need to do the vtk_py mesh stuff
     else: #assuming we are using a patient specific mesh
         ugrid = vtk_py.convertXMLMeshToUGrid(mesh)
@@ -116,32 +103,43 @@ def fenics(sim_params,file_inputs,output_params,passive_params,hs_params,cell_io
     no_of_int_points = 14 * np.shape(mesh.cells())[0]
 
     facetboundaries = MeshFunction("size_t", mesh, 2)
+    f.read(facetboundaries, casename+"/"+"facetboundaries")
+
+    fiberFS = VectorFunctionSpace(mesh, 'DG', 0)
     VQuadelem = VectorElement("Quadrature", mesh.ufl_cell(), degree=deg, quad_scheme="default")
     VQuadelem._quad_scheme = 'default'
     fiberFS = FunctionSpace(mesh, VQuadelem)
 
-    #f00 = Function(fiberFS)
-    #s00 = Function(fiberFS)
-    #n00 = Function(fiberFS)
+    """f00 = Function(fiberFS)
+    s00 = Function(fiberFS)
+    n00 = Function(fiberFS)"""
+
     f0 = Function(fiberFS)
     s0 = Function(fiberFS)
     n0 = Function(fiberFS)
-    f.read(facetboundaries, casename+"/"+"facetboundaries")
-
-    #f.read(f00, casename+"/"+"eF")
+    # these should be fiber vectors as Gauss points, and should be normalized
+    # projecting to a VectorFunctionSpace does not keep them normalized
     f.read(f0, casename+"/"+"eF")
-    #f0 = project(f00, VectorFunctionSpace(mesh, "CG", 1))
-    #f0 = f0/sqrt(inner(f0,f0))
-    #f.read(s00, casename+"/"+"eS")
     f.read(s0, casename+"/"+"eS")
+    f.read(n0, casename+"/"+"eN")
+    f.close()
+
+
+    """f0 = project(f00, VectorFunctionSpace(mesh, "CG", 1))
+    f0 = f0/sqrt(inner(f0, f0))
+    n0 = project(n00, VectorFunctionSpace(mesh, "CG", 1))
+    n0 = n0/sqrt(inner(n0, n0))
+    s0 = project(s00, VectorFunctionSpace(mesh, "CG", 1))
+    s0 = s0/sqrt(inner(s0, s0))"""
+    #f.read(f0, casename+"/"+"eF")
+
+    #f.read(s0, casename+"/"+"eS")
     #s0 = project(s00, VectorFunctionSpace(mesh, "CG", 1))
     #s0 = s0/sqrt(inner(s0,s0))
-    #f.read(n00, casename+"/"+"eN")
-    f.read(n0, casename+"/"+"eN")
+    #f.read(n0, casename+"/"+"eN")
     #n0 = project(n00, VectorFunctionSpace(mesh, "CG", 1))
     #n0 = n0/sqrt(inner(n0,n0))
 
-    f.close()
     File(output_path + "facetboundaries.pvd") << facetboundaries
     topid = 4
     LVendoid = 2

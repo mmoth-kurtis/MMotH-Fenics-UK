@@ -139,7 +139,7 @@ plt.xlabel('time (s)')
 plt.ylabel("Proportions")
 #------------------------------------------------------------------------------
 plt.subplot(426)
-plt.plot(tarray, stress_array[0:data_range,gauss_point])
+plt.plot(tarray, stress_array[0:data_range,:])
 #plt.scatter(myosim_summary_data[:,0], myosim_summary_data[:,1],color='r')
 #plt.scatter(myosim_summary_data[::10,0], myosim_summary_data[::10,1],color='r')
 plt.xlabel('time (s)')

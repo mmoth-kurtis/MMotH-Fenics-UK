@@ -62,10 +62,12 @@ def sim_driver(input_file_name):
     # Figure out which script needs to be executed
     if sim_params["sim_geometry"][0] == "ventricle":
         fenics_script = "fenics_LV"
-        print fenics_script
-
+    elif sim_params["sim_geometry"][0] == "ventricle_lclee_2":
+        fenics_script = "fenics_LV_LCLEE_2"
     elif sim_params["sim_geometry"][0] == "single_cell":
         fenics_script = "fenics_singlecell_isometric"
+    else:
+        sys.exit("Script does not exist for specified Geometry. Please include an existing fenics script.")
 
     # For now, going to have to import appropriate script as a module and wrap the whole
     # thing in a function so that inputs and output can be passed
