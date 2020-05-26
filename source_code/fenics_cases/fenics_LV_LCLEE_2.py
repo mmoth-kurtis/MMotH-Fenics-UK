@@ -32,13 +32,6 @@ def fenics(sim_params,file_inputs,output_params,passive_params,hs_params,cell_io
     #input_path = file_inputs["input_directory_path"][0]
     casename = file_inputs["casename"][0]
     #casename = "New_mesh"
-    #json_casename = file_inputs["casename"][0]
-    #casename = rc._byteify(json_casename)
-
-    # Check that the output path exists. If it does not, create it and let user know
-    #if not os.path.exists(output_path):
-    #    print "Output path does not exist. Creating it now"
-    #    os.makedirs(output_path)
 
     # Assign parameters for active force calculation
     filament_compliance_factor = hs_params["myofilament_parameters"]["filament_compliance_factor"][0]
@@ -107,7 +100,7 @@ def fenics(sim_params,file_inputs,output_params,passive_params,hs_params,cell_io
     f.read(mesh, casename, False)
 
     if casename == "ellipsoidal":
-        loading_number = 42;
+        #loading_number = 25;
         ugrid = vtk_py.convertXMLMeshToUGrid(mesh)
         ugrid = vtk_py.rotateUGrid(ugrid, sx=0.1, sy=0.1, sz=0.1)
         mesh = vtk_py.convertUGridToXMLMesh(ugrid)
@@ -255,26 +248,10 @@ def fenics(sim_params,file_inputs,output_params,passive_params,hs_params,cell_io
 
     	def eval(self, values, x):
             nvec = self.param["nvec"]
-            #udisp = self.param["disp"]
-            #print x[0]
-            #print x[1]
-            #print x[2]
-
-            #temp_displacement = udisp(x)
-            #temp_displacement_2 = udisp.vector().array()
-            #print temp_displacement
-
             rdir = np.array(nvec(x))/np.linalg.norm(nvec(x))
 
             scalefactor = self.param["scalefactor"]
-            #ratio = rdir[1]/rdir[0]
-            #print "ratio is " + str(ratio)
-            #return ratio
-            #print u.type()
 
-            #values[0] = temp_displacement[0]
-            #values[1] = ratio*values[0]
-            #values[2] = 0.0
 
             values[0] = scalefactor.a*rdir[0]
             values[1] = scalefactor.a*rdir[1]
@@ -287,20 +264,29 @@ def fenics(sim_params,file_inputs,output_params,passive_params,hs_params,cell_io
 
 
     s0CG.set_allow_extrapolation(True)
-    scalefactor = Expression('a', a=0.0, degree=1)
-    param={"nvec": s0CG,
-           "scalefactor": scalefactor};
+    scalefactor_epi = Expression('a', a=0.0, degree=1)
+    scalefactor_endo = Expression('a', a=0.0, degree=1)
+    param_endo={"nvec": s0CG,
+           "scalefactor": scalefactor_endo
+            };
+    param_epi={"nvec": s0CG,
+           "scalefactor": scalefactor_epi
+            };
 
-    radexp = MyExpr(param=param, degree=1)
+    #radexp = MyExpr(param=param, degree=1)
+    endo_exp = MyExpr(param=param_endo, degree=1)
+    epi_exp = MyExpr(param=param_epi, degree=1)
     ###################################################################################################
 
     # edgeboundaries 1 is epi, 2 is endo
-    endoring = pick_endoring_bc(method="cpp")(edgeboundaries, 1)
+    endoring = pick_endoring_bc(method="cpp")(edgeboundaries, 2)
+    epiring = pick_endoring_bc(method="cpp")(edgeboundaries, 1)
     # CKM trying to have radial expansion for entire top
     #endoring = pick_endoring_bc(method="cpp")(facetboundaries, topid)
     #bcedge = DirichletBC(W.sub(0), Expression(("0.0", "0.0", "0.0"), degree = 0), endoring, method="pointwise")
-    bcedge = DirichletBC(W.sub(0), radexp, endoring, method="pointwise")
-    bcs = [bctop, bcedge]
+    bcedge_endo = DirichletBC(W.sub(0), endo_exp, endoring, method="pointwise")
+    bcedge_epi = DirichletBC(W.sub(0), epi_exp, epiring, method="pointwise")
+    bcs = [bctop, bcedge_endo, bcedge_epi]
     #bcs = [bctop]
 
     w = Function(W)
@@ -316,16 +302,6 @@ def fenics(sim_params,file_inputs,output_params,passive_params,hs_params,cell_io
       	(u,p, pendo,c11,lm11) = split(w)
         #(u,p, pendo,c11,lm11) = w.split(True)
       	(v,q, qendo,v11,vm11) = TestFunctions(W)
-
-    #u.set_allow_extrapolation(True)
-    #param={"nvec": s0CG,
-    #        "scalefactor": scalefactor}
-           #"disp": u};
-
-    #radexp = MyExpr(param=param, degree=1)
-    #endoring = pick_endoring_bc(method="cpp")(facetboundaries, topid)
-    #bcedge = DirichletBC(W.sub(0), radexp, endoring, method="pointwise")
-    #bcs = [bctop, bcedge]
 
     if(ispressurectrl):
     	pendo = []
@@ -409,12 +385,6 @@ def fenics(sim_params,file_inputs,output_params,passive_params,hs_params,cell_io
     Pactive = cb_force * as_tensor(f0[i]*f0[j], (i,j)) #+ 0.25*cb_force * as_tensor(s0[i]*s0[j], (i,j))+ 0.25*cb_force * as_tensor(n0[i]*n0[j], (i,j))
     #Pactive, cb_force = uflforms.TempActiveStress(af_time.af_time)
 
-    # Trying to save a stress file to view stress field on mesh
-    #stressfile << project(Pactive,TensorFunctionSpace(mesh, 'DG',0))
-    #trying to save cauchy stress
-    #cauchy_stress, Pff, alpha = project(uflforms.Stress(),TF, form_compiler_parameters={"representation":"uflacs"})
-
-
     # Automatic differentiation  #####################################################################################################
     F1 = derivative(Wp, w, wtest)*dx
     F2 = inner(Pactive, grad(v))*dx
@@ -431,20 +401,16 @@ def fenics(sim_params,file_inputs,output_params,passive_params,hs_params,cell_io
     F4 = derivative(L4, w, wtest)
     F5 = -Kspring*inner(dot(u,n)*n,v)*ds(epiid)  # traction applied as Cauchy stress!, Pactive is 1PK
 
-#------------- Kurtis attempt at lm ___________________________________
-    # Define an F6 for lagrange multiplier for top
-    #lmratio = interpolate(s0)
-    #L6 = inner(as_vector([(s00.vector().array()[1]/s00.vector().array()[0])*lm11[0], -lm11[1], 0.0]), u)*ds(topid)
-    #F6 = derivative(L6, w, wtest)
-    Ftotal = F1 + F2 + F3 #+ F6 + F4 + F5
+
+    Ftotal = F1 + F2 + F3 # + F4 + F5
 
     Jac1 = derivative(F1, w, dw)
     Jac2 = derivative(F2, w, dw)
     Jac3 = derivative(F3, w, dw)
-    #Jac4 = derivative(F4, w, dw)
+    Jac4 = derivative(F4, w, dw)
     Jac5 = derivative(F5, w, dw)
-    #Jac6 = derivative(F6, w, dw)
-    Jac = Jac1 + Jac2 + Jac3 #+ Jac6 + Jac4 + Jac5
+
+    Jac = Jac1 + Jac2 + Jac3 # + Jac4 + Jac5
     ##################################################################################################################################
 
     solverparams = {"Jacobian": Jac,
@@ -522,9 +488,9 @@ def fenics(sim_params,file_inputs,output_params,passive_params,hs_params,cell_io
     print("cavity-vol = ", LVCavityvol.vol)
     for lmbda_value in range(0, loading_number):
 
-	# Scale factor for epicardial edge BC
-	scalefactor.a = lmbda_value*0.002
-
+        scalefactor_epi.a = lmbda_value*0.002
+        scalefactor_endo.a = lmbda_value*0.00345238
+#        print "scale factor is " + str(scalefactor.a)
         print "Loading phase step = ", lmbda_value
 
         LVCavityvol.vol += 0.004 #LCL change to smaller value
@@ -594,7 +560,7 @@ def fenics(sim_params,file_inputs,output_params,passive_params,hs_params,cell_io
     hs = half_sarcomere.half_sarcomere(hs_params,1)
 
     # Initialize cell ion module
-    print cell_ion_params
+    #print cell_ion_params
     cell_ion = cell_ion_driver.cell_ion_driver(cell_ion_params)
 
     # Initialize calcium
@@ -748,7 +714,8 @@ def fenics(sim_params,file_inputs,output_params,passive_params,hs_params,cell_io
         #cb_force = homogeneous_stress.calculate_force(tstep)
         #Pactive = cb_force * as_tensor(f0[i]*f0[j], (i,j))
         #k_time = tstep
-        scalefactor.a = 0.93*np.sin((3.14*(np.exp(-((((tstep+17*step_size)/850.)-.01)*23.5)**2.35)))*2*3.14/360.)
+        scalefactor_epi.a = 0.93*np.sin((3.14*(np.exp(-((((tstep+20.*step_size)/850.)-.01)*23.5)**2.35)))*2*3.14/360.)
+        scalefactor_endo.a = 1.56*np.sin((3.14*(np.exp(-((((tstep+20.*step_size)/850.)-.01)*23.5)**2.35)))*2*3.14/360.)
         #print "scale factor is " + str(scalefactor.a)
 
 
@@ -776,38 +743,7 @@ def fenics(sim_params,file_inputs,output_params,passive_params,hs_params,cell_io
         hsl_array_old = hsl_array
 
 ###########################################################################
-###########################################################################
-        # Trying to assemble before solving
-        #print "assembling F values"
-        #F1_values = assemble(F1, form_compiler_parameters={"representation":"uflacs"})
-        #F2_values = assemble(F2, form_compiler_parameters={"representation":"uflacs"})
-        #F3_values = assemble(F3, form_compiler_parameters={"representation":"uflacs"})
-        #F4_values = assemble(F4, form_compiler_parameters={"representation":"uflacs"})
-        #jac1_values = assemble(Jac1)
-        #jac2_values = assemble(Jac2)
-        #jac3_values = assemble(Jac3)
-        #jac4_values = assemble(Jac4)
-        #print "checking F values"
-        #if np.isnan(y_vec_array).any():
-        #    print "nan in populations array"
-        #if np.isnan(F1_values.array().astype(float)).any():
-        #    print "nan found in F1 assembly"
-        #if np.isnan(F2_values.array().astype(float)).any():
-        #    print "nan found in F2 assembly"
-        #if np.isnan(F3_values.array().astype(float)).any():
-        #    print "nan found in F3 assembly"
-        #if np.isnan(F4_values.array().astype(float)).any():
-        #    print "nan found in F4 assembly"
-        #if np.isnan(F4_values.array().astype(float)).any():
-        #    print "nan found in F4 assembly"
-        #if np.isnan(F4_values.array().astype(float)).any():
-        #    print "nan found in F4 assembly"
-        #if np.isnan(F4_values.array().astype(float)).any():
-        #    print "nan found in F4 assembly"
-        #if np.isnan(F4_values.array().astype(float)).any():
-        #    print "nan found in F4 assembly"
-###########################################################################
-###########################################################################
+
         #solver.solvenonlinear()
         #++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++
         solve(Ftotal == 0, w, bcs, J = Jac, form_compiler_parameters={"representation":"uflacs"})
