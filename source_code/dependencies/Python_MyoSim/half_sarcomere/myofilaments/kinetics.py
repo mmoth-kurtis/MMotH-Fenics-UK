@@ -97,10 +97,10 @@ def update_3state_with_SRX(self, time_step, Ca_conc, cell_time):
 
     # Evolve the system
 
-    #sol = solve_ivp(derivs, [0, time_step], y, method='RK23')
-    self.y[26] = 0.01*(1+np.sin((1.0/16.0)*cell_time+80.2))
+    sol = solve_ivp(derivs, [0, time_step], y, method='RK23')
+    #self.y[26] = 0.01*(1+np.sin((1.0/16.0)*cell_time+80.2))
     #print self.y[13]
-    #self.y = sol.y[:, -1]
+    self.y = sol.y[:, -1]
     self.n_on = y[-1]
     self.n_bound = np.sum(self.y[2 + np.arange(0, self.no_of_x_bins)])
 

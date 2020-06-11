@@ -18,6 +18,9 @@ def fenics(sim_params,file_inputs,output_params,passive_params,hs_params,cell_io
     global i
     global j
 
+    output_path = output_params["output_path"][0]
+    displacementfile = File(output_path + "u_disp.pvd")
+
     filament_compliance_factor = hs_params["myofilament_parameters"]["filament_compliance_factor"][0]
 #    filament_compliance_factor = 0.5
 
@@ -66,6 +69,9 @@ def fenics(sim_params,file_inputs,output_params,passive_params,hs_params,cell_io
     Ca_flag = 4
     constant_pCa = 6.5
 
+    fdataCa = open(output_path + "calcium_.txt", "w", 0)
+
+
     #prev_ca = np.load("calcium_10.npy")
     #prev_ca = prev_ca[:,0]
 
@@ -74,7 +80,7 @@ def fenics(sim_params,file_inputs,output_params,passive_params,hs_params,cell_io
     hs = half_sarcomere.half_sarcomere(hs_params,1)
     cell_ion = cell_ion_driver.cell_ion_driver(cell_ion_params)
     calcium = np.zeros(time_steps)
-    calcium[0] = cell_ion.model.calculate_concentrations(0,0)
+    calcium[0] = cell_ion.model_class.calculate_concentrations(0,0,fdataCa)
     parameters["form_compiler"]["quadrature_degree"]=2
     parameters["form_compiler"]["representation"] = "quadrature"
     #
@@ -163,7 +169,7 @@ def fenics(sim_params,file_inputs,output_params,passive_params,hs_params,cell_io
     bcfix = DirichletBC(W.sub(0), Constant((0.0, 0.0, 0.0)), fix, method="pointwise") # at one vertex u = v = w = 0
     bclower= DirichletBC(W.sub(0).sub(2), Constant((0.0)), facetboundaries, 4)        # u3 = 0 on lower face
     bcfront= DirichletBC(W.sub(0).sub(1), Constant((0.0)), facetboundaries, 5)        # u2 = 0 on front face
-    bcs = [bcleft, bcfix, bclower, bcfront]
+    bcs = [bcleft, bclower, bcfront, bcright]
 
     du,dp = TrialFunctions(W)
     w = Function(W)
@@ -204,8 +210,8 @@ def fenics(sim_params,file_inputs,output_params,passive_params,hs_params,cell_io
     #Active force calculation------------------------------------------------------
     y_vec = Function(Quad_vectorized_Fspace)
     hsl = sqrt(dot(f0, Cmat*f0))*hsl0
-    #hsl_old = Function(Quad)
-    hsl_old = hsl
+    hsl_old = Function(Quad)
+    #hsl_old = hsl
     delta_hsl = hsl - hsl_old
     #delta_hsl = 0.0
 
@@ -283,9 +289,9 @@ def fenics(sim_params,file_inputs,output_params,passive_params,hs_params,cell_io
 
     y_vec_array = y_vec.vector().get_local()[:]
 
-    #hsl_array = project(sqrt(dot(f0, Cmat*f0))*hsl0, Quad).vector().get_local()[:]
+    hsl_array = project(hsl, Quad).vector().get_local()[:]
 
-    hsl_array = np.ones(no_of_int_points)*hsl0
+    #hsl_array = np.ones(no_of_int_points)*hsl0
     delta_hsl_array = np.zeros(no_of_int_points)
 
     for counter in range(0,n_array_length * no_of_int_points,n_array_length):
@@ -319,8 +325,10 @@ def fenics(sim_params,file_inputs,output_params,passive_params,hs_params,cell_io
     #delta_hsls = np.zeros((time_steps,24))
     for l in range(time_steps):
 
+
+
         tarray.append(t)
-        hslarray.append(hsl_array[0])
+        #hslarray.append(hsl_array[0])
         #strarray.append(cb_f_array[0])
         #pstrarray.append(p_f_array[0])
 
@@ -337,34 +345,45 @@ def fenics(sim_params,file_inputs,output_params,passive_params,hs_params,cell_io
         #y_vec_array_new[k*n_array_length:(k+1)*n_array_length] = pop_holder
 
         # Right now, not general. The calcium depends on cycle number, just saying 0
-        calcium[l] = cell_ion.model.calculate_concentrations(0,t)
+        cycle = 0
+        calcium[l] = cell_ion.model_class.calculate_concentrations(cycle,t,fdataCa)
+
+        #calcium[l] = cell_ion.model.calculate_concentrations(0,t)
 
         # Looping through integration points within Python Myosim, not here
         # Debugging, checking if y_input matches y_output between steps
         #print y_vec_array[0:53]
-        y_vec_array_new = implement.update_simulation(hs, step_size, delta_hsl_array, hsl_array, y_vec_array, p_f_array, cb_f_array, calcium[l], n_array_length)
+        y_vec_array_new = implement.update_simulation(hs, step_size, delta_hsl_array, hsl_array, y_vec_array, p_f_array, cb_f_array, calcium[l], n_array_length, t)
     #    print y_vec_array_new[0:53]
         y_vec_array = y_vec_array_new # for Myosim
     #    print y_vec_array[0:53]
-        #hsl_array_old = hsl_array
+        hsl_array_old = hsl_array
 
-        #solve(Ftotal == 0, w, bcs, J = Jac, form_compiler_parameters={"representation":"uflacs"})
+        solve(Ftotal == 0, w, bcs, J = Jac, form_compiler_parameters={"representation":"uflacs"})
+        displacementfile << w.sub(0)
 
-        #hsl_old.vector()[:] = project(hsl, Quad).vector().get_local()[:] # for PDE
+        hsl_old.vector()[:] = project(hsl, Quad).vector().get_local()[:] # for PDE
 
-        #hsl_array = project(hsl, Quad).vector().get_local()[:]           # for Myosim
+        hsl_array = project(hsl, Quad).vector().get_local()[:]           # for Myosim
 
-        #delta_hsl_array = project(sqrt(dot(f0, Cmat*f0))*hsl0, Quad).vector().get_local()[:] - hsl_array_old # for Myosim
+        delta_hsl_array = project(sqrt(dot(f0, Cmat*f0))*hsl0, Quad).vector().get_local()[:] - hsl_array_old # for Myosim
 
         #delta_hsls[l] = delta_hsl_array
-
+        temp_DG = project(Pff, FunctionSpace(mesh, "DG", 1), form_compiler_parameters={"representation":"uflacs"})
+        p_f = interpolate(temp_DG, Quad)
+        p_f_array = p_f.vector().get_local()[:]
 
         cb_f_array = project(cb_force, Quad).vector().get_local()[:]
         strarray.append(cb_f_array[0])
+        pstrarray.append(p_f_array[0])
+        hslarray.append(hsl_array[0]+delta_hsl_array[0])
 
         #print(cb_f_array)
 
-
+        if t < 10:
+            u_D.u_D += .01
+        else:
+            u_D.u_D = u_D.u_D
         t = t + step_size
 
         calarray.append(hs.Ca_conc*np.ones(no_of_int_points))
@@ -413,5 +432,6 @@ def fenics(sim_params,file_inputs,output_params,passive_params,hs_params,cell_io
     "calarray": calarray,
     "hsl": hslarray
     }
+    fdataCa.close()
 
     return(outputs)

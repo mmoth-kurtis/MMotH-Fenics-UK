@@ -152,6 +152,8 @@ class Forms(object):
         Kappa = self.parameters["Kappa"]
         isincomp = self.parameters["incompressible"]
         Cmat = self.Cmat()
+        phi_m = self.parameters["phi_m"][0]
+        phi_g = self.parameters["phi_g"][0]
 
         if(isincomp):
             p = self.parameters["pressure_variable"]
@@ -165,8 +167,8 @@ class Forms(object):
         Efn = inner(f0, Ea*n0)
         Ens = inner(n0, Ea*s0)
 
-        #alpha = sqrt(2.0 * Eff + 1.0)
-        alpha = sqrt(dot(f0, Cmat*f0))
+        alpha = sqrt(2.0 * Eff + 1.0)
+        #alpha = sqrt(dot(f0, Cmat*f0))
 
 
     		#QQ = bff*pow(Eff,2.0) + bfx*(pow(Ess,2.0)+ pow(Enn,2.0)+ 2.0*pow(Ens,2.0)) + bxx*(2.0*pow(Efs,2.0) + 2.0*pow(Efn,2.0))
@@ -179,13 +181,18 @@ class Forms(object):
 
         Wp_m = C2*(exp(QQ_m) -  1.0)
 
+        Wp_m_weighted = phi_m*Wp_m
+
         if(isincomp):
             Wp_c = C/2.0*(exp(QQ_c) -  1.0) - p*(self.J() - 1.0)
         else:
             Wp_c = C/2.0*(exp(QQ_c) -  1.0) + Kappa/2.0*(self.J() - 1.0)**2.0
 
-        Wp = Wp_m + Wp_c
+        Wp_c_weighted = phi_g*Wp_c
 
+        #Wp = Wp_m + Wp_c
+        #Wp = Wp_m_weighted + Wp_c_weighted
+        Wp = Wp_c
         return Wp
 
 
@@ -246,6 +253,10 @@ class Forms(object):
         e2 = Constant((0.0, 1.0, 0.0))
         e3 = Constant((0.0, 0.0, 1.0))
 
+        C = self.parameters["c"][0]
+        bff = self.parameters["bf"][0]
+        bfx = self.parameters["bt"][0]
+        bxx = self.parameters["bfs"][0]
 
         f0 = self.parameters["fiber"]
         s0 = self.parameters["sheet"]
@@ -253,6 +264,8 @@ class Forms(object):
 
         C2 = self.parameters["c2"][0]
         C3 = self.parameters["c3"][0]
+        phi_m = self.parameters["phi_m"][0]
+        phi_g = self.parameters["phi_g"][0]
         isincomp = self.parameters["incompressible"]
 
         if(isincomp):
@@ -264,7 +277,15 @@ class Forms(object):
         J = self.J()
         Ea = self.Emat()
 
+        # Make it a variable to try to differentiate wrt?
+        Ea = variable(Ea)
+
         Eff = inner(f0, Ea*f0)
+        Ess = inner(s0, Ea*s0)
+        Enn = inner(n0, Ea*n0)
+        Efs = inner(f0, Ea*s0)
+        Efn = inner(f0, Ea*n0)
+        Ens = inner(n0, Ea*s0)
 
         alpha = sqrt(2.0 * Eff + 1.0)
 
@@ -272,16 +293,30 @@ class Forms(object):
         Q = C3*(alpha - 1.0)**2.0
 
         Sff = 2.0 * C2 * C3 * (1.0 - 1.0/alpha) * exp(Q)
+        Sff_weighted = Sff*phi_m
 
+        # Calculate Guccione passive stress?
+        Qbulk = bff*Eff**2.0 + bfx*(Ess**2.0 + Enn**2.0 + 2.0*Ens**2.0) + bxx*(2.0*Efs**2.0 + 2.0*Efn**2.0)
 
+        Wp_c = C/2.0*(exp(Qbulk) -  1.0) - p*(self.J() - 1.0)
+        Wp_c_weighted = Wp_c*phi_g
+
+        sbulk = diff(Wp_c_weighted,Ea)
+
+        #passive stress in fiber direction?
+        Sbulk_f = inner(f0,sbulk*f0)
+        sbulk_flocal = as_tensor([[Sbulk_f, 0.0, 0.0], [0.0, 0.0, 0.0], [0.0, 0.0, 0.0]])
         #S_local = as_tensor([[Sff, Sfs, Sfn], [Sfs, Sss, Sns], [Sfn, Sns, Snn]])
 
-        S_local = as_tensor([[Sff, 0.0, 0.0], [0.0, 0.0, 0.0], [0.0, 0.0, 0.0]])
+        #S_local = as_tensor([[Sff, 0.0, 0.0], [0.0, 0.0, 0.0], [0.0, 0.0, 0.0]])
+        S_local = as_tensor([[Sff_weighted, 0.0, 0.0], [0.0, 0.0, 0.0], [0.0, 0.0, 0.0]])
 
         TransMatrix = as_tensor(f0[i]*e1[j], (i,j)) + as_tensor(s0[i]*e2[j], (i,j)) + as_tensor(n0[i]*e3[j], (i,j))
 
         S_global = as_tensor(TransMatrix[i,k]*TransMatrix[j,l]*S_local[k,l],(i,j))
 
+        # guccione global
+        S_bulk_global = as_tensor(TransMatrix[i,k]*TransMatrix[j,l]*sbulk_flocal[k,l],(i,j))
         S = S_global
         #S = S_local
 
@@ -289,11 +324,15 @@ class Forms(object):
         P = F*S
         Pff =  inner(f0,P*f0)
 
+        Pbulk = F*S_bulk_global
+        Pbulkf = inner(f0,Pbulk*f0)
+
         #T = F*S*F.T - p*I
         T = F*S*F.T
 
         #return  P,S,T, alpha
-        return   Pff, alpha
+        #return   Pbulkf, Pff, alpha
+        return Pff, alpha
 
     def return_radial_vec_ratio(self):
 

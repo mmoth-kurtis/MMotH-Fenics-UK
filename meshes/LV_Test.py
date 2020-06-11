@@ -9,9 +9,12 @@ from dolfin import *
 from mpi4py import MPI as pyMPI
 
 def pig_lv():
-
+	#print "starting pig_LV"
 	casename = "ellipsoidal" #"New_mesh" #"ellipsoidal_from_MRI"
 	meshfilename =  casename + ".vtk" #"ellipsoidal.vtk"#
+
+	print meshfilename
+
 
 	outdir = "./" +casename + "/"
 	directory = os.getcwd() + '/' +  casename + "/"
@@ -52,7 +55,7 @@ def pig_lv():
 	hslFS = FunctionSpace(mesh, Quadelem)
 	isepiflip = False
 	isendoflip = True
-	endo_angle = 60; epi_angle = -60; casedir="./";
+	endo_angle = 30; epi_angle = -30; casedir="./";
 	hsl0_endo = 895.0
 	hsl0_epi = 955.0
 
@@ -89,5 +92,5 @@ def pig_lv():
 
 
 	return 0
-
+print "starting lvtest?"
 s = pig_lv()

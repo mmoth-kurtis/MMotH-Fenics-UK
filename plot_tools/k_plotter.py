@@ -58,7 +58,7 @@ sim_info = fenics_pop_file.shape
 num_timesteps = sim_info[0]
 num_int_points = sim_info[1]
 array_length = sim_info[2]
-gauss_point = 1000
+gauss_point = 1
 data_range = np.shape(tarray)[0]
 # Look at how info is dumped from FEniCS. For now, hard code number of detached and attached states, and bins
 # Want to be able to visualize distributions, will need this info to set up arrays.
@@ -139,7 +139,8 @@ plt.xlabel('time (s)')
 plt.ylabel("Proportions")
 #------------------------------------------------------------------------------
 plt.subplot(426)
-plt.plot(tarray, stress_array[0:data_range,:])
+plt.plot(tarray, stress_array[0:data_range,gauss_point])
+#plt.plot(tarray, stress_array[0:data_range])
 #plt.scatter(myosim_summary_data[:,0], myosim_summary_data[:,1],color='r')
 #plt.scatter(myosim_summary_data[::10,0], myosim_summary_data[::10,1],color='r')
 plt.xlabel('time (s)')
@@ -153,7 +154,8 @@ plt.xlabel('time (s)')
 plt.ylabel("Calcium [M]")
 #------------------------------------------------------------------------------
 ax2 = plt.subplot(421)
-plt.plot(tarray, HSL[0:data_range,gauss_point])
+plt.plot(tarray, HSL[0:data_range,:])
+#plt.plot(tarray, HSL[0:data_range])
 #plt.scatter(myosim_summary_data[:,0], myosim_summary_data[:,1],color='r')
 plt.xlabel('time [s]')
 plt.ylabel("hsl (nm)")
@@ -161,7 +163,8 @@ plt.ylabel("hsl (nm)")
 #---------------------------------------------------------------------------------
 plt.subplot(423)
 print np.shape(pstress)
-plt.plot(tarray, pstress[0:data_range,gauss_point])
+plt.plot(tarray, pstress[0:data_range,:])
+#plt.plot(tarray, pstress[0:data_range])
 plt.ylabel('Passive Stress (Pa)')
 #------------------------------------------------------------------------------
 #plt.subplot(423)
@@ -198,7 +201,7 @@ else:
 
 #------------------------------------------------------------------------------
 # Animate cross-bridges during simulation
-ax1 = plt.subplot(427,xlim=(xmin-1,xmax+1),ylim=(-.001,0.3))
+"""ax1 = plt.subplot(427,xlim=(xmin-1,xmax+1),ylim=(-.001,0.3))
 #ax = plt.axes(xlim=(xmin,xmax),ylim=(0,1))
 line1, = ax1.plot([],[],lw=3)
 line2, = ax2.plot([],[])
@@ -224,7 +227,7 @@ def animate(i):
     return line
 
 
-anim = FuncAnimation(fig, animate, init_func=init, frames = num_timesteps-1, interval = 1, blit=True)
+anim = FuncAnimation(fig, animate, init_func=init, frames = num_timesteps-1, interval = 1, blit=True)"""
 
 #mng = plt.get_current_fig_manager()
 #mng.frame.Maximize(True)

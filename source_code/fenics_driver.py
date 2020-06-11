@@ -64,6 +64,14 @@ def sim_driver(input_file_name):
         fenics_script = "fenics_LV"
     elif sim_params["sim_geometry"][0] == "ventricle_lclee_2":
         fenics_script = "fenics_LV_LCLEE_2"
+    elif sim_params["sim_geometry"][0] == "ventricle_circbc":
+        fenics_script = "fenics_LV_circ_bc"
+    elif sim_params["sim_geometry"][0] == "ventricle_lclee_hstress":
+        fenics_script = "fenics_LV_lclee_homog_stress"
+    elif sim_params["sim_geometry"][0] == "ventricle_lclee_oghstress":
+        fenics_script = "fenics_LV_lclee_og_hstress"
+    elif sim_params["sim_geometry"][0] == "ventricle_physloop":
+        fenics_script = "fenics_LV_physPVloop"
     elif sim_params["sim_geometry"][0] == "single_cell":
         fenics_script = "fenics_singlecell_isometric"
     else:
@@ -91,6 +99,7 @@ def sim_driver(input_file_name):
     np.save(output_path + "tarray",output_dictionary["tarray"])
     np.save(output_path + "stress_array",output_dictionary["strarray"])
     np.save(output_path + "pstress_array",output_dictionary["pstrarray"])
+    np.save(output_path + "pbulk_array",output_dictionary["pbulkarray"])
     np.save(output_path + "alpha_array",output_dictionary["alphaarray"])
     np.save(output_path + "calcium",output_dictionary["calarray"])
     np.save(output_path + "hsl",output_dictionary["hsl"])

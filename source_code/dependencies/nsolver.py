@@ -99,7 +99,8 @@ class NSolver(object):
                 dww = w.copy(deepcopy=True)
                 dww.vector()[:] = 0.0
 
-                while (rel_res > rel_tol and res > abs_tol) and it < maxiter:
+                #while (rel_res > rel_tol and res > abs_tol) and it < maxiter:
+                while (rel_res > rel_tol) and it < maxiter:
                         it += 1
 
                         A, b = assemble_system(Jac, -Ftotal, bcs, \

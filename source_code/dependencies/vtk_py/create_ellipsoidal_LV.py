@@ -1,4 +1,4 @@
-########################################################################
+#######################################################################
 import sys
 sys.path.append("/home/fenics/shared/source_code/dependencies")
 import vtk
@@ -11,7 +11,7 @@ import os
 ########################################################################
 
 
-def create_ellipsoidal_LV(casename="ellipsoidal", meshsize=0.1, gmshcmd="gmsh", iswritemesh=True, verbose=True):
+def create_ellipsoidal_LV(casename="ellipsoidal", meshsize=0.05, gmshcmd="gmsh", iswritemesh=True, verbose=True):
 
     print "starting script"
     if verbose:
@@ -30,13 +30,14 @@ def create_ellipsoidal_LV(casename="ellipsoidal", meshsize=0.1, gmshcmd="gmsh", 
 	os.system(cmd)
 
         cmd = "sed -i.bak s/'<<Meshsize>>'/'" + str(meshsize) + "'/g " + tempgeofile
+        #cmd = "sed 's/lz_i=lz_o-wt;/lz_i=lz_o-0.5*wt;/' ellipsoidal_temp.geo"
 	os.system(cmd)
 	cmd = gmshcmd+" -3 ellipsoidal_temp.geo -o " + meshfilename
 	os.system(cmd)
-	cmd = "rm ellipsoidal_temp.geo"
+	#cmd = "rm ellipsoidal_temp.geo"
 	os.system(cmd)
 
 	ugrid = vtk_py.readUGrid(meshfilename)
 
 	return ugrid
-returned_grid = create_ellipsoidal_LV(casename="ellipsoidal", meshsize=0.1, gmshcmd="gmsh", iswritemesh=True, verbose=True)
+returned_grid = create_ellipsoidal_LV(casename="ellipsoidal", meshsize=0.05, gmshcmd="gmsh", iswritemesh=True, verbose=True)

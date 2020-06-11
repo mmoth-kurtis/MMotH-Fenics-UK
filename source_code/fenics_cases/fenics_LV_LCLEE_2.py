@@ -187,7 +187,7 @@ def fenics(sim_params,file_inputs,output_params,passive_params,hs_params,cell_io
     X = SpatialCoordinate (mesh)
     #print dir()
     Press = Expression(("P"), P=0.0, degree=0)
-    Kspring = Constant(1000)
+    Kspring = Constant(100)
     LVCavityvol = Expression(("vol"), vol=0.0, degree=2)
     #C2 = Constant(0.5)
     #C3 = Constant(25.0)
@@ -241,7 +241,7 @@ def fenics(sim_params,file_inputs,output_params,passive_params,hs_params,cell_io
     #bctop = DirichletBC(W.sub(0), Expression((("0.0", "0.0", "0.0")), degree = 2), facetboundaries, topid)
 
     ######### Define an expression for epicardial edge radial displacement field ######################
-    class MyExpr(Expression):
+    """class MyExpr(Expression):
 
         def __init__(self, param, **kwargs):
         	self.param = param
@@ -271,23 +271,23 @@ def fenics(sim_params,file_inputs,output_params,passive_params,hs_params,cell_io
             };
     param_epi={"nvec": s0CG,
            "scalefactor": scalefactor_epi
-            };
+            };"""
 
     #radexp = MyExpr(param=param, degree=1)
-    endo_exp = MyExpr(param=param_endo, degree=1)
-    epi_exp = MyExpr(param=param_epi, degree=1)
+    #endo_exp = MyExpr(param=param_endo, degree=1)
+    #epi_exp = MyExpr(param=param_epi, degree=1)
     ###################################################################################################
 
     # edgeboundaries 1 is epi, 2 is endo
-    endoring = pick_endoring_bc(method="cpp")(edgeboundaries, 2)
-    epiring = pick_endoring_bc(method="cpp")(edgeboundaries, 1)
+    #endoring = pick_endoring_bc(method="cpp")(edgeboundaries, 2)
+    #epiring = pick_endoring_bc(method="cpp")(edgeboundaries, 1)
     # CKM trying to have radial expansion for entire top
     #endoring = pick_endoring_bc(method="cpp")(facetboundaries, topid)
     #bcedge = DirichletBC(W.sub(0), Expression(("0.0", "0.0", "0.0"), degree = 0), endoring, method="pointwise")
-    bcedge_endo = DirichletBC(W.sub(0), endo_exp, endoring, method="pointwise")
-    bcedge_epi = DirichletBC(W.sub(0), epi_exp, epiring, method="pointwise")
-    bcs = [bctop, bcedge_endo, bcedge_epi]
-    #bcs = [bctop]
+    #bcedge_endo = DirichletBC(W.sub(0), endo_exp, endoring, method="pointwise")
+    #bcedge_epi = DirichletBC(W.sub(0), epi_exp, epiring, method="pointwise")
+    #bcs = [bctop, bcedge_endo, bcedge_epi]
+    bcs = [bctop]
 
     w = Function(W)
     dw = TrialFunction(W)
@@ -402,7 +402,7 @@ def fenics(sim_params,file_inputs,output_params,passive_params,hs_params,cell_io
     F5 = -Kspring*inner(dot(u,n)*n,v)*ds(epiid)  # traction applied as Cauchy stress!, Pactive is 1PK
 
 
-    Ftotal = F1 + F2 + F3 # + F4 + F5
+    Ftotal = F1 + F2 + F3+ F5 # + F4 + F5
 
     Jac1 = derivative(F1, w, dw)
     Jac2 = derivative(F2, w, dw)
@@ -410,7 +410,7 @@ def fenics(sim_params,file_inputs,output_params,passive_params,hs_params,cell_io
     Jac4 = derivative(F4, w, dw)
     Jac5 = derivative(F5, w, dw)
 
-    Jac = Jac1 + Jac2 + Jac3 # + Jac4 + Jac5
+    Jac = Jac1 + Jac2 + Jac3 + Jac5 # + Jac4 + Jac5
     ##################################################################################################################################
 
     solverparams = {"Jacobian": Jac,
@@ -488,12 +488,13 @@ def fenics(sim_params,file_inputs,output_params,passive_params,hs_params,cell_io
     print("cavity-vol = ", LVCavityvol.vol)
     for lmbda_value in range(0, loading_number):
 
-        scalefactor_epi.a = lmbda_value*0.002
-        scalefactor_endo.a = lmbda_value*0.00345238
+        #scalefactor_epi.a = lmbda_value*0.002
+        #scalefactor_endo.a = lmbda_value*0.00345238
 #        print "scale factor is " + str(scalefactor.a)
         print "Loading phase step = ", lmbda_value
 
-        LVCavityvol.vol += 0.004 #LCL change to smaller value
+        #LVCavityvol.vol += 0.004 #LCL change to smaller value
+        LVCavityvol.vol += 0.005
 
         p_cav = uflforms.LVcavitypressure()
         V_cav = uflforms.LVcavityvol()
@@ -543,7 +544,8 @@ def fenics(sim_params,file_inputs,output_params,passive_params,hs_params,cell_io
             stresstemp = project(Pactive,TensorFunctionSpace(mesh,'DG',0))
             stresstemp.rename("Pactive","Pactive")
             stressfile << stresstemp
-            hsl_temp = project(hsl,FunctionSpace(mesh,'DG',0))
+            #hsl_temp = project(hsl,FunctionSpace(mesh,'DG',0))
+            hsl_temp = project(hsl,FunctionSpace(mesh,'CG',1))
             hsl_temp.rename("hsl_temp","hsl")
             hsl_file << hsl_temp
             alpha_temp = project(alphas,FunctionSpace(mesh,'DG',0))
@@ -714,8 +716,8 @@ def fenics(sim_params,file_inputs,output_params,passive_params,hs_params,cell_io
         #cb_force = homogeneous_stress.calculate_force(tstep)
         #Pactive = cb_force * as_tensor(f0[i]*f0[j], (i,j))
         #k_time = tstep
-        scalefactor_epi.a = 0.93*np.sin((3.14*(np.exp(-((((tstep+20.*step_size)/850.)-.01)*23.5)**2.35)))*2*3.14/360.)
-        scalefactor_endo.a = 1.56*np.sin((3.14*(np.exp(-((((tstep+20.*step_size)/850.)-.01)*23.5)**2.35)))*2*3.14/360.)
+        #scalefactor_epi.a = 0.93*np.sin((3.14*(np.exp(-((((tstep+20.*step_size)/850.)-.01)*23.5)**2.35)))*2*3.14/360.)
+        #scalefactor_endo.a = 1.56*np.sin((3.14*(np.exp(-((((tstep+20.*step_size)/850.)-.01)*23.5)**2.35)))*2*3.14/360.)
         #print "scale factor is " + str(scalefactor.a)
 
 
@@ -777,7 +779,8 @@ def fenics(sim_params,file_inputs,output_params,passive_params,hs_params,cell_io
         stresstemp = project(Pactive,TensorFunctionSpace(mesh,'DG',0))
         stresstemp.rename("Pactive","Pactive")
         stressfile << stresstemp
-        hsl_temp = project(hsl,FunctionSpace(mesh,'DG',0))
+        #hsl_temp = project(hsl,FunctionSpace(mesh,'DG',0))
+        hsl_temp = project(hsl,FunctionSpace(mesh,'CG',1))
         hsl_temp.rename("hsl_temp","hsl")
         hsl_file << hsl_temp
         alpha_temp = project(alphas,FunctionSpace(mesh,'DG',0))
