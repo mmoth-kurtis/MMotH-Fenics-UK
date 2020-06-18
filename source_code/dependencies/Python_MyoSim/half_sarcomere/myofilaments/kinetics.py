@@ -4,10 +4,10 @@ import scipy.constants as scipy_constants
 from scipy.integrate import solve_ivp
 
 
-def evolve_kinetics(self, time_step, Ca_conc, cell_time, old_overlap):
+def evolve_kinetics(self, time_step, Ca_conc, cell_time):
     """Updates kinetics, switches to different sub-functions as required"""
     if (self.kinetic_scheme == '3state_with_SRX'):
-        update_3state_with_SRX(self, time_step, Ca_conc,cell_time, old_overlap)
+        update_3state_with_SRX(self, time_step, Ca_conc,cell_time)
 
 
 def return_fluxes(self, y, Ca_conc):
@@ -107,7 +107,7 @@ def return_fluxes(self, y, Ca_conc):
         return fluxes, rates
 
 
-def update_3state_with_SRX(self, time_step, Ca_conc, cell_time, old_overlap):
+def update_3state_with_SRX(self, time_step, Ca_conc, cell_time):
     """ Updates kinetics for thick and thin filaments """
 
     # Pull out the myofilaments vector

@@ -99,7 +99,7 @@ def sim_driver(input_file_name):
     np.save(output_path + "tarray",output_dictionary["tarray"])
     np.save(output_path + "stress_array",output_dictionary["strarray"])
     np.save(output_path + "pstress_array",output_dictionary["pstrarray"])
-    np.save(output_path + "pbulk_array",output_dictionary["pbulkarray"])
+    #np.save(output_path + "pbulk_array",output_dictionary["pbulkarray"])
     np.save(output_path + "alpha_array",output_dictionary["alphaarray"])
     np.save(output_path + "calcium",output_dictionary["calarray"])
     np.save(output_path + "hsl",output_dictionary["hsl"])

@@ -3,7 +3,7 @@ import numpy as np
 import pandas as pd
 
 
-def update_simulation(self, time_step, delta_hsl, hsl, y0, pf, cbf, calcium, n_array_length, cell_time,set_data = 0):
+def update_simulation(self, time_step, delta_hsl, hsl, y0, pf, cbf, calcium, n_array_length, cell_time,overlap_array,set_data = 0):
 
     # Need to do some kinetics stuff
     time_step = time_step/1000.0
@@ -19,7 +19,7 @@ def update_simulation(self, time_step, delta_hsl, hsl, y0, pf, cbf, calcium, n_a
     num_int_points = np.shape(hsl)
     num_int_points = num_int_points[0]
     y_pops = np.zeros(np.size(y0))
-
+    self.temp_overlaps = np.zeros(num_int_points)
     #print y0[0:53]
     for i in range(num_int_points):
         self.hs_length = hsl[i]
@@ -36,22 +36,27 @@ def update_simulation(self, time_step, delta_hsl, hsl, y0, pf, cbf, calcium, n_a
         if (np.abs(delta_hsl[i]) > 0.0):
             # Need to move some things
             self.myof.move_cb_distributions(delta_hsl[i])
-            
+
+        # passed in overlaps from previous timestep
+        old_overlap = overlap_array[i]
         self.myof.evolve_kinetics(time_step, self.Ca_conc, cell_time)
         #if i==1:
             #print self.myof.y
-
+        #if (np.abs(delta_hsl[i]) > 0.0):
+            # Need to move some things
+        #    self.myof.move_cb_distributions(delta_hsl[i])
         #self.hs_length = self.hs_length + delta_hsl
 
         # Assign int point's population vector to larger y vector
         y_pops[i*n_array_length:(i+1)*n_array_length] = self.myof.y[0:n_array_length]
+        self.temp_overlaps[i] = self.myof.n_overlap
 
     # Update forces
     # Don't need these, will be reset at beginning of this fcn
     #self.myof.set_myofilament_forces()
     #self.hs_force = self.myof.total_force
     #print y_pops[0:53]
-    return y_pops
+    return self.temp_overlaps, y_pops
 
 def return_rates_fenics(self):
     fluxes, rates = self.myof.return_fluxes(self.myof.y, self.Ca_conc)
