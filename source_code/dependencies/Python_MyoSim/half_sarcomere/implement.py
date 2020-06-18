@@ -31,12 +31,16 @@ def update_simulation(self, time_step, delta_hsl, hsl, y0, pf, cbf, calcium, n_a
         #if i==1:
             #print self.myof.y
         # Myofilaments
-        self.myof.evolve_kinetics(time_step, self.Ca_conc, cell_time)
-        #if i==1:
-            #print self.myof.y
+        # moving interpolation here, so populations match up with active force
+        # generated at end of Newton Iteration
         if (np.abs(delta_hsl[i]) > 0.0):
             # Need to move some things
             self.myof.move_cb_distributions(delta_hsl[i])
+            
+        self.myof.evolve_kinetics(time_step, self.Ca_conc, cell_time)
+        #if i==1:
+            #print self.myof.y
+
         #self.hs_length = self.hs_length + delta_hsl
 
         # Assign int point's population vector to larger y vector

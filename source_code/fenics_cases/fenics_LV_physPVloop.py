@@ -446,6 +446,8 @@ def fenics(sim_params,file_inputs,output_params,passive_params,hs_params,cell_io
 
     displacementfile = File(output_path + "u_disp.pvd")
     stressfile = File(output_path + "Stress.pvd")
+    pk1file = File(output_path + "pk1_act_on_f0.pvd")
+
     #cauchystressfile = File(output_path + "cauchystress.pvd")
     hsl_file = File(output_path + "hsl_mesh.pvd")
     alpha_file = File(output_path + "alpha_mesh.pvd")
@@ -469,6 +471,7 @@ def fenics(sim_params,file_inputs,output_params,passive_params,hs_params,cell_io
     strarray = np.zeros((no_of_time_steps+1,no_of_int_points))
     pstrarray = np.zeros((no_of_time_steps+1,no_of_int_points))
     alphaarray = np.zeros((no_of_time_steps+1,no_of_int_points))
+    overlaparray = np.zeros((no_of_time_steps+1,no_of_int_points))
     calcium = np.zeros(no_of_time_steps+1)
     y_vec_array = y_vec.vector().get_local()[:]
 
@@ -507,10 +510,18 @@ def fenics(sim_params,file_inputs,output_params,passive_params,hs_params,cell_io
 #        print "scale factor is " + str(scalefactor.a)
         print "Loading phase step = ", lmbda_value
 
+# Kurtis understanding circulatory
+        #print "volume before loading = " + str(LVCavityvol.vol)
+        #print "pressure before loading = " + str(p_cav)
         LVCavityvol.vol += 0.004 #LCL change to smaller value
 
+        #print "volume after loading, before calling forms = " + str(LVCavityvol.vol)
+        #print "pressure after loading, before calling forms = " + str(p_cav)
         p_cav = uflforms.LVcavitypressure()
         V_cav = uflforms.LVcavityvol()
+
+        #print "volume after calling forms = " + str(LVCavityvol.vol)
+        #print "pressure after calling forms = " + str(p_cav)
         #print "LV Pressure" + str(p_cav)
         #print "LV Volume" + str(V_cav)
         hsl_array_old = hsl_array
@@ -528,8 +539,11 @@ def fenics(sim_params,file_inputs,output_params,passive_params,hs_params,cell_io
         alpha_temp.rename("alpha_temp","alpha_temp")
         alpha_file << alpha_temp"""
 
+
         #solver.solvenonlinear()
         solve(Ftotal == 0, w, bcs, J = Jac, form_compiler_parameters={"representation":"uflacs"})
+        #print "volume after solving = " + str(LVCavityvol.vol)
+        #print "pressure after solving = " + str(p_cav)
         hsl_old.vector()[:] = project(hsl, Quad).vector().get_local()[:] # for active stress
 
         hsl_array = project(hsl, Quad).vector().get_local()[:]           # for Myosim
@@ -558,6 +572,9 @@ def fenics(sim_params,file_inputs,output_params,passive_params,hs_params,cell_io
             #stresstemp = project(cb_force,FunctionSpace(mesh,'DG',0))
             stresstemp.rename("Pactive","Pactive")
             stressfile << stresstemp
+            pk1temp = project(inner(f0,Pactive*f0),FunctionSpace(mesh,'DG',0))
+            pk1temp.rename("pk1temp","pk1temp")
+            pk1file << pk1temp
             hsl_temp = project(hsl,FunctionSpace(mesh,'DG',0))
             hsl_temp.rename("hsl_temp","hsl")
             hsl_file << hsl_temp
@@ -729,8 +746,8 @@ def fenics(sim_params,file_inputs,output_params,passive_params,hs_params,cell_io
         #cb_force = homogeneous_stress.calculate_force(tstep)
         #Pactive = cb_force * as_tensor(f0[i]*f0[j], (i,j))
         #k_time = tstep
-        scalefactor_epi.a = 0.93*np.sin((3.14*(np.exp(-((((tstep+20.*step_size)/850.)-.01)*23.5)**2.35)))*2*3.14/360.)
-        scalefactor_endo.a = 1.56*np.sin((3.14*(np.exp(-((((tstep+20.*step_size)/850.)-.01)*23.5)**2.35)))*2*3.14/360.)
+        #scalefactor_epi.a = 0.93*np.sin((3.14*(np.exp(-((((tstep+20.*step_size)/850.)-.01)*23.5)**2.35)))*2*3.14/360.)
+        #scalefactor_endo.a = 1.56*np.sin((3.14*(np.exp(-((((tstep+20.*step_size)/850.)-.01)*23.5)**2.35)))*2*3.14/360.)
         #print "scale factor is " + str(scalefactor.a)
 
 
@@ -743,15 +760,20 @@ def fenics(sim_params,file_inputs,output_params,passive_params,hs_params,cell_io
                 np.save(output_path + "tarray", tarray)
                 np.save(output_path + "strarray", strarray)
                 np.save(output_path + "hslarray", hslarray)
+                np.save(output_path + "overlap", overlaparray)
                 #np.save(output_path + "dumped_populations",dumped_populations)
                 np.save(output_path + "pstress_array",pstrarray)
                 #np.save(output_path + "alpha_array",alphaarray)
                 np.save(output_path + "calcium",calarray)
-                np.save(output_path + "HSL",hslarray)
+                #np.save(output_path + "HSL",hslarray)
 
-
+        # Quick hack
+        if counter == 0:
+            overlap_counter = 1
+        else:
+            overlap_counter = counter
     # Going to try to loop through integration points in python, not in fenics script
-        y_vec_array_new = implement.update_simulation(hs, step_size, delta_hsl_array, hsl_array, y_vec_array, p_f_array, cb_f_array, calcium[counter], n_array_length, cell_time)
+        temp_overlap, y_vec_array_new = implement.update_simulation(hs, step_size, delta_hsl_array, hsl_array, y_vec_array, p_f_array, cb_f_array, calcium[counter], n_array_length, cell_time, overlaparray[overlap_counter,:])
 
         y_vec_array = y_vec_array_new # for Myosim
 
@@ -773,7 +795,9 @@ def fenics(sim_params,file_inputs,output_params,passive_params,hs_params,cell_io
 
         #solver.solvenonlinear()
         #++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++
+        print "before solving, volume = " + str(LVCavityvol.vol)
         solve(Ftotal == 0, w, bcs, J = Jac, form_compiler_parameters={"representation":"uflacs"})
+        print "after solving, volume = " + str(LVCavityvol.vol)
         #++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++
         cb_f_array = project(cb_force, Quad).vector().get_local()[:]
 	print max(cb_f_array), min(cb_f_array)
@@ -805,6 +829,9 @@ def fenics(sim_params,file_inputs,output_params,passive_params,hs_params,cell_io
         stresstemp = project(Pactive,TensorFunctionSpace(mesh,'DG',0))
         stresstemp.rename("Pactive","Pactive")
         stressfile << stresstemp
+        pk1temp = project(inner(f0,Pactive*f0),FunctionSpace(mesh,'DG',0))
+        pk1temp.rename("pk1temp","pk1temp")
+        pk1file << pk1temp
         hsl_temp = project(hsl,FunctionSpace(mesh,'DG',0))
         hsl_temp.rename("hsl_temp","hsl")
         hsl_file << hsl_temp
@@ -820,6 +847,8 @@ def fenics(sim_params,file_inputs,output_params,passive_params,hs_params,cell_io
         strarray[counter,:] = cb_f_array
         pstrarray[counter,:] = p_f_array
         alphaarray[counter,:] = alpha_array
+        overlaparray[counter,:] = temp_overlap
+
 
     if(MPI.rank(comm) == 0):
         fdataPV.close()
@@ -856,8 +885,10 @@ def fenics(sim_params,file_inputs,output_params,passive_params,hs_params,cell_io
     "pstrarray": pstrarray,
     "alphaarray": alphaarray,
     "calarray": calarray,
-    "hsl": hslarray
+    "hsl": hslarray,
+    "overlap": overlaparray
     }
+
 
     return(outputs)
 

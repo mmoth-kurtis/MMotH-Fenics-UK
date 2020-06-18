@@ -4,10 +4,10 @@ import scipy.constants as scipy_constants
 from scipy.integrate import solve_ivp
 
 
-def evolve_kinetics(self, time_step, Ca_conc, cell_time):
+def evolve_kinetics(self, time_step, Ca_conc, cell_time, old_overlap):
     """Updates kinetics, switches to different sub-functions as required"""
     if (self.kinetic_scheme == '3state_with_SRX'):
-        update_3state_with_SRX(self, time_step, Ca_conc,cell_time)
+        update_3state_with_SRX(self, time_step, Ca_conc,cell_time, old_overlap)
 
 
 def return_fluxes(self, y, Ca_conc):
@@ -40,16 +40,51 @@ def return_fluxes(self, y, Ca_conc):
         r4[r4 > self.parent_hs.max_rate] = self.parent_hs.max_rate
         J4 = r4 * M_bound
 
-        if (self.n_overlap > 0.0):
+
+# Kurtis trying something
+        """if (self.n_overlap > 0.0):
             Jon = (self.k_on * Ca_conc * (self.n_overlap - n_on) *
-                (1.0 + self.k_coop * (n_on / self.n_overlap)))
+            (1.0 + self.k_coop * (n_on / self.n_overlap)))
         else:
             Jon = 0.0
 
         if (self.n_overlap > 0.0):
             Joff = self.k_off * (n_on - n_bound) * \
+            (1.0 + self.k_coop * ((self.n_overlap - n_on) / self.n_overlap))
+        else:
+            Joff = 0.0"""
+        if (self.n_overlap > 0.0):
+            if self.n_overlap > n_on:
+                Jon = (self.k_on * Ca_conc * (self.n_overlap - n_on) *
+                (1.0 + self.k_coop * (n_on / self.n_overlap)))
+            else:
+                # overlap has fallen equal to, or below n_on
+                # force n_on to be the same as the overlap
+                n_on_new = self.n_overlap
+                self.y[-1] = n_on_new
+                # Take ones that were forced off, put in n_off population
+                self.y[-2] += n_on-n_on_new
+                # Re-update n_on in case it's used in any other calculations
+                n_on = n_on_new
+                # Finally, set Jon to zero so no more sites activate
+                Jon = 0.0
+        else:
+            # Overlap is zero, force n_on to be zero as well. If any binding sites are turned
+            # off from this, put them back in n_off
+            n_on_new = self.n_overlap
+            self.y[-1] = n_on_new
+            self.y[-2] += n_on - n_on_new
+            n_on = n_on_new
+            Jon = 0.0
+
+        if (self.n_overlap > 0.0):
+            if self.n_overlap > n_on:
+                Joff = self.k_off * (n_on - n_bound) * \
                 (1.0 + self.k_coop * ((self.n_overlap - n_on) /
                                       self.n_overlap))
+
+            else:
+                Joff = self.k_off * (n_on - n_bound)
         else:
             Joff = 0.0
 
@@ -60,6 +95,8 @@ def return_fluxes(self, y, Ca_conc):
         fluxes['J4'] = J4
         fluxes['Jon'] = Jon
         fluxes['Joff'] = Joff
+        #fluxes['d_overlap_dt'] = self.n_overlap-old_overlap
+        #print fluxes['d_overlap_dt']
 
         rates = dict()
         rates['R1'] = r1
@@ -70,7 +107,7 @@ def return_fluxes(self, y, Ca_conc):
         return fluxes, rates
 
 
-def update_3state_with_SRX(self, time_step, Ca_conc, cell_time):
+def update_3state_with_SRX(self, time_step, Ca_conc, cell_time, old_overlap):
     """ Updates kinetics for thick and thin filaments """
 
     # Pull out the myofilaments vector
@@ -91,7 +128,7 @@ def update_3state_with_SRX(self, time_step, Ca_conc, cell_time):
         J4 = fluxes['J4']
         for i in np.arange(0, self.no_of_x_bins):
             dy[i + 2] = J3[i] - J4[i]
-        dy[-2] = -fluxes['Jon'] + fluxes['Joff']
+        dy[-2] = -fluxes['Jon'] + fluxes['Joff'] #- fluxes['d_overlap_dt']
         dy[-1] = fluxes['Jon'] - fluxes['Joff']
         return dy
 
@@ -103,6 +140,7 @@ def update_3state_with_SRX(self, time_step, Ca_conc, cell_time):
     self.y = sol.y[:, -1]
     self.n_on = y[-1]
     self.n_bound = np.sum(self.y[2 + np.arange(0, self.no_of_x_bins)])
+
 
     # Do some tidying for extreme situations
     self.y[np.nonzero(self.y > 1.0)] = 1.0
