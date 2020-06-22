@@ -103,12 +103,13 @@ def sim_driver(input_file_name):
     np.save(output_path + "alpha_array",output_dictionary["alphaarray"])
     np.save(output_path + "calcium",output_dictionary["calarray"])
     np.save(output_path + "hsl",output_dictionary["hsl"])
+    np.save(output_path + "overlap",output_dictionary["overlap"])
 
     # If user wants to visualize, do that here
-    if output_params["visualize_flag"][0] > 0:
+#    if output_params["visualize_flag"][0] > 0:
 
         # call plotting script
-        print "going to visualize"
+#        print "going to visualize"
 
 
 if np.shape(sys.argv) > 0:

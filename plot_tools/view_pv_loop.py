@@ -14,8 +14,8 @@ time, LV_pressure, arterial_pressure, venous_pressure, LV_vol, ven_vol, art_vol,
 #volume = data[:2]
 fig, (ax1, ax2, ax3)  = plt.subplots(nrows=3,ncols=1)
 ax1.plot(LV_vol,LV_pressure)
-ax1.set_xlabel('Volume (m^3)')
-ax1.set_ylabel('LV Pressure (Pa)')
+ax1.set_xlabel('Volume (mL)')
+ax1.set_ylabel('LV Pressure (mmHg)')
 
 ax2.plot(time,LV_pressure,label='LV Pressure')
 ax2.plot(time,arterial_pressure,label='Arterial Pressure')
@@ -27,7 +27,7 @@ ax2.legend(loc='upper center', bbox_to_anchor=(0.5, -0.175), shadow=True, ncol=3
 #ax2.set_xlabel('Time (ms)')
 ax2.legend(loc='lower left')
 ax2.set_xlabel('Time (ms)')
-ax2.set_ylabel('Pressure (Pa)')
+ax2.set_ylabel('Pressure (mmHg)')
 ax4 = ax2.twinx()
 color= 'tab:gray'
 ax4.set_ylabel('calcium',color=color)
@@ -44,7 +44,7 @@ ax3.legend(loc='upper center', bbox_to_anchor=(0.5, -0.175), shadow=True, ncol=3
 #l3 = ax3.plot(time,ven_vol,label='Venous Volume')
 #ax3.legend((l1, l2, l3),('LV Volume','Venous Volume','Arterial Volume'))
 #ax3.set_xlabel('Time (ms)')
-ax3.set_ylabel('Volume (m^3)')
+ax3.set_ylabel('Volume (mL)')
 #ax3.legend()
 ax3.legend(loc='lower left')
 

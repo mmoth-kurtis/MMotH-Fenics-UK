@@ -9,7 +9,7 @@ Currently, IPython only works using python 2.7
 import os as os
 import numpy as np
 import matplotlib.pyplot as plt
-from IPython import get_ipython
+import sys
 from matplotlib.animation import FuncAnimation
 import time
 plt.style.use('seaborn-pastel')
@@ -45,20 +45,24 @@ num_bins = np.shape(cb_domain)
 fenics_pop_file = np.load(sim_dir + '/dumped_populations.npy')
 tarray = np.load(sim_dir + '/tarray.npy')
 #tarray = tarray[:-1]
-stress_array = np.load(sim_dir + '/strarray.npy')
+stress_array = np.load(sim_dir + '/stress_array.npy')
 #stress_array = np.load(sim_dir + '/stress_array.npy')
 
 calcium = np.load(sim_dir + '/calcium.npy')
 #calcium = calcium[:,0]
-HSL = np.load(sim_dir + '/hslarray.npy')
+HSL = np.load(sim_dir + '/hsl.npy')
 #HSL = np.load(sim_dir + '/HSL.npy')
 pstress = np.load(sim_dir + '/pstress_array.npy')
+#overlap = np.load(sim_dir + '/overlap.npy')
 # Define number of time steps and array length here
 sim_info = fenics_pop_file.shape
 num_timesteps = sim_info[0]
 num_int_points = sim_info[1]
 array_length = sim_info[2]
-gauss_point = 1000
+#print sys.argv[0]
+#print sys.argv[1]
+gauss_point = int(sys.argv[1])
+#gauss_point = 1000
 data_range = np.shape(tarray)[0]
 # Look at how info is dumped from FEniCS. For now, hard code number of detached and attached states, and bins
 # Want to be able to visualize distributions, will need this info to set up arrays.
@@ -89,7 +93,7 @@ myosim_summary_file = 'C:\\ProgramData\\Myosim\\MyoSim_output\\summary.txt'
 myosim_summary_data = np.zeros((no_of_time_steps,2))
 myosim_summary_data[:,0:2] = np.loadtxt(myosim_summary_file, skiprows = 5, usecols = (0,2))
 myosim_rates = np.zeros((n_array_length-3,5))
-myosim_rates[:,0:5] = np.loadtxt(myosim_rates_file, skiprows = 1, usecols = (0,1,2,3,4))
+myosim_rates[:,0:5] = np.loadtxt(myosim_rates_file, skiprows = 1, usecols = (0,1,2,3,4))"""
 
 
 fenics_rates_file = sim_dir + '/rates.npy'
@@ -167,9 +171,12 @@ plt.plot(tarray, pstress[0:data_range,gauss_point])
 #plt.plot(tarray, pstress[0:data_range])
 plt.ylabel('Passive Stress (Pa)')
 #------------------------------------------------------------------------------
+#plt.subplot(425)
+#plt.plot(tarray, overlap[0:data_range,gauss_point])
+#plt.ylabel('Overlap')
 #plt.subplot(423)
 #plt.scatter(myosim_rates[:,0], myosim_rates[:,1],color='k')
-"""if lang_flag=='python':
+if lang_flag=='python':
     rate3 = np.zeros(num_bins)
     rate4 = np.zeros(num_bins)
     # Right now, getting these fluxes at last time point
@@ -197,11 +204,13 @@ else:
     rate3, = plt.plot(fenics_rates[:,0], fenics_rates[:,3])
     #plt.scatter(myosim_rates[:,0], myosim_rates[:,4],color='b')
     rate4, = plt.plot(fenics_rates[:,0], fenics_rates[:,4])
-    plt.legend((rate3, rate4), ('Attach', 'Detach'))"""
+    plt.legend((rate3, rate4), ('Attach', 'Detach'))
 
 #------------------------------------------------------------------------------
 # Animate cross-bridges during simulation
-"""ax1 = plt.subplot(427,xlim=(xmin-1,xmax+1),ylim=(-.001,0.3))
+max_nbound = np.max(fenics_pop_data[:,2])
+print max_nbound
+ax1 = plt.subplot(427,xlim=(xmin-1,xmax+1),ylim=(-.001,max_nbound/2))
 #ax = plt.axes(xlim=(xmin,xmax),ylim=(0,1))
 line1, = ax1.plot([],[],lw=3)
 line2, = ax2.plot([],[])
@@ -227,7 +236,7 @@ def animate(i):
     return line
 
 
-anim = FuncAnimation(fig, animate, init_func=init, frames = num_timesteps-1, interval = 1, blit=True)"""
+anim = FuncAnimation(fig, animate, init_func=init, frames = num_timesteps-1, interval = 1, blit=True)
 
 #mng = plt.get_current_fig_manager()
 #mng.frame.Maximize(True)

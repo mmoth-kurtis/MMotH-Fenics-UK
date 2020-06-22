@@ -102,7 +102,7 @@ def fenics(sim_params,file_inputs,output_params,passive_params,hs_params,cell_io
     if casename == "ellipsoidal":
         #loading_number = 25;
         ugrid = vtk_py.convertXMLMeshToUGrid(mesh)
-        ugrid = vtk_py.rotateUGrid(ugrid, sx=0.1, sy=0.1, sz=0.1)
+        ugrid = vtk_py.rotateUGrid(ugrid, sx=0.11, sy=0.11, sz=0.11)
         mesh = vtk_py.convertUGridToXMLMesh(ugrid)
 
         #don't need to do the vtk_py mesh stuff
@@ -742,7 +742,7 @@ def fenics(sim_params,file_inputs,output_params,passive_params,hs_params,cell_io
         #print np.shape(y_vec_array_new)
 
         # Update calcium
-        calcium[counter] = cell_ion.model_class.calculate_concentrations(cycle,tstep,fdataCa) #LCL Commented off
+        calcium[counter] = cell_ion.model_class.calculate_concentrations(cycle,cell_time,fdataCa) #LCL Commented off
         #cb_force = homogeneous_stress.calculate_force(tstep)
         #Pactive = cb_force * as_tensor(f0[i]*f0[j], (i,j))
         #k_time = tstep
