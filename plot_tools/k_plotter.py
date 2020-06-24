@@ -46,14 +46,14 @@ fenics_pop_file = np.load(sim_dir + '/dumped_populations.npy')
 tarray = np.load(sim_dir + '/tarray.npy')
 #tarray = tarray[:-1]
 stress_array = np.load(sim_dir + '/stress_array.npy')
-#stress_array = np.load(sim_dir + '/stress_array.npy')
+#stress_array = np.load(sim_dir + '/strarray.npy')
 
 calcium = np.load(sim_dir + '/calcium.npy')
 #calcium = calcium[:,0]
 HSL = np.load(sim_dir + '/hsl.npy')
-#HSL = np.load(sim_dir + '/HSL.npy')
+#HSL = np.load(sim_dir + '/hslarray.npy')
 pstress = np.load(sim_dir + '/pstress_array.npy')
-#overlap = np.load(sim_dir + '/overlap.npy')
+overlap = np.load(sim_dir + '/overlap.npy')
 # Define number of time steps and array length here
 sim_info = fenics_pop_file.shape
 num_timesteps = sim_info[0]
@@ -96,7 +96,7 @@ myosim_rates = np.zeros((n_array_length-3,5))
 myosim_rates[:,0:5] = np.loadtxt(myosim_rates_file, skiprows = 1, usecols = (0,1,2,3,4))"""
 
 
-fenics_rates_file = sim_dir + '/rates.npy'
+"""fenics_rates_file = sim_dir + '/rates.npy'
 
 if lang_flag=='python':
     rates = np.load(fenics_rates_file, allow_pickle=True)
@@ -171,12 +171,12 @@ plt.plot(tarray, pstress[0:data_range,gauss_point])
 #plt.plot(tarray, pstress[0:data_range])
 plt.ylabel('Passive Stress (Pa)')
 #------------------------------------------------------------------------------
-#plt.subplot(425)
-#plt.plot(tarray, overlap[0:data_range,gauss_point])
-#plt.ylabel('Overlap')
+plt.subplot(425)
+plt.plot(tarray, overlap[0:data_range,gauss_point])
+plt.ylabel('Overlap')
 #plt.subplot(423)
 #plt.scatter(myosim_rates[:,0], myosim_rates[:,1],color='k')
-if lang_flag=='python':
+"""if lang_flag=='python':
     rate3 = np.zeros(num_bins)
     rate4 = np.zeros(num_bins)
     # Right now, getting these fluxes at last time point
@@ -205,7 +205,7 @@ else:
     #plt.scatter(myosim_rates[:,0], myosim_rates[:,4],color='b')
     rate4, = plt.plot(fenics_rates[:,0], fenics_rates[:,4])
     plt.legend((rate3, rate4), ('Attach', 'Detach'))
-
+"""
 #------------------------------------------------------------------------------
 # Animate cross-bridges during simulation
 max_nbound = np.max(fenics_pop_data[:,2])

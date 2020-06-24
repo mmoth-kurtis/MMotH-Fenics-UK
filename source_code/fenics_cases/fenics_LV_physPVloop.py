@@ -754,18 +754,18 @@ def fenics(sim_params,file_inputs,output_params,passive_params,hs_params,cell_io
         # Now print out volumes, pressures, calcium
         if(MPI.rank(comm) == 0):
             print >>fdataPV, tstep, p_cav*0.0075 , Part*.0075, Pven*.0075, V_cav, V_ven, V_art, calcium[counter]
-            if save_output:
+            """if save_output:
                 print "saving output"
                 np.save(output_path +"dumped_populations", dumped_populations)
                 np.save(output_path + "tarray", tarray)
-                np.save(output_path + "strarray", strarray)
-                np.save(output_path + "hslarray", hslarray)
+                np.save(output_path + "stress_array", strarray)
+                np.save(output_path + "hsl", hslarray)
                 np.save(output_path + "overlap", overlaparray)
                 #np.save(output_path + "dumped_populations",dumped_populations)
                 np.save(output_path + "pstress_array",pstrarray)
                 #np.save(output_path + "alpha_array",alphaarray)
                 np.save(output_path + "calcium",calarray)
-                #np.save(output_path + "HSL",hslarray)
+                #np.save(output_path + "HSL",hslarray)"""
 
         # Quick hack
         if counter == 0:
@@ -795,9 +795,20 @@ def fenics(sim_params,file_inputs,output_params,passive_params,hs_params,cell_io
 
         #solver.solvenonlinear()
         #++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++
-        print "before solving, volume = " + str(LVCavityvol.vol)
-        solve(Ftotal == 0, w, bcs, J = Jac, form_compiler_parameters={"representation":"uflacs"})
-        print "after solving, volume = " + str(LVCavityvol.vol)
+        try:
+            solve(Ftotal == 0, w, bcs, J = Jac, form_compiler_parameters={"representation":"uflacs"})
+        except:
+            print "Newton Iteration non-convergence, saving myosim info"
+            np.save(output_path +"dumped_populations", dumped_populations)
+            np.save(output_path + "tarray", tarray)
+            np.save(output_path + "stress_array", strarray)
+            np.save(output_path + "hsl", hslarray)
+            np.save(output_path + "overlap", overlaparray)
+            #np.save(output_path + "dumped_populations",dumped_populations)
+            np.save(output_path + "pstress_array",pstrarray)
+            #np.save(output_path + "alpha_array",alphaarray)
+            np.save(output_path + "calcium",calarray)
+            #np.save(output_path + "HSL",hslarray)
         #++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++
         cb_f_array = project(cb_force, Quad).vector().get_local()[:]
 	print max(cb_f_array), min(cb_f_array)

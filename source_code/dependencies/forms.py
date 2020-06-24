@@ -190,9 +190,9 @@ class Forms(object):
 
         Wp_c_weighted = phi_g*Wp_c
 
-        #Wp = Wp_m + Wp_c
+        Wp = Wp_m + Wp_c
         #Wp = Wp_m_weighted + Wp_c_weighted
-        Wp = Wp_c
+        #Wp = Wp_c
         return Wp
 
 
