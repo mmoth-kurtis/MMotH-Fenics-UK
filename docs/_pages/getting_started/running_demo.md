@@ -11,6 +11,6 @@ title: "Running a Simulation"
 Two demo instruction files are included for the user to test the installation and gain familiarity with functionality.  
 
 ###Start the Docker Container  
-With Docker running, enter the command line of your container by following the suggested workflow instruction from the [previous page](/mmoth-vent/getting_started/)
+With Docker running, enter the command line of your container by following the instructions at the bottom of the [previous page](/MMotH-Vent/getting_started/installation/)
 
 <a href="/MMotH-Vent/getting_started/mesh_generation_readme/" class="btn btn--primary">Building a Mesh >></a>
