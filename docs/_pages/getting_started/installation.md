@@ -18,6 +18,7 @@ Currently, Docker is required to run MMotH-Vent. Docker is a program that create
   * [Clone Repository](#clone-the-mmoth-vent-repository)
   * [Load Image](#load-image)
   * [Create Container](#create-container)
+  * [Enter Container Command Line](#enter-container-command-line)
 
 ## Install Docker
 Install the latest version of [Docker](http://www.docker.com).
@@ -61,7 +62,9 @@ Once the container has been created, it needs to be started. Use the following c
 ```
 docker start CONTAINER_ID
 ```
-With the container started, the following command takes the user to a command line within the container to execute the MMotH code. Replace CONTAINER_NAME with the name of the container as seen from the ```docker ps -a``` command.
+
+## Enter Container Command Line
+Now that the container is started, the following command takes the user to a command line within the container to execute the MMotH code. Replace CONTAINER_NAME with the name of the container as seen from the ```docker ps -a``` command.
 ```
 sudo docker exec -ti -u fenics CONTAINER_NAME /bin/bash -l
 ```
