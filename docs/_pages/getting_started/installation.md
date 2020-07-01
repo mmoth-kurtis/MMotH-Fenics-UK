@@ -13,7 +13,7 @@ gallery:
     title: "biophoto"
 ---
 
-Currently, Docker is required to run MMotH-Vent. Docker is a program that creates "containers" that allows code to be run in a controlled environment using the host computer's resources. A switch from Docker to Singularity may be made in the future to allow the code to be executed on a computing cluster. To get started, follow the below steps:  
+Currently, Docker is required to run MMotH-Vent. Docker is a program that creates "containers" that allows code to be run in a controlled environment using the host computer's resources. A switch from Docker to Singularity may be made in the future to allow the code to be executed on a computing cluster. To get started, follow these steps:  
   * [Install Docker](#install-docker)
   * [Clone Repository](#clone-the-mmoth-fenics-uk-repository)
   * [Load Image](#load-image)
