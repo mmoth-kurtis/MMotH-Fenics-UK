@@ -23,10 +23,10 @@ Currently, Docker is required to run MMotH-Vent. Docker is a program that create
 Install the latest version of [Docker](http://www.docker.com).
 
 ## Clone the MMoth-Vent Repository
-All of the source code to run MMotH-Vent is located on a [GitHub repository](https://github.com/mmoth-kurtis/MMotH-Fenics-UK.git). Users experienced with Git can do this through a command line approach. Otherwise, a .zip file from the repository can be downloaded from the repository. Unzip the file in the desired directory.
+All of the source code to run MMotH-Vent is located on a [GitHub repository](https://github.com/mmoth-kurtis/MMotH-Fenics-UK.git). Users experienced with Git can do this through a command line approach. Otherwise, a .zip file from the repository can be downloaded. Unzip the file in the desired directory.
 
 ## Load Image  
-A Docker image is a copy of the environment used to execute the code. This allows standardization of the modules and their versions used by MMoth-Vent. The image that needs to be loaded by Docker is in the MMotH-Fenics-UK repository, saved as ```MMotH-Vent.tar```. From the command line, with Docker running, navigate to where this file is saved on your machine, and execute the following:  
+A Docker image is a copy of the environment used to execute the code. This allows standardization of the modules and their versions used by MMoth-Vent. The image that needs to be loaded by Docker __is in the MMotH-Fenics-UK repository, saved as ```MMotH-Vent.tar```__. *We need a way to distribute this outside of our lab* From the command line, with Docker running, navigate to where this file is saved on your machine, and execute the following:  
 ```
 docker load < MMotH-Vent.tar
 ```
@@ -38,7 +38,7 @@ to check that the ```MMotH-Vent``` image has been loaded correctly.
 
 
 ## Create Container
-Once Docker has loaded the image, a container can be created in which MMoth-Vent will be ran. To access the cloned repository, the directory containing MMotH-Vent source code needs to be shared with the container. To create the container, and mount the directory to be shared, execute the following at the command line:  
+Once Docker has loaded the image, a container can be created in which MMoth-Vent will be executed. To access the cloned repository, the directory containing MMotH-Vent source code needs to be shared with the container. To create the container, and mount the directory to be shared, execute the following at the command line:  
 ```
 sudo docker run -it --mount src=/path_to_MMotH-Vent_directory_on_machine,target=/home/fenics/shared/,type=bind image_name
 ```
@@ -71,4 +71,4 @@ It is recommended to create an alias shortcut to issue this command regularly. A
 * Enter the command line in the container using ```sudo docker exec -ti -u fenics CONTAINER_NAME /bin/bash -l```
 The container can be exited by issuing the ```exit``` command. Continue to the next page to see how to run an MMotH-Vent simulation.
 
-<a href="/mmoth-vent/getting_started/running_demo/" class="btn btn--primary">Running a Simulation >></a>
+<a href="/MMotH-Vent/getting_started/running_demo/" class="btn btn--primary">Running a Simulation >></a>
