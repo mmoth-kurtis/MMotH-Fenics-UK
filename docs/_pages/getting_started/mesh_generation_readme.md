@@ -32,33 +32,33 @@ Follow the remaining instructions set out in FEniCS_LV_Segmentation.pdf (current
 
 **Note, for rat meshes, instead of using black_blood_3SA_C2h images for the short axis, use "Dense_newFS_6SA_AveMag_Slc0" for the short axis slices, and "Dense_newFS_2LA_AveMag_Slc0" & "Dense_newFS_2LA_AveMag_Slc1" for the long axis images.**
 
-<img src="https://github.com/mmoth-kurtis/MMotH-Fenics-UK/blob/master/docs/pages/images/FEniCS_LV_segmentation_Page_03.jpg?raw=true" alt="titlepage" width="800"/>
+<img src="https://github.com/mmoth-kurtis/MMotH-Vent/blob/master/docs/pages/images/FEniCS_LV_segmentation_Page_03.jpg?raw=true" alt="titlepage" width="800"/>
 
-<img src="https://github.com/mmoth-kurtis/MMotH-Fenics-UK/blob/master/docs/pages/images/FEniCS_LV_segmentation_Page_04.jpg?raw=true" alt="titlepage" width="800"/>
+<img src="https://github.com/mmoth-kurtis/MMotH-Vent/blob/master/docs/pages/images/FEniCS_LV_segmentation_Page_04.jpg?raw=true" alt="titlepage" width="800"/>
 
-<img src="https://github.com/mmoth-kurtis/MMotH-Fenics-UK/blob/master/docs/pages/images/FEniCS_LV_segmentation_Page_05.jpg?raw=true" alt="titlepage" width="800"/>
+<img src="https://github.com/mmoth-kurtis/MMotH-Vent/blob/master/docs/pages/images/FEniCS_LV_segmentation_Page_05.jpg?raw=true" alt="titlepage" width="800"/>
 
-<img src="https://github.com/mmoth-kurtis/MMotH-Fenics-UK/blob/master/docs/pages/images/FEniCS_LV_segmentation_Page_06.jpg?raw=true" alt="titlepage" width="800"/>
+<img src="https://github.com/mmoth-kurtis/MMotH-Vent/blob/master/docs/pages/images/FEniCS_LV_segmentation_Page_06.jpg?raw=true" alt="titlepage" width="800"/>
 
 <img src="https://github.com/mmoth-kurtis/MMotH-Fenics-UK/blob/master/docs/pages/images/FEniCS_LV_segmentation_Page_07.jpg?raw=true" alt="titlepage" width="800"/>
 
-<img src="https://github.com/mmoth-kurtis/MMotH-Fenics-UK/blob/master/docs/pages/images/FEniCS_LV_segmentation_Page_08.jpg?raw=true" alt="titlepage" width="800"/>
+<img src="https://github.com/mmoth-kurtis/MMotH-Vent/blob/master/docs/pages/images/FEniCS_LV_segmentation_Page_08.jpg?raw=true" alt="titlepage" width="800"/>
 
-<img src="https://github.com/mmoth-kurtis/MMotH-Fenics-UK/blob/master/docs/pages/images/FEniCS_LV_segmentation_Page_09.jpg?raw=true" alt="titlepage" width="800"/>
+<img src="https://github.com/mmoth-kurtis/MMotH-Vent/blob/master/docs/pages/images/FEniCS_LV_segmentation_Page_09.jpg?raw=true" alt="titlepage" width="800"/>
 
-<img src="https://github.com/mmoth-kurtis/MMotH-Fenics-UK/blob/master/docs/pages/images/FEniCS_LV_segmentation_Page_10.jpg?raw=true" alt="titlepage" width="800"/>
+<img src="https://github.com/mmoth-kurtis/MMotH-Vent/blob/master/docs/pages/images/FEniCS_LV_segmentation_Page_10.jpg?raw=true" alt="titlepage" width="800"/>
 
-<img src="https://github.com/mmoth-kurtis/MMotH-Fenics-UK/blob/master/docs/pages/images/FEniCS_LV_segmentation_Page_11.jpg?raw=true" alt="titlepage" width="800"/>
+<img src="https://github.com/mmoth-kurtis/MMotH-Vent/blob/master/docs/pages/images/FEniCS_LV_segmentation_Page_11.jpg?raw=true" alt="titlepage" width="800"/>
 
 * Some clarification for the Transform World Matrix: Change the entries in the last column so that the contours are in the center of the viewing volume. **Make sure to use the same transformation for both endo and epi volumes.**  
 
-<img src="https://github.com/mmoth-kurtis/MMotH-Fenics-UK/blob/master/docs/pages/images/FEniCS_LV_segmentation_Page_12.jpg?raw=true" alt="titlepage" width="800"/>
+<img src="https://github.com/mmoth-kurtis/MMotH-Vent/blob/master/docs/pages/images/FEniCS_LV_segmentation_Page_12.jpg?raw=true" alt="titlepage" width="800"/>
 
-<img src="https://github.com/mmoth-kurtis/MMotH-Fenics-UK/blob/master/docs/pages/images/FEniCS_LV_segmentation_Page_13.jpg?raw=true" alt="titlepage" width="800"/>
+<img src="https://github.com/mmoth-kurtis/MMotH-Vent/blob/master/docs/pages/images/FEniCS_LV_segmentation_Page_13.jpg?raw=true" alt="titlepage" width="800"/>
 
-<img src="https://github.com/mmoth-kurtis/MMotH-Fenics-UK/blob/master/docs/pages/images/FEniCS_LV_segmentation_Page_14.jpg?raw=true" alt="titlepage" width="800"/>
+<img src="https://github.com/mmoth-kurtis/MMotH-Vent/blob/master/docs/pages/images/FEniCS_LV_segmentation_Page_14.jpg?raw=true" alt="titlepage" width="800"/>
 
-<img src="https://github.com/mmoth-kurtis/MMotH-Fenics-UK/blob/master/docs/pages/images/FEniCS_LV_segmentation_Page_15.jpg?raw=true" alt="titlepage" width="800"/>
+<img src="https://github.com/mmoth-kurtis/MMotH-Vent/blob/master/docs/pages/images/FEniCS_LV_segmentation_Page_15.jpg?raw=true" alt="titlepage" width="800"/>
 
 * Run the 1.createLV.py script on the stl files (creating json input for this now to be able to specify output directory and mesh name). This creates .vtk files.
   * Note: in the 1.createLV.py file, line 51, the user can control mesh refinement  
