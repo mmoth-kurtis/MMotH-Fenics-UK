@@ -8,4 +8,4 @@ title: "Running a Simulation"
   <p>This page is under  construction.</p>
 </div>
 
-<a href="/mmoth-vent/getting_started/mesh_generation_readme/" class="btn btn--primary">Building a Mesh >></a>
+<a href="/MMotH-Vent/getting_started/mesh_generation_readme/" class="btn btn--primary">Building a Mesh >></a>
