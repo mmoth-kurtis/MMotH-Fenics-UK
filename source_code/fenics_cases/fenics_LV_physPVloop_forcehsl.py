@@ -266,7 +266,7 @@ def fenics(sim_params,file_inputs,output_params,passive_params,hs_params,cell_io
     s0CG.set_allow_extrapolation(True)
     scalefactor_epi = Expression('a', a=0.0, degree=1)
     scalefactor_endo = Expression('a', a=0.0, degree=1)
-    #scalefactor_hsl = Expression('a+b*sin(t*c/d+c/2)', a=1.09, b=0.09, c=3.14, d=100, t=0.0, degree=1)
+    scalefactor_hsl = Expression('a+b*sin(t*c/d+c/2)', a=1.09, b=0.09, c=3.14, d=100, t=0.0, degree=1)
     param_endo={"nvec": s0CG,
            "scalefactor": scalefactor_endo
             };
@@ -348,8 +348,8 @@ def fenics(sim_params,file_inputs,output_params,passive_params,hs_params,cell_io
     #Active force calculation------------------------------------------------------
     y_vec = Function(Quad_vectorized_Fspace)
     #print hsl0_transmural
-    hsl = sqrt(dot(f0, Cmat*f0))*hsl0_transmural
-    #hsl = scalefactor_hsl*hsl0_transmural
+    #hsl = sqrt(dot(f0, Cmat*f0))*hsl0_transmural
+    hsl = scalefactor_hsl*hsl0_transmural
     #print type(hsl)
     # Forcing hsl
     #hsl = scalefactor_hsl.a*hsl0_transmural
@@ -483,9 +483,9 @@ def fenics(sim_params,file_inputs,output_params,passive_params,hs_params,cell_io
     calcium = np.zeros(no_of_time_steps+1)
     y_vec_array = y_vec.vector().get_local()[:]
 
-    hsl_array = project(sqrt(dot(f0, Cmat*f0))*hsl0, Quad).vector().get_local()[:]
+    #hsl_array = project(sqrt(dot(f0, Cmat*f0))*hsl0, Quad).vector().get_local()[:]
     #print scalefactor_hsl.a
-    #hsl_array = project(scalefactor_hsl*hsl0_transmural, Quad).vector().get_local()[:]
+    hsl_array = project(scalefactor_hsl*hsl0_transmural, Quad).vector().get_local()[:]
 
     delta_hsl_array = np.zeros(no_of_int_points)
 
@@ -574,8 +574,8 @@ def fenics(sim_params,file_inputs,output_params,passive_params,hs_params,cell_io
 
         hsl_array = project(hsl, Quad).vector().get_local()[:]           # for Myosim
 
-        delta_hsl_array = project(sqrt(dot(f0, Cmat*f0))*hsl0_transmural, Quad).vector().get_local()[:] - hsl_array_old # for Myosim
-        #delta_hsl_array = project(scalefactor_hsl*hsl0_transmural, Quad).vector().get_local()[:] - hsl_array_old
+        #delta_hsl_array = project(sqrt(dot(f0, Cmat*f0))*hsl0_transmural, Quad).vector().get_local()[:] - hsl_array_old # for Myosim
+        delta_hsl_array = project(scalefactor_hsl*hsl0_transmural, Quad).vector().get_local()[:] - hsl_array_old
 
         temp_DG = project(Pff, FunctionSpace(mesh, "DG", 1), form_compiler_parameters={"representation":"uflacs"})
         p_f = interpolate(temp_DG, Quad)
@@ -781,7 +781,7 @@ def fenics(sim_params,file_inputs,output_params,passive_params,hs_params,cell_io
 
         # force update to hsl
         #scalefactor_hsl.a = 1.09+.09*(np.sin(cell_time*3.14/100 + 3.14/2))
-        #scalefactor_hsl.t = cell_time
+        scalefactor_hsl.t = cell_time
 
         #scalefactor_hsl_f = project(scalefactor_hsl_f,Quad)
         # Update calcium
@@ -863,8 +863,8 @@ def fenics(sim_params,file_inputs,output_params,passive_params,hs_params,cell_io
 
         hsl_array = project(hsl, Quad).vector().get_local()[:]           # for Myosim
 
-        delta_hsl_array = project(sqrt(dot(f0, Cmat*f0))*hsl0_transmural, Quad).vector().get_local()[:] - hsl_array_old # for Myosim
-        #delta_hsl_array = project(scalefactor_hsl*hsl0_transmural,Quad).vector().get_local()[:] - hsl_array_old
+        #delta_hsl_array = project(sqrt(dot(f0, Cmat*f0))*hsl0_transmural, Quad).vector().get_local()[:] - hsl_array_old # for Myosim
+        delta_hsl_array = project(scalefactor_hsl*hsl0_transmural,Quad).vector().get_local()[:] - hsl_array_old
         temp_DG = project(Pff, FunctionSpace(mesh, "DG", 1), form_compiler_parameters={"representation":"uflacs"})
         p_f = interpolate(temp_DG, Quad)
         p_f_array = p_f.vector().get_local()[:]

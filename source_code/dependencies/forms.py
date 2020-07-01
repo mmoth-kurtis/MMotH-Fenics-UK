@@ -301,11 +301,21 @@ class Forms(object):
         Wp_c = C/2.0*(exp(Qbulk) -  1.0) - p*(self.J() - 1.0)
         Wp_c_weighted = Wp_c*phi_g
 
+        #sbulk differentiated wrt Ea, in global coordinates
+        #thus sbulk is PK2 in global?
         sbulk = diff(Wp_c_weighted,Ea)
 
-        #passive stress in fiber direction?
-        Sbulk_f = inner(f0,sbulk*f0)
-        sbulk_flocal = as_tensor([[Sbulk_f, 0.0, 0.0], [0.0, 0.0, 0.0], [0.0, 0.0, 0.0]])
+        #passive stress in fiber direction
+        """Sbulk_f = inner(f0,sbulk*f0)
+        #passive stress in transverse
+        Sbulk_t = inner(s0,sbulk*s0)
+        #passive shear stress
+        Sbulk_shear = inner(f0,sbulk*s0)
+
+        Sbulk_local = as_tensor([[Sbulk_f, Sbulk_shear, Sbulk_shear],[Sbulk_shear, Sbulk_t, Sbulk_shear],[Sbulk_shear, Sbulk_shear, Sbulk_t]])"""
+        #sbulk_flocal = as_tensor([[Sbulk_f, 0.0, 0.0], [0.0, 0.0, 0.0], [0.0, 0.0, 0.0]])
+        #Sbulk_trans_local = as_tensor([[0.0, 0.0, 0.0], [0.0, Sbulk_t, 0.0], [0.0, 0.0, Sbulk_t]])
+        #Sbulk_shear_local = as_tensor([[0.0, Sbulk_shear, Sbulk_shear], [Sbulk_shear, 0.0, Sbulk_shear], [Sbulk_shear, Sbulk_shear, 0.0]])
         #S_local = as_tensor([[Sff, Sfs, Sfn], [Sfs, Sss, Sns], [Sfn, Sns, Snn]])
 
         #S_local = as_tensor([[Sff, 0.0, 0.0], [0.0, 0.0, 0.0], [0.0, 0.0, 0.0]])
@@ -316,7 +326,9 @@ class Forms(object):
         S_global = as_tensor(TransMatrix[i,k]*TransMatrix[j,l]*S_local[k,l],(i,j))
 
         # guccione global
-        S_bulk_global = as_tensor(TransMatrix[i,k]*TransMatrix[j,l]*sbulk_flocal[k,l],(i,j))
+        """S_bulk_global = as_tensor(TransMatrix[i,k]*TransMatrix[j,l]*Sbulk_local[k,l],(i,j))
+        Pg = F*S_global"""
+        Pg = F*sbulk
         S = S_global
         #S = S_local
 
@@ -324,15 +336,15 @@ class Forms(object):
         P = F*S
         Pff =  inner(f0,P*f0)
 
-        Pbulk = F*S_bulk_global
-        Pbulkf = inner(f0,Pbulk*f0)
+        #Pbulk = F*S_bulk_global
+        #Pbulkf = inner(f0,Pbulk*f0)
 
         #T = F*S*F.T - p*I
         T = F*S*F.T
 
         #return  P,S,T, alpha
         #return   Pbulkf, Pff, alpha
-        return Pff, alpha
+        return Pg, Pff, alpha
 
     def return_radial_vec_ratio(self):
 

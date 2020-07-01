@@ -53,7 +53,10 @@ calcium = np.load(sim_dir + '/calcium.npy')
 HSL = np.load(sim_dir + '/hsl.npy')
 #HSL = np.load(sim_dir + '/hslarray.npy')
 pstress = np.load(sim_dir + '/pstress_array.npy')
-overlap = np.load(sim_dir + '/overlap.npy')
+#gucc_fiber = np.load(sim_dir + '/gucc_fiber.npy')
+#gucc_trans = np.load(sim_dir + '/gucc_trans.npy')
+#gucc_shear = np.load(sim_dir + '/gucc_shear.npy')
+#overlap = np.load(sim_dir + '/overlap.npy')
 # Define number of time steps and array length here
 sim_info = fenics_pop_file.shape
 num_timesteps = sim_info[0]
@@ -165,15 +168,20 @@ plt.xlabel('time [s]')
 plt.ylabel("hsl (nm)")
 
 #---------------------------------------------------------------------------------
-plt.subplot(423)
+"""plt.subplot(423)
 print np.shape(pstress)
-plt.plot(tarray, pstress[0:data_range,gauss_point])
+fiber_pstress, = plt.plot(tarray, pstress[0:data_range,gauss_point])
+gfiber, = plt.plot(tarray, gucc_fiber[0:data_range,gauss_point])
+gtrans, = plt.plot(tarray, gucc_trans[0:data_range,gauss_point])
+gshear, = plt.plot(tarray, gucc_shear[0:data_range,gauss_point])
+plt.legend((fiber_pstress, gfiber, gtrans, gshear), ('fiber', 'G_fiber', 'G_trans', 'G_shear'))
+
 #plt.plot(tarray, pstress[0:data_range])
 plt.ylabel('Passive Stress (Pa)')
 #------------------------------------------------------------------------------
 plt.subplot(425)
 plt.plot(tarray, overlap[0:data_range,gauss_point])
-plt.ylabel('Overlap')
+plt.ylabel('Overlap')"""
 #plt.subplot(423)
 #plt.scatter(myosim_rates[:,0], myosim_rates[:,1],color='k')
 """if lang_flag=='python':
