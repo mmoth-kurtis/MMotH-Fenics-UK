@@ -80,7 +80,7 @@ def fenics(sim_params,file_inputs,output_params,passive_params,hs_params,cell_io
     hs = half_sarcomere.half_sarcomere(hs_params,1)
     cell_ion = cell_ion_driver.cell_ion_driver(cell_ion_params)
     calcium = np.zeros(time_steps)
-    calcium[0] = cell_ion.model_class.calculate_concentrations(0,0,fdataCa)
+    calcium[0] = cell_ion.model_class.calculate_concentrations(0,0)
     parameters["form_compiler"]["quadrature_degree"]=2
     parameters["form_compiler"]["representation"] = "quadrature"
     #
@@ -285,6 +285,8 @@ def fenics(sim_params,file_inputs,output_params,passive_params,hs_params,cell_io
     calarray = []
     strarray = []
     pstrarray = []
+    overlaparray = np.zeros((time_steps+1,no_of_int_points))
+    print np.shape(overlaparray)
 
 
     y_vec_array = y_vec.vector().get_local()[:]
@@ -300,7 +302,7 @@ def fenics(sim_params,file_inputs,output_params,passive_params,hs_params,cell_io
         y_vec_array[counter+1] = 1
         y_vec_array[counter-2] = 1
 
-    Pff, alpha = uflforms.stress()
+    Pg, Pff, alpha = uflforms.stress()
 
     temp_DG = project(Pff, FunctionSpace(mesh, "DG", 1), form_compiler_parameters={"representation":"uflacs"})
     p_f = interpolate(temp_DG, Quad)
@@ -346,14 +348,20 @@ def fenics(sim_params,file_inputs,output_params,passive_params,hs_params,cell_io
 
         # Right now, not general. The calcium depends on cycle number, just saying 0
         cycle = 0
-        calcium[l] = cell_ion.model_class.calculate_concentrations(cycle,t,fdataCa)
+        calcium[l] = cell_ion.model_class.calculate_concentrations(cycle,t)
 
         #calcium[l] = cell_ion.model.calculate_concentrations(0,t)
 
         # Looping through integration points within Python Myosim, not here
         # Debugging, checking if y_input matches y_output between steps
         #print y_vec_array[0:53]
-        y_vec_array_new = implement.update_simulation(hs, step_size, delta_hsl_array, hsl_array, y_vec_array, p_f_array, cb_f_array, calcium[l], n_array_length, t)
+        # Quick hack
+        if l == 0:
+            overlap_counter = 1
+        else:
+            overlap_counter = l
+
+        temp_overlap, y_vec_array_new = implement.update_simulation(hs, step_size, delta_hsl_array, hsl_array, y_vec_array, p_f_array, cb_f_array, calcium[l], n_array_length, t,overlaparray[overlap_counter,:])
     #    print y_vec_array_new[0:53]
         y_vec_array = y_vec_array_new # for Myosim
     #    print y_vec_array[0:53]
@@ -377,6 +385,8 @@ def fenics(sim_params,file_inputs,output_params,passive_params,hs_params,cell_io
         strarray.append(cb_f_array[0])
         pstrarray.append(p_f_array[0])
         hslarray.append(hsl_array[0]+delta_hsl_array[0])
+        overlaparray[l,:] = temp_overlap
+
 
         #print(cb_f_array)
 
@@ -430,7 +440,9 @@ def fenics(sim_params,file_inputs,output_params,passive_params,hs_params,cell_io
     "pstrarray": pstrarray,
     "alphaarray": darray,
     "calarray": calarray,
-    "hsl": hslarray
+    "hsl": hslarray,
+    "overlap": overlaparray
+
     }
     fdataCa.close()
 

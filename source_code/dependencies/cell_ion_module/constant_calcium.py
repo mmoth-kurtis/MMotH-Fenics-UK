@@ -1,39 +1,43 @@
 import numpy as np
 
 
-## Uses a constant calcium
-def display_success():
-    print "model successfully imported"
+## Initialize constant calcium class
+#
+# constant calcium class is passed back to fenics script
+# @param[in] params Dictionary for cell ion model in the input file under "model_inputs"
+# @param[out] model_class Class object generated, passed back to fenics script
+def init(params):
 
-def calculate_concentrations(cycle,time):
+    model_class = constant_calcium(params)
+    return model_class
 
-    """# Time is passed in as ms, not seconds
-    t = time/1000
-    # Don't plan on using this transient much, hard coding some stuff
-    t_act = 0.08
-    cardiac_period = .17
-    t_p = cardiac_period*cycle + t_act+0.01
-    fCa = 25
-    fCa_2 = 2.5
-    calcium_value = 0.0
-    pCa = 7
+## Constant calcium class
+#
+# This is the class whose method returns a constant calcium value
+#
+#
+class constant_calcium():
 
-    if t <= t_act:
-        pCa = 7
-        calcium_value = 10**(-1*pCa)
+    def __init__(self,params):
 
-    elif ((cardiac_period*cycle+t_act) < t) and (t < (t_p)):
-        pCa = (t - (cardiac_period*cycle+t_act))/0.02
+        # Hard coding, have established this transient
+        # these could be set in params if needed
+        self.t_act = params["t_act"]
+        self.pCa = params["pCa"]
 
-    elif (t >= t_p):
-        pCa = 0.5*np.exp(-np.power((t - t_p)*fCa, fCa_2))
+    ## calculate calcium concentration method
+    #
+    # returns constant calcium value according to user defined pCa value after
+    # time exceeds t_act. Uses class properties self.t_act and self.pCa
+    # @param[in] cycle Integer denoting current cardiac cycle. Not needed for this
+    # @param[in] time float denoting the current cell time, specified in ms
+    # @param[out] calcium_value float calculated calcium value
+    def calculate_concentrations(self,cycle,time):
 
-    calcium_value = (0.1 + 1000 * np.sin(3.14*pCa)) * 1E-9"""
+        t = time/1000
 
-    t = time/1000
-    t_act = 0.01
-    calcium_value = 0.0
-    if t > t_act:
-        calcium_value = np.power(10.0,-5)
+        calcium_value = 0.0
+        if t > self.t_act:
+            calcium_value = np.power(10.0,-self.pCa)
 
-    return calcium_value
+        return calcium_value

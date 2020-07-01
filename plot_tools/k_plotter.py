@@ -46,6 +46,14 @@ fenics_pop_file = np.load(sim_dir + '/dumped_populations.npy')
 tarray = np.load(sim_dir + '/tarray.npy')
 #tarray = tarray[:-1]
 stress_array = np.load(sim_dir + '/stress_array.npy')
+
+print stress_array.ndim
+if stress_array.ndim > 1:
+    # single cell sims only save for one gauss point, dimension is one less than
+    # ventricle simulation
+    single_cell_sim_flag = 0
+else:
+    single_cell_sim_flag = 1
 #stress_array = np.load(sim_dir + '/strarray.npy')
 
 calcium = np.load(sim_dir + '/calcium.npy')
@@ -79,25 +87,11 @@ fenics_pop_data = np.zeros((num_timesteps,array_length))
 for i in range(data_range):
 
     # Reading in information from just one Gauss point [i = timestep, 0 = gauss point, : is all pop info]
-    # Which element is it from?
-    #fenics_pop_data[i,:] = fenics_pop_file[i,0,:]
     fenics_pop_data[i,0] = fenics_pop_file[i,gauss_point,0] # state 1 pops
     fenics_pop_data[i,1] = fenics_pop_file[i,gauss_point,1] # state 2 pops
     fenics_pop_data[i,2] = np.sum(fenics_pop_file[i,gauss_point,2:array_length-3]) # state 3
     fenics_pop_data[i,3] = fenics_pop_file[i,0,array_length-1]
     fenics_pop_data[i,4:] = fenics_pop_file[i,0,4:array_length]
-
-""" Not interested in myosim information at the moment
-myosim_pop_file = 'C:\\ProgramData\\Myosim\\MyoSim_output\\populations.txt'
-myosim_pop_data = np.zeros((no_of_time_steps,4))
-myosim_pop_data[:,0:3] = np.loadtxt(myosim_pop_file, skiprows = 5, usecols = (1,2,3))
-myosim_rates_file = 'C:\\ProgramData\\Myosim\\MyoSim_output\\rates.txt'
-myosim_summary_file = 'C:\\ProgramData\\Myosim\\MyoSim_output\\summary.txt'
-myosim_summary_data = np.zeros((no_of_time_steps,2))
-myosim_summary_data[:,0:2] = np.loadtxt(myosim_summary_file, skiprows = 5, usecols = (0,2))
-myosim_rates = np.zeros((n_array_length-3,5))
-myosim_rates[:,0:5] = np.loadtxt(myosim_rates_file, skiprows = 1, usecols = (0,1,2,3,4))"""
-
 
 """fenics_rates_file = sim_dir + '/rates.npy'
 
@@ -118,9 +112,9 @@ fig = plt.figure()
 #------------------------------------------------------------------------------
 plt.subplot(422)
 #Added -1 so it plots fenics_pop_data[:-1,#] instead of entire array. Time array is one short for some reason
-state_1_pops_fenics, = plt.plot(tarray, fenics_pop_data[0:data_range,0],label='SRX')
-state_2_pops_fenics, = plt.plot(tarray, fenics_pop_data[0:data_range,1],label='Detached')
-state_3_pops_fenics, = plt.plot(tarray, fenics_pop_data[0:data_range,2],label='M Bound')
+state_1_pops_fenics, = plt.plot(tarray[0:data_range], fenics_pop_data[0:data_range,0],label='SRX')
+state_2_pops_fenics, = plt.plot(tarray[0:data_range], fenics_pop_data[0:data_range,1],label='Detached')
+state_3_pops_fenics, = plt.plot(tarray[0:data_range], fenics_pop_data[0:data_range,2],label='M Bound')
 
 """plt.scatter(tarray[::10], myosim_pop_data[::10,0], color = 'k')
 plt.scatter(tarray[::10], myosim_pop_data[::10,1], color = 'b')
@@ -135,8 +129,8 @@ plt.ylabel("Proportions")
 #------------------------------------------------------------------------------
 plt.subplot(424)
 #state_3_pops_fenics, = plt.plot(tarray, np.sum(fenics_pop_data[0:data_range,2:array_length-2]), 'r')
-state_3_pops_fenics, = plt.plot(tarray, fenics_pop_data[0:data_range,2])
-binding_sites, = plt.plot(tarray, fenics_pop_file[0:data_range,gauss_point,array_length-1])
+state_3_pops_fenics, = plt.plot(tarray[0:data_range], fenics_pop_data[0:data_range,2])
+binding_sites, = plt.plot(tarray[0:data_range], fenics_pop_file[0:data_range,gauss_point,array_length-1])
 
 #plt.scatter(tarray, myosim_pop_data[:,2], color = 'r')
 #plt.scatter(tarray[::10], myosim_pop_data[::10,2], color = 'r')
@@ -146,7 +140,10 @@ plt.xlabel('time (s)')
 plt.ylabel("Proportions")
 #------------------------------------------------------------------------------
 plt.subplot(426)
-plt.plot(tarray, stress_array[0:data_range,gauss_point])
+if single_cell_sim_flag > 0:
+    plt.plot(tarray,stress_array[0:data_range])
+else:
+    plt.plot(tarray[0:data_range], stress_array[0:data_range,gauss_point])
 #plt.plot(tarray, stress_array[0:data_range])
 #plt.scatter(myosim_summary_data[:,0], myosim_summary_data[:,1],color='r')
 #plt.scatter(myosim_summary_data[::10,0], myosim_summary_data[::10,1],color='r')
@@ -155,13 +152,16 @@ plt.ylabel("Stress (Pa)")
 
 #------------------------------------------------------------------------------
 plt.subplot(428)
-plt.plot(tarray, calcium[0:data_range,0])
+plt.plot(tarray[0:data_range], calcium[0:data_range,0])
 #plt.scatter(myosim_summary_data[:,0], myosim_summary_data[:,1],color='r')
 plt.xlabel('time (s)')
 plt.ylabel("Calcium [M]")
 #------------------------------------------------------------------------------
 ax2 = plt.subplot(421)
-plt.plot(tarray, HSL[0:data_range,gauss_point])
+if single_cell_sim_flag > 0:
+    plt.plot(tarray,HSL[0:data_range])
+else:
+    plt.plot(tarray[0:data_range], HSL[0:data_range,gauss_point])
 #plt.plot(tarray, HSL[0:data_range])
 #plt.scatter(myosim_summary_data[:,0], myosim_summary_data[:,1],color='r')
 plt.xlabel('time [s]')
@@ -234,7 +234,10 @@ y = np.zeros(np.shape(cb_domain))
 def animate(i):
     # array_length -1 for cpp, -2 for python
     y = fenics_pop_file[i,gauss_point,2:array_length-2]
-    m.append(HSL[i,gauss_point])
+    if single_cell_sim_flag > 0:
+        m.append(HSL[i])
+    else:
+        m.append(HSL[i,gauss_point])
     print np.shape(cb_domain)
     t.append(tarray[i])
     print np.shape(y)
