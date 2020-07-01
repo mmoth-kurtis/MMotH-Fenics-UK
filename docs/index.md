@@ -27,7 +27,7 @@ gallery:
 
 <!--{% include gallery layout="third"  %}-->
 
-MMotH-Vent is a multi-scale finite-element solver that simulates left ventricular mechanics. Specifically, MMotH-Vent simulates cardiac cycles by coupling a cross-bridge kinetics model to a myocardial tissue constitutive law and circulatory model. More information about each model formulation can be found [here](/mmoth-vent/model_formulation/model_formulations/).  
+MMotH-Vent is a multi-scale finite-element solver that simulates left ventricular mechanics. Specifically, MMotH-Vent simulates cardiac cycles by coupling a cross-bridge kinetics model to a myocardial tissue constitutive law and circulatory model. More information about each model formulation can be found [here](/MMotH-Vent/model_formulation/model_formulations/).  
 
 MMotH is a collaborative project led by:  
 * [Dr. Ken Campbell](https://sites.google.com/g.uky.edu/campbellmusclelab), University of Kentucky
@@ -35,7 +35,7 @@ MMotH is a collaborative project led by:
 * [Dr. Lik-Chuan Lee](https://researchgroups.msu.edu/compbiomech/), Michigan State University
 * [Dr. Chris Yengo](https://sites.psu.edu/yengolab1/), Penn State University
 
-Get started with MMotH-Vent by installing it [here](/mmoth-vent/getting_started/installation/).
+Get started with MMotH-Vent by installing it [here](/MMoth-Vent/getting_started/installation/).
 
 <!--<h3 class="archive__subtitle">{{ site.data.ui-text[site.locale].recent_posts | default: "Recent Posts" }}</h3>-->
 
