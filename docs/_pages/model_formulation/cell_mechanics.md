@@ -13,7 +13,7 @@ Each gauss point within a finite element is treated as a half-sarcomere. The hal
 
 ### Cross-brige Kinetics
 This will go more in depth in the equations/cross-bridge distribution techniques.  
-[Contraction Models](/mmoth-vent/overview/cell_mechanics/contraction_models/)
+[Contraction Models](/MMotH-Vent/overview/cell_mechanics/contraction_models/)
 
 ### Cell Ion Modeling
 For now, we are just calculating the calcium concentration. Expand on this.
