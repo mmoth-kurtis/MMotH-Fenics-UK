@@ -70,3 +70,5 @@ Follow the remaining instructions set out in FEniCS_LV_Segmentation.pdf (current
 * Run LV_Test.py on the New_Mesh files to yield the HDF5 file. This is what is needed for FEniCS. This step creates the mesh and assigns fiber angles, as well as the local coordinate system for each element.
 * Crop the top of the volumes out in Paraview.
 * Quick note: **Check the fiber orientation**. Loading in the ```fiber.pvd``` file will show scalar values for fiber angles at each integration point. This may not actually be correct. After initializing a simulation, the ```fiber000000.vtu``` file will allow for the visualization of the fiber angle vectors in Paraview. Load this file, and click "Glyph". In my case, after the epicardium, the fibers wound the wrong way. I had to switch ```isendoflip``` to ```False``` in line 51 of ```LV_Test.py```.
+
+<a href="/MMotH-Vent/getting_started/fenics_input_readme/" class="btn btn--primary"><< Creating Input Files </a>
