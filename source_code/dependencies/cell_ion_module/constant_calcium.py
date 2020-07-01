@@ -22,8 +22,8 @@ class constant_calcium():
 
         # Hard coding, have established this transient
         # these could be set in params if needed
-        self.t_act = params["t_act"]
-        self.pCa = params["pCa"]
+        self.t_act = params["t_act"][0]
+        self.pCa = params["pCa"][0]
 
     ## calculate calcium concentration method
     #
@@ -34,10 +34,13 @@ class constant_calcium():
     # @param[out] calcium_value float calculated calcium value
     def calculate_concentrations(self,cycle,time):
 
+        print "calculating calcium"
+        print "time = " + str(time)
+        print "t_act = " + str(self.t_act)
         t = time/1000
 
         calcium_value = 0.0
         if t > self.t_act:
             calcium_value = np.power(10.0,-self.pCa)
-
+            print "calcium is " + str(calcium_value)
         return calcium_value

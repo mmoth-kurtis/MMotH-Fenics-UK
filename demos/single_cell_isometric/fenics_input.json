@@ -91,8 +91,8 @@
     "model_inputs": {
 	"initial_calcium": [1e-7, "Molar"],
         "path_to_calcium": ["/home/fenics/shared/demos/ellipsoid_input/calcium_14.npy"],
-	"pCa": [5],
-	"t_act": [0.01]
+	"pCa": [7],
+	"t_act": [0.0]
     }
   },
 
