@@ -25,7 +25,19 @@ In general, the syntax to execute MMotH-Vent is
 python [path to fenics_driver.py] [instruction file]
 ```
 
-The default option in this instruction file is to save all of the output in the same directory from which ```fenics_driver.py``` is executed from.
+The default option in this instruction file is to save all of the output in the same directory from which ```fenics_driver.py``` is executed. The MyoSim data at any gauss point can be plotted by executing
+```
+python [path to k_plotter] [gauss point]
+```
+Assuming the path hierarchy is unchanged from the master repository, after running the demo, the MyoSim data can be visualized by
+```
+python /home/fenics/shared/plot_tools/k_plotter 0
+```
+which should yield the following plot:
+```
+insert screenshot
+```
+Finally, the mesh and displacement solutions are saved as ParaView files, and can be viewed with that free program.
 
 
 <a href="/MMotH-Vent/getting_started/mesh_generation_readme/" class="btn btn--primary">Building a Mesh >></a>
