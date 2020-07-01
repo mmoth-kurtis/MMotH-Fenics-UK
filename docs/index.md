@@ -35,7 +35,7 @@ MMotH is a collaborative project led by:
 * [Dr. Lik-Chuan Lee](https://researchgroups.msu.edu/compbiomech/), Michigan State University
 * [Dr. Chris Yengo](https://sites.psu.edu/yengolab1/), Penn State University
 
-Get started with MMotH-Vent by installing it [here](/mmoth-vent/getting_started/installation/).
+Get started with MMotH-Vent by installing it [here](/MMotH-Vent/getting_started/installation/).
 
 <!--<h3 class="archive__subtitle">{{ site.data.ui-text[site.locale].recent_posts | default: "Recent Posts" }}</h3>-->
 
