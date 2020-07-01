@@ -33,7 +33,7 @@ Assuming the path hierarchy is unchanged from the master repository, after runni
 python /home/fenics/shared/plot_tools/k_plotter 0
 ```
 which should yield the following plot:
-<img src="https://github.com/mmoth-kurtis/MMotH-Vent/blob/master/docs/pages/images/FEniCS_LV_segmentation_Page_03.jpg?raw=true" alt="titlepage" width="800"/>
+<img src="https://github.com/mmoth-kurtis/MMotH-Vent/blob/master/docs/assets/images/Screen%20Shot%202020-07-01%20at%205.03.18%20PM.png?raw=true" alt="titlepage" width="800"/>
 Finally, the mesh and displacement solutions are saved as ParaView files, and can be viewed with that free program.
 
 
