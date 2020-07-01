@@ -41,7 +41,7 @@ to check that the ```MMotH-Vent``` image has been loaded correctly.
 ## Create Container
 Once Docker has loaded the image, a container can be created in which MMoth-Vent will be executed. To access the cloned repository, the directory containing MMotH-Vent source code needs to be shared with the container. To create the container, and mount the directory to be shared, execute the following at the command line:  
 ```
-sudo docker run -it --mount src=/path_to_MMotH-Vent_directory_on_machine,target=/home/fenics/shared/,type=bind image_name
+sudo docker run -it --mount src=[/path_to_MMotH-Vent_directory_on_machine],target=[/home/fenics/shared/,type=bind image_name]
 ```
 The directory structure within the new container is  
 ```
@@ -60,18 +60,18 @@ This displays something similar to the following, showing all containers created
 {% include figure image_path="/assets/images/docker_display_images.png" alt="Display containers" %}
 Once the container has been created, it needs to be started. Use the following command and replace "Container ID" with the created container's ID which can be found from the previous command.
 ```
-docker start CONTAINER_ID
+docker start [CONTAINER_ID]
 ```
 
 ## Enter Container Command Line
 Now that the container is started, the following command takes the user to a command line within the container to execute the MMotH code. Replace CONTAINER_NAME with the name of the container as seen from the ```docker ps -a``` command.
 ```
-sudo docker exec -ti -u fenics CONTAINER_NAME /bin/bash -l
+sudo docker exec -ti -u fenics [CONTAINER_NAME] /bin/bash -l
 ```
 It is recommended to create an alias shortcut to issue this command regularly. As a recap, once the container is created from the image, the regular workflow to use MMotH-Vent is:
 * Start Docker
-* From the command line, start the created container using ```docker start CONTAINER_ID```
-* Enter the command line in the container using ```sudo docker exec -ti -u fenics CONTAINER_NAME /bin/bash -l```
+* From the command line, start the created container using ```docker start [CONTAINER_ID]```
+* Enter the command line in the container using ```sudo docker exec -ti -u fenics [CONTAINER_NAME] /bin/bash -l```
 The container can be exited by issuing the ```exit``` command. Continue to the next page to see how to run an MMotH-Vent simulation.
 
 <a href="/MMotH-Vent/getting_started/running_demo/" class="btn btn--primary">Running a Simulation >></a>

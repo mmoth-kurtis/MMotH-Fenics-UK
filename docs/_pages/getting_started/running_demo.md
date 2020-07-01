@@ -12,12 +12,20 @@ Two demo instruction files are included for the user to test the installation an
 
 Navigate to ```/home/fenics/shared/demos/```, where you will see two directories:  
 * ```single_cell_length_control_demo/```
-* ```ellipsoidal_ventricle_demo```
+* ```ellipsoidal_ventricle_demo/```
 
 Enter the ```single_cell_length_control_demo/``` directory, which contains the instruction file ```singlecell_demo.json```. To execute this instruction file, use the following command:  
 
-```python
-python ../../source_code/fenics_drive.py singlecell_demo.json
 ```
+python ../../source_code/fenics_driver.py singlecell_demo.json
+```
+
+In general, the syntax to execute MMotH-Vent is
+```
+python [path to fenics_driver.py] [instruction file]
+```
+
+The default option in this instruction file is to save all of the output in the same directory from which ```fenics_driver.py``` is executed from.
+
 
 <a href="/MMotH-Vent/getting_started/mesh_generation_readme/" class="btn btn--primary">Building a Mesh >></a>
