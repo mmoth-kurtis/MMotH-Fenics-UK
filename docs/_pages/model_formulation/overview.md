@@ -16,6 +16,6 @@ This code features a multi-scale model of the left-ventricle. Below is a figure 
 
 For more detail about individual model formulations, see below:
 
-[Cell Mechanics](/MMotH-Vent/overview/cell_mechanics/)  
-[Tissue Mechanics](/MMotH-Vent/overview/tissue_mechanics/)  
-[Hemodynamics](/MMotH-Vent/overview/hemodynamics/)  
+[Cell Mechanics](/MMotH-Vent/model_formulation/cell_mechanics/)  
+[Tissue Mechanics](/MMotH-Vent/model_formulation/tissue_mechanics/)  
+[Hemodynamics](/MMotH-Vent/model_formulation/hemodynamics/)  
