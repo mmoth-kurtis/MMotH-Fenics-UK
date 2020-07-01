@@ -12,19 +12,24 @@ from fenics_cases import fenics_LV
 from dependencies import recode_dictionary
 from dependencies import load_parameters
 import numpy as np
-#from pso import pso_driver
-## This should be running in a FEniCS container, make it easy to import necessary source code
 
 
 def sim_driver(input_file_name):
 
-    ## This is the simulation driver.
+    ## This is the simulation driver function.
     #
-    #Loads in parameters and selects appropriate fenics script to run
-    # User provides file name
-    #input_file_name = sys.argv[1]
+    # sim_driver is the function that is called when the user executes this script.
+    # The high level parsing of the instruction file is done here, including
+    # determining which fenics script to execute (single cell, full ventricle, etc.)
+    # and saving the output of that script upon successful execution.
+    #
+    # Parameters
+    # ----------
+    # input_file_name: string
+    #   JSON formatted input file. The structure of this file should follow that
+    #   seen [here](https://mmoth-kurtis.github.io/MMotH-Fenics-UK/getting_started/fenics_input_readme/)
 
-    # Check that the file exists, if not , exit
+    # Check that the file exists, if not , exit.
     if not os.path.exists(input_file_name):
         print "input file does not exist"
         exit()
@@ -33,10 +38,10 @@ def sim_driver(input_file_name):
     with open(input_file_name, 'r') as json_input:
       input_parameters = json.load(json_input)
 
-    # Convert any unicode values to python strings so they work with some cpp libraries
+    # Convert any unicode values to python strings so they work with some cpp libraries.
     recode_dictionary.recode(input_parameters)
 
-    ## Parse out the different types of parameters
+    # Parse out the different types of parameters.
     sim_params = input_parameters["simulation_parameters"]
     file_inputs = input_parameters["file_inputs"]
     output_params = input_parameters["output_parameters"]
@@ -47,19 +52,19 @@ def sim_driver(input_file_name):
     windkessel_params = input_parameters["windkessel_parameters"]
     optimization_params = input_parameters["optimization_parameters"]
 
-    ## Assign input/output parameters
+    # Assign input/output parameters.
     output_path = output_params["output_path"][0]
     input_path = file_inputs["input_directory_path"][0]
 
-    # This may only be needed in ventricle simulations
+    # This may only be needed in ventricle simulations.
     casename = file_inputs["casename"][0]
 
-    # Check that the output path exists. If it does not, create it and let user know
+    # Check that the output path exists. If it does not, create it and let user know.
     if not os.path.exists(output_path):
         print "Output path does not exist. Creating it now"
         os.makedirs(output_path)
 
-    # Figure out which script needs to be executed
+    # Figure out which script needs to be executed.
     if sim_params["sim_geometry"][0] == "ventricle":
         fenics_script = "fenics_LV"
     elif sim_params["sim_geometry"][0] == "ventricle_lclee_2":
@@ -75,10 +80,9 @@ def sim_driver(input_file_name):
     elif sim_params["sim_geometry"][0] == "single_cell":
         fenics_script = "fenics_singlecell_isometric"
     else:
-        sys.exit("Script does not exist for specified Geometry. Please include an existing fenics script.")
+        sys.exit("FEnICS cript does not exist. Please include an existing fenics script.")
 
-    # For now, going to have to import appropriate script as a module and wrap the whole
-    # thing in a function so that inputs and output can be passed
+    # Import the script as a module so inputs and outputs can be passed.
     script_name = __import__(fenics_script)
 
     # Call the "fenics" function within the script
@@ -108,12 +112,8 @@ def sim_driver(input_file_name):
     np.save(output_path + "hsl",output_dictionary["hsl"])
     np.save(output_path + "overlap",output_dictionary["overlap"])
 
-    # If user wants to visualize, do that here
-#    if output_params["visualize_flag"][0] > 0:
-
-        # call plotting script
-#        print "going to visualize"
-
-
+# Execute script if input file is given
 if np.shape(sys.argv) > 0:
     sim_driver(sys.argv[1])
+else:
+    sys.exit("Error: No input file given.")
