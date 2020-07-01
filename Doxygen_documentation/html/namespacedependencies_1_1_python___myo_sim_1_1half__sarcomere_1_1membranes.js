@@ -1,0 +1,4 @@
+var namespacedependencies_1_1_python___myo_sim_1_1half__sarcomere_1_1membranes =
+[
+    [ "membranes", "namespacedependencies_1_1_python___myo_sim_1_1half__sarcomere_1_1membranes_1_1membranes.html", "namespacedependencies_1_1_python___myo_sim_1_1half__sarcomere_1_1membranes_1_1membranes" ]
+];

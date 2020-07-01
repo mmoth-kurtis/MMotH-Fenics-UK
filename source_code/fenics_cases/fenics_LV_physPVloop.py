@@ -19,10 +19,48 @@ from cell_ion_module import cell_ion_driver
 import homogeneous_stress
 from edgetypebc import *
 
+## Fenics simulation function
+#
+# This simulates some integer number of cardiac cycles.
+# As of 07/01/2020, the following is implemented:
+# - Combination of Guccione strain-energy function (SEF) and myofiber SEF
+# - General MyoSim drives active contraction based on [Ca]2+ from file or 3 state paper
+# - 3 compartment Windkessel circulatory system
+#
+# General layout of this script:
+#   - Parse input parameters
+#   - Read in mesh, assign fiber, sheet, sheet-normal local coordinate system
+#   - Define appropriate finite elements and function spaces
+#   - Define variational problem and boundary conditions (active stress calculated here so Newton Iteration can vary it)
+#       boundary conditions: zero z-displacement at base, mean x,y displacement = 0
+#   - Load ventricle by incrementally increasing cavity volume.
+#     No contraction occurs here. Solve for new displacements after each loading step
+#   - "Closed Loop Phase"
+#       - Solve Windkessel model
+#           - Solve for new compartment pressures based on volumes from previous timestep
+#           - Calculate blood flow between compartments, update volumes
+#       - Solve MyoSim
+#           - Calcium updated from cell_ion module before MyoSim call
+#           - Interpolate cross-bridges based on solution from previous Newton Iteration
+#           - Solve ODEs to get new populations
+#       - Solve variational problem to get new displacements
+#
+# Parameters
+# ----------
+# @param[in] sim_params Dictionary for setting up the simulation
+# @param[in] file_inputs Dictionary containing all file information, now namely just mesh casename
+# @param[in] output_params Dictionary to specify output path
+# @param[in] passive_params Dictionary for passive material law parameters
+# @param[in] hs_params Dictionary for all MyoSim parameters
+# @param[in] cell_ion_params Dictionary for cell ion module parameters
+# @param[in] monodomain_params Dictionary for monodomain parameters (not implemented)
+# @param[in] windkessel_params Dictionary for all Windkessel parameters
+# @param[out]
 def fenics(sim_params,file_inputs,output_params,passive_params,hs_params,cell_ion_params,monodomain_params,windkessel_params):
     global i
     global j
 
+    # We don't do pressure control simulations, probably will get rid of this.
     ispressurectrl = False
     #------------------## Load in all information and set up simulation #-----------------
 
