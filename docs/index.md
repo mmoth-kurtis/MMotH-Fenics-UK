@@ -32,7 +32,7 @@ MMotH-Vent is a multi-scale finite-element solver that simulates left ventricula
 MMotH is a collaborative project led by:  
 * [Dr. Ken Campbell](https://sites.google.com/g.uky.edu/campbellmusclelab), University of Kentucky
 * [Dr. Jonathan Wenk](https://www.engr.uky.edu/directory/wenk-jonathan), University of Kentucky
-* [Dr. Lik-Chuan Lee](https://researchgroups.msu.edu/compbiomech/), Michigan State University
+* [Dr. Lik Chuan Lee](https://researchgroups.msu.edu/compbiomech/), Michigan State University
 * [Dr. Chris Yengo](https://sites.psu.edu/yengolab1/), Penn State University
 
 Get started with MMotH-Vent by installing it [here](/MMotH-Vent/getting_started/installation/).
