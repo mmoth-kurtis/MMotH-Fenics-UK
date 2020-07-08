@@ -43,11 +43,12 @@ num_bins = np.shape(cb_domain)
 # Assuming the dumped npy files from FEniCS always take these names
 # Note, these arrays include info for every Gauss point
 fenics_pop_file = np.load(sim_dir + '/dumped_populations.npy')
-tarray = np.load(sim_dir + '/tarray.npy')
+#tarray = np.load(sim_dir + '/tarray.npy')
+tarray = np.arange(0,340,0.5)
 #tarray = tarray[:-1]
 stress_array = np.load(sim_dir + '/stress_array.npy')
 
-print stress_array.ndim
+#print stress_array.ndim
 if stress_array.ndim > 1:
     # single cell sims only save for one gauss point, dimension is one less than
     # ventricle simulation
@@ -74,7 +75,8 @@ array_length = sim_info[2]
 #print sys.argv[1]
 gauss_point = int(sys.argv[1])
 #gauss_point = 1000
-data_range = np.shape(tarray)[0]
+#data_range = np.shape(tarray)[0]
+data_range = 8
 # Look at how info is dumped from FEniCS. For now, hard code number of detached and attached states, and bins
 # Want to be able to visualize distributions, will need this info to set up arrays.
 #num_d_states
@@ -217,7 +219,7 @@ else:
 #------------------------------------------------------------------------------
 # Animate cross-bridges during simulation
 max_nbound = np.max(fenics_pop_data[:,2])
-print max_nbound
+#print max_nbound
 ax1 = plt.subplot(427,xlim=(xmin-1,xmax+1),ylim=(-.001,max_nbound/2))
 #ax = plt.axes(xlim=(xmin,xmax),ylim=(0,1))
 line1, = ax1.plot([],[],lw=3)

@@ -79,6 +79,8 @@ def sim_driver(input_file_name):
         fenics_script = "fenics_LV_physPVloop"
     elif sim_params["sim_geometry"][0] == "single_cell":
         fenics_script = "fenics_singlecell_isometric"
+    elif sim_params["sim_geometry"][0] == "ellipsoid_set_hsl":
+        fenics_script = "fenics_LV_physPVloop_forcehsl"
     else:
         sys.exit("FEnICS cript does not exist. Please include an existing fenics script.")
 

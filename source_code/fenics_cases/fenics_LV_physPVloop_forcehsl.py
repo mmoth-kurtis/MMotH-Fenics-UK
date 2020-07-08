@@ -68,7 +68,7 @@ def fenics(sim_params,file_inputs,output_params,passive_params,hs_params,cell_io
     save_output = sim_params["save_output"][0]
     step_size = sim_params["sim_timestep"][0]
     loading_number = sim_params["loading_number"][0]
-    if sim_params["sim_geometry"][0] == "ventricle" or sim_params["sim_geometry"][0] == "ventricle_lclee_2" or sim_params["sim_geometry"][0] == "ventricle_physloop":
+    if sim_params["sim_geometry"][0] == "ventricle" or sim_params["sim_geometry"][0] == "ventricle_lclee_2" or sim_params["sim_geometry"][0] == "ventricle_physloop" or sim_params["sim_geometry"][0] == "ellipsoid_set_hsl":
         # For ventricle for now, specify number of cardiac cycles
         cycles = sim_params["sim_type"][1]
         meshfilename = sim_params["sim_type"][2]
@@ -266,7 +266,7 @@ def fenics(sim_params,file_inputs,output_params,passive_params,hs_params,cell_io
     s0CG.set_allow_extrapolation(True)
     scalefactor_epi = Expression('a', a=0.0, degree=1)
     scalefactor_endo = Expression('a', a=0.0, degree=1)
-    scalefactor_hsl = Expression('a+b*sin(t*c/d+c/2)', a=1.09, b=0.09, c=3.14, d=100, t=0.0, degree=1)
+    scalefactor_hsl = Expression('mean', mean=1.00, degree=1)
     param_endo={"nvec": s0CG,
            "scalefactor": scalefactor_endo
             };
@@ -496,6 +496,7 @@ def fenics(sim_params,file_inputs,output_params,passive_params,hs_params,cell_io
         y_vec_array[counter-2] = 1
 
     Pg, Pff, alpha = uflforms.stress()
+
     # Pg is guccione stress tensor as first Piola-Kirchhoff
 
     # Magnitude of bulk passive stress in fiber direction
@@ -584,6 +585,9 @@ def fenics(sim_params,file_inputs,output_params,passive_params,hs_params,cell_io
         temp_DG_1 = project(alpha, FunctionSpace(mesh, "DG", 1), form_compiler_parameters={"representation":"uflacs"})
         alphas = interpolate(temp_DG_1, Quad)
         alpha_array = alphas.vector().get_local()[:]
+        mean_alpha = np.mean(alpha_array)
+        scalefactor_hsl.mean = mean_alpha
+
 
         temp_DG_2 = project(Pg_fiber, FunctionSpace(mesh, "DG", 1), form_compiler_parameters={"representation":"uflacs"})
         pgf = interpolate(temp_DG_2, Quad)
@@ -609,7 +613,7 @@ def fenics(sim_params,file_inputs,output_params,passive_params,hs_params,cell_io
             #stresstemp = project(cb_force,FunctionSpace(mesh,'DG',0))
             stresstemp.rename("Pactive","Pactive")
             stressfile << stresstemp
-            pk1temp = project(inner(f0,Pactive*f0),FunctionSpace(mesh,'DG',0))
+            pk1temp = project(inner(f0,Pactive*f0),FunctionSpace(mesh,'DG',1))
             pk1temp.rename("pk1temp","pk1temp")
             pk1file << pk1temp
             hsl_temp = project(hsl,FunctionSpace(mesh,'DG',1))
@@ -781,7 +785,7 @@ def fenics(sim_params,file_inputs,output_params,passive_params,hs_params,cell_io
 
         # force update to hsl
         #scalefactor_hsl.a = 1.09+.09*(np.sin(cell_time*3.14/100 + 3.14/2))
-        scalefactor_hsl.t = cell_time
+        #scalefactor_hsl.t = cell_time
 
         #scalefactor_hsl_f = project(scalefactor_hsl_f,Quad)
         # Update calcium
@@ -872,6 +876,8 @@ def fenics(sim_params,file_inputs,output_params,passive_params,hs_params,cell_io
         temp_DG_1 = project(alpha, FunctionSpace(mesh, "DG", 1), form_compiler_parameters={"representation":"uflacs"})
         alphas = interpolate(temp_DG_1, Quad)
         alpha_array = alphas.vector().get_local()[:]
+        mean_alpha = np.mean(alpha_array)
+        scalefactor_hsl.mean = mean_alpha
 
         temp_DG_2 = project(Pg_fiber, FunctionSpace(mesh, "DG", 1), form_compiler_parameters={"representation":"uflacs"})
         pgf = interpolate(temp_DG_2, Quad)
@@ -896,7 +902,7 @@ def fenics(sim_params,file_inputs,output_params,passive_params,hs_params,cell_io
         stresstemp = project(Pactive,TensorFunctionSpace(mesh,'DG',0))
         stresstemp.rename("Pactive","Pactive")
         stressfile << stresstemp
-        pk1temp = project(inner(f0,Pactive*f0),FunctionSpace(mesh,'DG',0))
+        pk1temp = project(inner(f0,Pactive*f0),FunctionSpace(mesh,'DG',1))
         pk1temp.rename("pk1temp","pk1temp")
         pk1file << pk1temp
         hsl_temp = project(hsl,FunctionSpace(mesh,'DG',1))

@@ -431,7 +431,7 @@ def fenics(sim_params,file_inputs,output_params,passive_params,hs_params,cell_io
     #Pactive = Scalefactor * cb_force2 * as_tensor(f0[i]*f0[j], (i,j)) #+ 0.25*cb_force * as_tensor(s0[i]*s0[j], (i,j))+ 0.25*cb_force * as_tensor(n0[i]*n0[j], (i,j))
     #Pactive, cb_force = uflforms.TempActiveStress(af_time.af_time)
     Scalefactor2 = Constant(1)
-    Pactive = Scalefactor2 * cb_force * as_tensor(f0[i]*f0[j], (i,j)) #+ 0.1*cb_force * as_tensor(s0CG[i]*s0CG[j], (i,j))+ 0.1*cb_force * as_tensor(n0[i]*n0[j], (i,j))
+    Pactive = Scalefactor2 * cb_force * as_tensor(f0[i]*f0[j], (i,j)) + 0.1*cb_force * as_tensor(s0CG[i]*s0CG[j], (i,j))+ 0.1*cb_force * as_tensor(n0[i]*n0[j], (i,j))
     # Automatic differentiation  #####################################################################################################
     F1 = derivative(Wp, w, wtest)*dx
     F2 = inner(Pactive, grad(v))*dx
@@ -647,7 +647,7 @@ def fenics(sim_params,file_inputs,output_params,passive_params,hs_params,cell_io
             #stresstemp = project(cb_force,FunctionSpace(mesh,'DG',0))
             stresstemp.rename("Pactive","Pactive")
             stressfile << stresstemp
-            pk1temp = project(inner(f0,Pactive*f0),FunctionSpace(mesh,'DG',0))
+            pk1temp = project(inner(f0,Pactive*f0),FunctionSpace(mesh,'DG',1))
             pk1temp.rename("pk1temp","pk1temp")
             pk1file << pk1temp
             hsl_temp = project(hsl,FunctionSpace(mesh,'DG',1))
@@ -934,7 +934,7 @@ def fenics(sim_params,file_inputs,output_params,passive_params,hs_params,cell_io
         stresstemp = project(Pactive,TensorFunctionSpace(mesh,'DG',0))
         stresstemp.rename("Pactive","Pactive")
         stressfile << stresstemp
-        pk1temp = project(inner(f0,Pactive*f0),FunctionSpace(mesh,'DG',0))
+        pk1temp = project(inner(f0,Pactive*f0),FunctionSpace(mesh,'DG',1))
         pk1temp.rename("pk1temp","pk1temp")
         pk1file << pk1temp
         hsl_temp = project(hsl,FunctionSpace(mesh,'DG',1))
