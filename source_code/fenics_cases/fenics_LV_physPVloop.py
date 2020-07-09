@@ -87,6 +87,9 @@ def fenics(sim_params,file_inputs,output_params,passive_params,hs_params,cell_io
     x_bin_min = hs_params["myofilament_parameters"]["bin_min"][0]
     x_bin_max = hs_params["myofilament_parameters"]["bin_max"][0]
     x_bin_increment = hs_params["myofilament_parameters"]["bin_width"][0]
+    # using passive_l_slack as hsl minimum
+    hsl_min_threshold = hs_params["myofilament_parameters"]["passive_l_slack"][0]
+    hsl_max_threshold = hs_params["myofilament_parameters"]["hsl_max_threshold"][0]
 
     ## Set up information for active force calculation
     # Create x interval for cross-bridges
@@ -608,16 +611,36 @@ def fenics(sim_params,file_inputs,output_params,passive_params,hs_params,cell_io
         #solver.solvenonlinear()
         solve(Ftotal == 0, w, bcs, J = Jac, form_compiler_parameters={"representation":"uflacs"})
 
-        hsl_old.vector()[:] = project(hsl, Quad).vector().get_local()[:] # for active stress
-
+        #hsl_old.vector()[:] = project(hsl, Quad).vector().get_local()[:] # for active stress
+        hsl_old = project(hsl, Quad).vector().get_local()[:]
         hsl_array = project(hsl, Quad).vector().get_local()[:]           # for Myosim
 
-        delta_hsl_array = project(sqrt(dot(f0, Cmat*f0))*hsl0_transmural, Quad).vector().get_local()[:] - hsl_array_old # for Myosim
+        #delta_hsl_array = project(sqrt(dot(f0, Cmat*f0))*hsl0_transmural, Quad).vector().get_local()[:] - hsl_array_old # for Myosim
         #delta_hsl_array = project(scalefactor_hsl*hsl0_transmural, Quad).vector().get_local()[:] - hsl_array_old
 
         temp_DG = project(Pff, FunctionSpace(mesh, "DG", 1), form_compiler_parameters={"representation":"uflacs"})
         p_f = interpolate(temp_DG, Quad)
         p_f_array = p_f.vector().get_local()[:]
+
+        print np.shape(hsl_array)
+        print np.shape(hsl_old)
+        for ii in range(np.shape(hsl_array)[0]):
+            if hsl_array[ii] > hsl_max_threshold:
+                #print "hsl exceeded max, index is " + str(ii)
+                hsl_array[ii] = hsl_max_threshold
+            if hsl_array[ii] < hsl_min_threshold:
+                #print "hsl below min, index is " + str(ii)
+                hsl_array[ii] = hsl_min_threshold
+            if hsl_old[ii] > hsl_max_threshold:
+                hsl_old[ii] = hsl_max_threshold
+            if p_f_array[ii] < 0.0:
+                p_f_array[ii] = 0.0
+
+        #assign(hsl,hsl_array)
+        #temp_function = project(hsl_array[:],FunctionSpace(mesh, "DG", 1), form_compiler_parameters={"representation":"uflacs"})
+        #assign(hsl,temp_function)
+
+        delta_hsl_array = hsl_array - hsl_array_old
 
         temp_DG_1 = project(alpha, FunctionSpace(mesh, "DG", 1), form_compiler_parameters={"representation":"uflacs"})
         alphas = interpolate(temp_DG_1, Quad)
@@ -633,11 +656,11 @@ def fenics(sim_params,file_inputs,output_params,passive_params,hs_params,cell_io
         pgs = interpolate(temp_DG_4, Quad)
         pgs_array = pgs.vector().get_local()[:]
 
-        for ii in range(np.shape(alpha_array)[0]):
+        """for ii in range(np.shape(alpha_array)[0]):
             #if (alpha_array[ii] < 1.0):
              #   p_f_array[ii] = 0.0
              if(p_f_array[ii] < 0.0):
-                 p_f_array[ii] = 0.0
+                 p_f_array[ii] = 0.0"""
 
         if(MPI.rank(comm) == 0):
 
@@ -897,15 +920,32 @@ def fenics(sim_params,file_inputs,output_params,passive_params,hs_params,cell_io
         cb_f_array = project(cb_force, Quad).vector().get_local()[:]
 	#print max(cb_f_array), min(cb_f_array)
 
-        hsl_old.vector()[:] = project(hsl, Quad).vector().get_local()[:] # for active stress
+        #hsl_old.vector()[:] = project(hsl, Quad).vector().get_local()[:] # for active stress
+        hsl_old = project(hsl, Quad).vector().get_local()[:]
 
         hsl_array = project(hsl, Quad).vector().get_local()[:]           # for Myosim
 
-        delta_hsl_array = project(sqrt(dot(f0, Cmat*f0))*hsl0_transmural, Quad).vector().get_local()[:] - hsl_array_old # for Myosim
+        #delta_hsl_array = project(sqrt(dot(f0, Cmat*f0))*hsl0_transmural, Quad).vector().get_local()[:] - hsl_array_old # for Myosim
         #delta_hsl_array = project(scalefactor_hsl*hsl0_transmural,Quad).vector().get_local()[:] - hsl_array_old
+
         temp_DG = project(Pff, FunctionSpace(mesh, "DG", 1), form_compiler_parameters={"representation":"uflacs"})
         p_f = interpolate(temp_DG, Quad)
         p_f_array = p_f.vector().get_local()[:]
+
+        for ii in range(np.shape(hsl_array)[0]):
+            if hsl_array[ii] > hsl_max_threshold:
+                #print "hsl exceeded max, index is " + str(ii)
+                hsl_array[ii] = hsl_max_threshold
+            if hsl_array[ii] < hsl_min_threshold:
+                #print "hsl below min, index is " + str(ii)
+                hsl_array[ii] = hsl_min_threshold
+            if hsl_old[ii] > hsl_max_threshold:
+                hsl_old[ii] = hsl_max_threshold
+            if p_f_array[ii] < 0.0:
+                p_f_array[ii] = 0.0
+
+        #assign(hsl,interpolate(project(hsl_array,FunctionSpace(mesh,"DG",1),form_compiler_parameters={"representation":"uflacs"}),Quad))
+
 
         temp_DG_1 = project(alpha, FunctionSpace(mesh, "DG", 1), form_compiler_parameters={"representation":"uflacs"})
         alphas = interpolate(temp_DG_1, Quad)
@@ -921,11 +961,17 @@ def fenics(sim_params,file_inputs,output_params,passive_params,hs_params,cell_io
         pgs = interpolate(temp_DG_4, Quad)
         pgs_array = pgs.vector().get_local()[:]
 
-        for ii in range(np.shape(alpha_array)[0]):
+        """for ii in range(np.shape(alpha_array)[0]):
             #if (alpha_array[ii] < 1.0):
              #   p_f_array[ii] = 0.0
              if(p_f_array[ii] < 0.0):
                  p_f_array[ii] = 0.0
+             if hsl_array[ii] > hsl_max_threshold:
+                 print "hsl exceeded threshold"
+                 hsl_array[ii] = hsl_max_threshold
+             if hsl_array[ii] < hsl_min_threshold:
+                 print "hsl under threshold"
+                 hsl_array[ii] = hsl_min_threshold"""
 
         calarray[counter,:] = hs.Ca_conc * np.ones(no_of_int_points)
 

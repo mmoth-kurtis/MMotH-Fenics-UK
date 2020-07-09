@@ -74,9 +74,10 @@ array_length = sim_info[2]
 #print sys.argv[0]
 #print sys.argv[1]
 gauss_point = int(sys.argv[1])
+
 #gauss_point = 1000
 #data_range = np.shape(tarray)[0]
-data_range = 8
+data_range = 37
 # Look at how info is dumped from FEniCS. For now, hard code number of detached and attached states, and bins
 # Want to be able to visualize distributions, will need this info to set up arrays.
 #num_d_states
@@ -145,7 +146,7 @@ plt.subplot(426)
 if single_cell_sim_flag > 0:
     plt.plot(tarray,stress_array[0:data_range])
 else:
-    plt.plot(tarray[0:data_range], stress_array[0:data_range,gauss_point])
+    plt.plot(tarray[0:data_range], stress_array[0:data_range,:])
 #plt.plot(tarray, stress_array[0:data_range])
 #plt.scatter(myosim_summary_data[:,0], myosim_summary_data[:,1],color='r')
 #plt.scatter(myosim_summary_data[::10,0], myosim_summary_data[::10,1],color='r')
@@ -163,7 +164,7 @@ ax2 = plt.subplot(421)
 if single_cell_sim_flag > 0:
     plt.plot(tarray,HSL[0:data_range])
 else:
-    plt.plot(tarray[0:data_range], HSL[0:data_range,gauss_point])
+    plt.plot(tarray[0:data_range], HSL[0:data_range,:])
 #plt.plot(tarray, HSL[0:data_range])
 #plt.scatter(myosim_summary_data[:,0], myosim_summary_data[:,1],color='r')
 plt.xlabel('time [s]')
