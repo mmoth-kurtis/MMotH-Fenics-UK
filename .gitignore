@@ -12,3 +12,4 @@ working_directory_untracked/
 LV_closed2.py
 # Ignore config file for github website
 #_config.yml
+*.hdf5
