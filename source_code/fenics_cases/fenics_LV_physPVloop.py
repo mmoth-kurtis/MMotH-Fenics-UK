@@ -91,6 +91,8 @@ def fenics(sim_params,file_inputs,output_params,passive_params,hs_params,cell_io
     hsl_min_threshold = hs_params["myofilament_parameters"]["passive_l_slack"][0]
     hsl_max_threshold = hs_params["myofilament_parameters"]["hsl_max_threshold"][0]
 
+    xfiber_fraction = hs_params["myofilament_parameters"]["xfiber_fraction"][0]
+
     ## Set up information for active force calculation
     # Create x interval for cross-bridges
     xx = np.arange(x_bin_min, x_bin_max + x_bin_increment, x_bin_increment)
@@ -166,35 +168,35 @@ def fenics(sim_params,file_inputs,output_params,passive_params,hs_params,cell_io
     v2d = v2d.reshape((-1, mesh.geometry().dim()))
 
     f0 = Function(fiberFS)
-    #s0 = Function(fiberFS)
+    s0 = Function(fiberFS)
     n0 = Function(fiberFS)
     hsl0_transmural = Function(Quad)
 
     f.read(hsl0_transmural, casename+"/"+"hsl0")
     f.read(f0, casename+"/"+"eF")
-    #f.read(s0, casename+"/"+"eS")
+    f.read(s0, casename+"/"+"eS")
     f.read(n0, casename+"/"+"eN")
 
     f.read(facetboundaries, casename+"/"+"facetboundaries")
     f.read(edgeboundaries, casename+"/"+"edgeboundaries")
 
     #f00 = Function(fiberFS)
-    s00 = Function(fiberFS)
+    #s00 = Function(fiberFS)
     #n00 = Function(fiberFS)
 
 
     #f.read(f00, casename+"/"+"eF")
     #f0 = project(f00, VectorFunctionSpace(mesh, "CG", 1))
     #f0 = project(f0/sqrt(inner(f0,f0)), VectorFunctionSpace(mesh, "CG", 1))
-    f.read(s00, casename+"/"+"eS")
-    s0CG = project(s00, VectorFunctionSpace(mesh, "CG", 1))
-    s0CG = project(s0CG/sqrt(inner(s0CG,s0CG)), VectorFunctionSpace(mesh, "CG", 1))
+    #f.read(s00, casename+"/"+"eS")
+    #s0CG = project(s00, VectorFunctionSpace(mesh, "CG", 1))
+    #s0CG = project(s0CG/sqrt(inner(s0CG,s0CG)), VectorFunctionSpace(mesh, "CG", 1))
     #f.read(n00, casename+"/"+"eN")
     #n0CG = project(n00, VectorFunctionSpace(mesh, "CG", 1))
     #n0CG = project(n0CG/sqrt(inner(n0CG,n0CG)), VectorFunctionSpace(mesh, "CG", 1))
 
     ### Export as a vector and normalize directly
-    for p in v2d:
+    """for p in v2d:
         #fvec = np.array([f0.vector().array()[p[0]], f0.vector().array()[p[1]], f0.vector().array()[p[2]]])
         #normfvec = fvec/np.linalg.norm(fvec)
         svec = np.array([s0CG.vector().array()[p[0]], s0CG.vector().array()[p[1]], s0CG.vector().array()[p[2]]])
@@ -204,7 +206,7 @@ def fenics(sim_params,file_inputs,output_params,passive_params,hs_params,cell_io
         for k in range(0,3):
         	#f0.vector()[p[k]] = normfvec[k]
         	s0CG.vector()[p[k]] = normsvec[k]
-        	#n0CG.vector()[p[k]] = normnvec[k]
+        	#n0CG.vector()[p[k]] = normnvec[k]"""
 
     f.close()
     File(output_path + "facetboundaries.pvd") << facetboundaries
@@ -217,7 +219,7 @@ def fenics(sim_params,file_inputs,output_params,passive_params,hs_params,cell_io
     comm = mesh.mpi_comm()
 
     File(output_path + "fiber.pvd") << project(f0, VectorFunctionSpace(mesh, "CG", 1))
-    File(output_path + "sheet.pvd") << project(s0CG, VectorFunctionSpace(mesh, "CG", 1))
+    File(output_path + "sheet.pvd") << project(s0, VectorFunctionSpace(mesh, "CG", 1))
     File(output_path + "sheet-normal.pvd") << project(n0, VectorFunctionSpace(mesh, "CG", 1))
 
     ##############################################################################
@@ -304,20 +306,20 @@ def fenics(sim_params,file_inputs,output_params,passive_params,hs_params,cell_io
 
 
 
-    s0CG.set_allow_extrapolation(True)
+    #s0CG.set_allow_extrapolation(True)
     scalefactor_epi = Expression('a', a=0.0, degree=1)
     scalefactor_endo = Expression('a', a=0.0, degree=1)
     #scalefactor_hsl = Expression('a+b*sin(t*c/d+c/2)', a=1.09, b=0.09, c=3.14, d=100, t=0.0, degree=1)
-    param_endo={"nvec": s0CG,
+    """param_endo={"nvec": s0CG,
            "scalefactor": scalefactor_endo
             };
     param_epi={"nvec": s0CG,
            "scalefactor": scalefactor_epi
-            };
+            };"""
 
     #radexp = MyExpr(param=param, degree=1)
-    endo_exp = MyExpr(param=param_endo, degree=1)
-    epi_exp = MyExpr(param=param_epi, degree=1)
+    #endo_exp = MyExpr(param=param_endo, degree=1)
+    #epi_exp = MyExpr(param=param_epi, degree=1)
     ###################################################################################################
 
     # edgeboundaries 1 is epi, 2 is endo
@@ -326,8 +328,8 @@ def fenics(sim_params,file_inputs,output_params,passive_params,hs_params,cell_io
     # CKM trying to have radial expansion for entire top
     #endoring = pick_endoring_bc(method="cpp")(facetboundaries, topid)
     #bcedge = DirichletBC(W.sub(0), Expression(("0.0", "0.0", "0.0"), degree = 0), endoring, method="pointwise")
-    bcedge_endo = DirichletBC(W.sub(0), endo_exp, endoring, method="pointwise")
-    bcedge_epi = DirichletBC(W.sub(0), epi_exp, epiring, method="pointwise")
+    #bcedge_endo = DirichletBC(W.sub(0), endo_exp, endoring, method="pointwise")
+    #bcedge_epi = DirichletBC(W.sub(0), epi_exp, epiring, method="pointwise")
     #bcs = [bctop, bcedge_endo, bcedge_epi]
     bcs = [bctop]
 
@@ -362,7 +364,7 @@ def fenics(sim_params,file_inputs,output_params,passive_params,hs_params,cell_io
              "LVendoid": LVendoid,
              "LVendo_comp": 2,
              "fiber": f0,
-             "sheet": s0CG,
+             "sheet": s0,
              "sheet-normal": n0,
     #         "C2": C2,
     #         "C3": C3,
@@ -390,6 +392,7 @@ def fenics(sim_params,file_inputs,output_params,passive_params,hs_params,cell_io
     y_vec = Function(Quad_vectorized_Fspace)
     #print hsl0_transmural
     hsl = sqrt(dot(f0, Cmat*f0))*hsl0_transmural
+    #hsl = project(sqrt(dot(f0, Cmat*f0))*hsl0_transmural, Quad)
     #hsl = scalefactor_hsl*hsl0_transmural
     #print type(hsl)
     # Forcing hsl
@@ -434,7 +437,7 @@ def fenics(sim_params,file_inputs,output_params,passive_params,hs_params,cell_io
     #Pactive = Scalefactor * cb_force2 * as_tensor(f0[i]*f0[j], (i,j)) #+ 0.25*cb_force * as_tensor(s0[i]*s0[j], (i,j))+ 0.25*cb_force * as_tensor(n0[i]*n0[j], (i,j))
     #Pactive, cb_force = uflforms.TempActiveStress(af_time.af_time)
     Scalefactor2 = Constant(1)
-    Pactive = Scalefactor2 * cb_force * as_tensor(f0[i]*f0[j], (i,j)) + 0.1*cb_force * as_tensor(s0CG[i]*s0CG[j], (i,j))+ 0.1*cb_force * as_tensor(n0[i]*n0[j], (i,j))
+    Pactive = Scalefactor2 * cb_force * as_tensor(f0[i]*f0[j], (i,j)) + xfiber_fraction*cb_force * as_tensor(s0[i]*s0[j], (i,j))+ xfiber_fraction*cb_force * as_tensor(n0[i]*n0[j], (i,j))
     # Automatic differentiation  #####################################################################################################
     F1 = derivative(Wp, w, wtest)*dx
     F2 = inner(Pactive, grad(v))*dx
@@ -453,12 +456,12 @@ def fenics(sim_params,file_inputs,output_params,passive_params,hs_params,cell_io
 
     # Define circumferential direction
     zaxis = Expression(("0", "0", "1"), degree=2)
-    caxis = cross(s0CG, zaxis)
-    File(output_path + "caxis.pvd") << project(caxis, VectorFunctionSpace(mesh, "CG", 1))
+    #caxis = cross(s0CG, zaxis)
+    #File(output_path + "caxis.pvd") << project(caxis, VectorFunctionSpace(mesh, "CG", 1))
 
     # Penalty method for enforcing no displacement in circumferential direction
     Kpen = Constant(1000000)
-    F6 = Kpen*inner(dot(u,caxis)*caxis, v)*ds(topid)
+    #F6 = Kpen*inner(dot(u,caxis)*caxis, v)*ds(topid)
 
 
     Ftotal = F1 + F2 + F3 + F4 #+ F5#F6 + F4 #+ F5 + F4
@@ -468,7 +471,7 @@ def fenics(sim_params,file_inputs,output_params,passive_params,hs_params,cell_io
     Jac3 = derivative(F3, w, dw)
     Jac4 = derivative(F4, w, dw)
     Jac5 = derivative(F5, w, dw)
-    Jac6 = derivative(F6, w, dw)
+    #Jac6 = derivative(F6, w, dw)
 
     Jac = Jac1 + Jac2 + Jac3 + Jac4 #+ Jac5 #Jac6 + Jac4#+ Jac5 + Jac4
     ##################################################################################################################################
@@ -622,10 +625,10 @@ def fenics(sim_params,file_inputs,output_params,passive_params,hs_params,cell_io
         p_f = interpolate(temp_DG, Quad)
         p_f_array = p_f.vector().get_local()[:]
 
-        print np.shape(hsl_array)
-        print np.shape(hsl_old)
+        #print np.shape(hsl_array)
+        #print np.shape(hsl_old)
         for ii in range(np.shape(hsl_array)[0]):
-            if hsl_array[ii] > hsl_max_threshold:
+            """if hsl_array[ii] > hsl_max_threshold:
                 #print "hsl exceeded max, index is " + str(ii)
                 hsl_array[ii] = hsl_max_threshold
             if hsl_array[ii] < hsl_min_threshold:
@@ -633,8 +636,12 @@ def fenics(sim_params,file_inputs,output_params,passive_params,hs_params,cell_io
                 hsl_array[ii] = hsl_min_threshold
             if hsl_old[ii] > hsl_max_threshold:
                 hsl_old[ii] = hsl_max_threshold
+            if hsl_old[ii] < hsl_min_threshold:
+                hsl_old[ii] = hsl_min_threshold"""
             if p_f_array[ii] < 0.0:
                 p_f_array[ii] = 0.0
+
+        #hsl.vector()[:] = hsl_array
 
         #assign(hsl,hsl_array)
         #temp_function = project(hsl_array[:],FunctionSpace(mesh, "DG", 1), form_compiler_parameters={"representation":"uflacs"})
@@ -675,6 +682,10 @@ def fenics(sim_params,file_inputs,output_params,passive_params,hs_params,cell_io
             pk1file << pk1temp
             hsl_temp = project(hsl,FunctionSpace(mesh,'DG',1))
             #hsl_temp = project(hsl,Quad)
+            #print np.shape(hsl_temp.vector())
+            #hsl_temp.vector()[:] = hsl_array
+            #hsl_temp = project(hsl,Quad)
+            #hsl_temp2 = project(hsl_temp,FunctionSpace(mesh,'DG',1))
             hsl_temp.rename("hsl_temp","hsl")
             hsl_file << hsl_temp
             alpha_temp = project(alphas,FunctionSpace(mesh,'DG',0))
@@ -829,7 +840,7 @@ def fenics(sim_params,file_inputs,output_params,passive_params,hs_params,cell_io
                 dumped_populations[counter, i, j] = y_vec_array[i * n_array_length + j]
 
 
-        y_vec.vector()[:] = y_vec_array # for PDE
+        #y_vec.vector()[:] = y_vec_array # for PDE
 
         # Initialize MyoSim solution holder
         y_vec_array_new = np.zeros(no_of_int_points*n_array_length)
@@ -880,6 +891,9 @@ def fenics(sim_params,file_inputs,output_params,passive_params,hs_params,cell_io
         temp_overlap, y_vec_array_new = implement.update_simulation(hs, step_size, delta_hsl_array, hsl_array, y_vec_array, p_f_array, cb_f_array, calcium[counter], n_array_length, cell_time, overlaparray[overlap_counter,:])
 
         y_vec_array = y_vec_array_new # for Myosim
+
+        #Kurtis moved to here
+        y_vec.vector()[:] = y_vec_array # for PDE
 
         hsl_array_old = hsl_array
 
@@ -933,7 +947,7 @@ def fenics(sim_params,file_inputs,output_params,passive_params,hs_params,cell_io
         p_f_array = p_f.vector().get_local()[:]
 
         for ii in range(np.shape(hsl_array)[0]):
-            if hsl_array[ii] > hsl_max_threshold:
+            """if hsl_array[ii] > hsl_max_threshold:
                 #print "hsl exceeded max, index is " + str(ii)
                 hsl_array[ii] = hsl_max_threshold
             if hsl_array[ii] < hsl_min_threshold:
@@ -941,8 +955,12 @@ def fenics(sim_params,file_inputs,output_params,passive_params,hs_params,cell_io
                 hsl_array[ii] = hsl_min_threshold
             if hsl_old[ii] > hsl_max_threshold:
                 hsl_old[ii] = hsl_max_threshold
+            if hsl_old[ii] < hsl_min_threshold:
+                hsl_old[ii] = hsl_min_threshold"""
             if p_f_array[ii] < 0.0:
                 p_f_array[ii] = 0.0
+
+        #hsl.vector()[:] = hsl_array
 
         #assign(hsl,interpolate(project(hsl_array,FunctionSpace(mesh,"DG",1),form_compiler_parameters={"representation":"uflacs"}),Quad))
 
@@ -984,6 +1002,8 @@ def fenics(sim_params,file_inputs,output_params,passive_params,hs_params,cell_io
         pk1temp.rename("pk1temp","pk1temp")
         pk1file << pk1temp
         hsl_temp = project(hsl,FunctionSpace(mesh,'DG',1))
+        #hsl_temp.vector().set_local(hsl_array)
+
         #hsl_temp = project(hsl,Quad)
         hsl_temp.rename("hsl_temp","hsl")
         hsl_file << hsl_temp

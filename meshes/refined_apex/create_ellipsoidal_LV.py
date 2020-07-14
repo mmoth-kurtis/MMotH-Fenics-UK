@@ -11,12 +11,12 @@ import os
 ########################################################################
 
 
-def create_ellipsoidal_LV(casename="ellipsoidal", meshsize=0.05, gmshcmd="gmsh", iswritemesh=True, verbose=True):
+def create_ellipsoidal_LV(casename="ellipsoidal", meshsize=0.5, gmshcmd="gmsh", iswritemesh=True, verbose=True):
 
     print "starting script"
     if verbose:
         print '*** create_ellipsoidal_LV ***'
-	
+
         cur_dir = os.path.dirname(os.path.abspath(inspect.getfile(inspect.currentframe())))
 
 	print "cur_dir" + cur_dir
@@ -40,4 +40,4 @@ def create_ellipsoidal_LV(casename="ellipsoidal", meshsize=0.05, gmshcmd="gmsh",
 	ugrid = vtk_py.readUGrid(meshfilename)
 
 	return ugrid
-returned_grid = create_ellipsoidal_LV(casename="ellipsoidal", meshsize=0.05, gmshcmd="gmsh", iswritemesh=True, verbose=True)
+returned_grid = create_ellipsoidal_LV(casename="ellipsoidal", meshsize=0.5, gmshcmd="gmsh", iswritemesh=True, verbose=True)

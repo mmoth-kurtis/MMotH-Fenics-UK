@@ -33,9 +33,9 @@ lang_flag = 'python'
 #lang_flag = 'c++'
 
 # For now, hard coding bin discretization information
-xmin = -12
-xmax = 12
-bin_width = 0.5
+xmin = -10
+xmax = 10
+bin_width = 1.0
 cb_domain = np.arange(xmin,xmax+bin_width,bin_width)
 num_bins = np.shape(cb_domain)
 
@@ -62,10 +62,10 @@ calcium = np.load(sim_dir + '/calcium.npy')
 HSL = np.load(sim_dir + '/hsl.npy')
 #HSL = np.load(sim_dir + '/hslarray.npy')
 pstress = np.load(sim_dir + '/pstress_array.npy')
-#gucc_fiber = np.load(sim_dir + '/gucc_fiber.npy')
-#gucc_trans = np.load(sim_dir + '/gucc_trans.npy')
-#gucc_shear = np.load(sim_dir + '/gucc_shear.npy')
-#overlap = np.load(sim_dir + '/overlap.npy')
+gucc_fiber = np.load(sim_dir + '/gucc_fiber.npy')
+gucc_trans = np.load(sim_dir + '/gucc_trans.npy')
+gucc_shear = np.load(sim_dir + '/gucc_shear.npy')
+overlap = np.load(sim_dir + '/overlap.npy')
 # Define number of time steps and array length here
 sim_info = fenics_pop_file.shape
 num_timesteps = sim_info[0]
@@ -77,7 +77,7 @@ gauss_point = int(sys.argv[1])
 
 #gauss_point = 1000
 #data_range = np.shape(tarray)[0]
-data_range = 37
+data_range = 50
 # Look at how info is dumped from FEniCS. For now, hard code number of detached and attached states, and bins
 # Want to be able to visualize distributions, will need this info to set up arrays.
 #num_d_states
@@ -146,7 +146,7 @@ plt.subplot(426)
 if single_cell_sim_flag > 0:
     plt.plot(tarray,stress_array[0:data_range])
 else:
-    plt.plot(tarray[0:data_range], stress_array[0:data_range,:])
+    plt.plot(tarray[0:data_range], stress_array[0:data_range,gauss_point])
 #plt.plot(tarray, stress_array[0:data_range])
 #plt.scatter(myosim_summary_data[:,0], myosim_summary_data[:,1],color='r')
 #plt.scatter(myosim_summary_data[::10,0], myosim_summary_data[::10,1],color='r')
@@ -164,27 +164,27 @@ ax2 = plt.subplot(421)
 if single_cell_sim_flag > 0:
     plt.plot(tarray,HSL[0:data_range])
 else:
-    plt.plot(tarray[0:data_range], HSL[0:data_range,:])
+    plt.plot(tarray[0:data_range], HSL[0:data_range,gauss_point])
 #plt.plot(tarray, HSL[0:data_range])
 #plt.scatter(myosim_summary_data[:,0], myosim_summary_data[:,1],color='r')
 plt.xlabel('time [s]')
 plt.ylabel("hsl (nm)")
 
 #---------------------------------------------------------------------------------
-"""plt.subplot(423)
+plt.subplot(423)
 print np.shape(pstress)
-fiber_pstress, = plt.plot(tarray, pstress[0:data_range,gauss_point])
-gfiber, = plt.plot(tarray, gucc_fiber[0:data_range,gauss_point])
-gtrans, = plt.plot(tarray, gucc_trans[0:data_range,gauss_point])
-gshear, = plt.plot(tarray, gucc_shear[0:data_range,gauss_point])
+fiber_pstress, = plt.plot(tarray[0:data_range], pstress[0:data_range,gauss_point])
+gfiber, = plt.plot(tarray[0:data_range], gucc_fiber[0:data_range,gauss_point])
+gtrans, = plt.plot(tarray[0:data_range], gucc_trans[0:data_range,gauss_point])
+gshear, = plt.plot(tarray[0:data_range], gucc_shear[0:data_range,gauss_point])
 plt.legend((fiber_pstress, gfiber, gtrans, gshear), ('fiber', 'G_fiber', 'G_trans', 'G_shear'))
 
 #plt.plot(tarray, pstress[0:data_range])
 plt.ylabel('Passive Stress (Pa)')
 #------------------------------------------------------------------------------
 plt.subplot(425)
-plt.plot(tarray, overlap[0:data_range,gauss_point])
-plt.ylabel('Overlap')"""
+plt.plot(tarray[0:data_range], overlap[0:data_range,gauss_point])
+plt.ylabel('Overlap')
 #plt.subplot(423)
 #plt.scatter(myosim_rates[:,0], myosim_rates[:,1],color='k')
 """if lang_flag=='python':

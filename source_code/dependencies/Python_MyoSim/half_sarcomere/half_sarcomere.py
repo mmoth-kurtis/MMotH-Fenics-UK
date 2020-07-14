@@ -12,12 +12,14 @@ class half_sarcomere():
 
     from .implement import update_simulation, update_data_holder
     from .display import display_fluxes
+    import numpy as np
 
     ## initialization function for class half_sarcomere
     #
     # @param[in] hs_params loaded in from json file as dictionary. Input is \[value "units"\](see fenics.py)
     # @param[in] data_buffer_size = 1 since data is stored in fenics.py
     def __init__(self,hs_params, data_buffer_size):
+
 
         self.hs_length = float(hs_params["initial_hs_length"][0])
         self.Ca_conc = 1.0e-9

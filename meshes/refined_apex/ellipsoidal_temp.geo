@@ -20,10 +20,10 @@ apex_z = lz_i + wt/2;
 
 Point(1) = {0,0,0,lc};
 Point(2) = {lx_o,0,0,lc};
-Point(3) = {0,0,-lz_o,lc};
+Point(3) = {0,0,-lz_o,refine_apex};
 Point(4) = {lx_i,0,0,lc};
-Point(5) = {0,0,-lz_i,lc};
-Point(6) = {0,0,-apex_z,refine_apex};
+Point(5) = {0,0,-lz_i,refine_apex};
+//Point(6) = {0,0,-apex_z,refine_apex};
 Ellipse(1) = {2,1,3,3};
 Ellipse(2) = {4,1,5,5};
 
