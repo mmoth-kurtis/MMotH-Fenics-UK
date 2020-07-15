@@ -3,19 +3,20 @@ remote_theme: pmarsceill/just-the-docs
 # Auxiliary links for the upper right navigation.
 aux_links:
   "Campbell Muscle Lab":
-    - "http://www.campbellmusclelab.org"
-  "MMotH-Vent Repository":
-    - "http://github.com/mmoth-kurtis/MMotH-Vent"
+  - "http://www.campbellmusclelab.org"
+  "Lab GitHub":
+  - "http://campbell-muscle-lab.github.io"
+  "GitHub How Tos Repo":
+  - "http://github.com/Campbell-Muscle-Lab/howtos_GitHub"
 
-
-# Not a big fan of dark mode. I think the light looks better.
+  # Not a big fan of dark mode. I think the light looks better.
 # color_scheme: "dark"
 
 # You can display an image instead of the site's title like this.
 # logo: "/assets/images/example-image.png"
 
 # Footer
-footer_content: "Written by the Computational Biomechanics Lab at University of Kentucky"
+footer_content: "Written by the Campbell Muscle Lab"
 
 # This is the title of the website
-title: "MMotH-Vent"
+title: "GitHub How Tos"
