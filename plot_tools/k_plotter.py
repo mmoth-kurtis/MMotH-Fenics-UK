@@ -43,9 +43,9 @@ num_bins = np.shape(cb_domain)
 # Assuming the dumped npy files from FEniCS always take these names
 # Note, these arrays include info for every Gauss point
 fenics_pop_file = np.load(sim_dir + '/dumped_populations.npy')
-#tarray = np.load(sim_dir + '/tarray.npy')
-tarray = np.arange(0,340,0.5)
-#tarray = tarray[:-1]
+tarray = np.load(sim_dir + '/tarray.npy')
+#tarray = np.arange(0,340,0.1)
+tarray = tarray[:-1]
 stress_array = np.load(sim_dir + '/stress_array.npy')
 
 #print stress_array.ndim
@@ -76,8 +76,8 @@ array_length = sim_info[2]
 gauss_point = int(sys.argv[1])
 
 #gauss_point = 1000
-#data_range = np.shape(tarray)[0]
-data_range = 50
+data_range = np.shape(tarray)[0]
+#data_range = 50
 # Look at how info is dumped from FEniCS. For now, hard code number of detached and attached states, and bins
 # Want to be able to visualize distributions, will need this info to set up arrays.
 #num_d_states

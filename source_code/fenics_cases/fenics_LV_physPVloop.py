@@ -440,7 +440,7 @@ def fenics(sim_params,file_inputs,output_params,passive_params,hs_params,cell_io
     Pactive = Scalefactor2 * cb_force * as_tensor(f0[i]*f0[j], (i,j)) + xfiber_fraction*cb_force * as_tensor(s0[i]*s0[j], (i,j))+ xfiber_fraction*cb_force * as_tensor(n0[i]*n0[j], (i,j))
     # Automatic differentiation  #####################################################################################################
     F1 = derivative(Wp, w, wtest)*dx
-    F2 = inner(Pactive, grad(v))*dx
+    F2 = inner(Fmat*Pactive, grad(v))*dx
     if(ispressurectrl):
         pressure = Expression(("p"), p=0.0, degree=2)
         F3 = inner(pressure*n, v)*ds(LVendoid)

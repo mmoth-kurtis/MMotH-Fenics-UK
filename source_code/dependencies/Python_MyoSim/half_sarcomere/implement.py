@@ -47,6 +47,12 @@ def update_simulation(self, time_step, delta_hsl, hsl, y0, pf, cbf, calcium, n_a
         #    self.myof.move_cb_distributions(delta_hsl[i])
         #self.hs_length = self.hs_length + delta_hsl
 
+        # enforce n_bound < n_on, needs to be generalized for greater than 3 state
+        """decrement_counter = 0
+        while self.myof.n_on < self.myof.n_bound:
+            self.myof.y[2+decrement_counter] = 0.0
+            self.myof.n_bound = np.sum(self.myof.y[2 + np.arange(0, self.myof.no_of_x_bins)])
+            decrement_counter += 1"""
         # Assign int point's population vector to larger y vector
         y_pops[i*n_array_length:(i+1)*n_array_length] = self.myof.y[0:n_array_length]
         self.temp_overlaps[i] = self.myof.n_overlap
