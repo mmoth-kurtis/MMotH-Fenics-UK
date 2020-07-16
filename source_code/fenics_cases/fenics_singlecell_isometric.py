@@ -60,7 +60,7 @@ def fenics(sim_params,file_inputs,output_params,passive_params,hs_params,cell_io
 
     #hsl0 = 1000
     hsl0 = hs_params["initial_hs_length"][0]
-    time_steps = 201
+    #time_steps = 401
     #time_steps = 2
     #step_size = 0.5
     step_size = sim_params["sim_timestep"][0]
@@ -246,7 +246,7 @@ def fenics(sim_params,file_inputs,output_params,passive_params,hs_params,cell_io
     Press = Expression(("P"), P=0.0, degree=0)
     # Automatic differentiation  #####################################################################################################
     F1 = derivative(Wp, w, wtest)*dx
-    F2 = inner(Pactive, grad(v))*dx
+    F2 = inner(Fmat*Pactive, grad(v))*dx
     F3 = inner(Press*N, v)*ds(2, domain=mesh)
     Ftotal = F1 + F2 - F3
 
@@ -286,8 +286,6 @@ def fenics(sim_params,file_inputs,output_params,passive_params,hs_params,cell_io
     strarray = []
     pstrarray = []
     overlaparray = np.zeros((time_steps+1,no_of_int_points))
-    print np.shape(overlaparray)
-
 
     y_vec_array = y_vec.vector().get_local()[:]
 
@@ -330,6 +328,12 @@ def fenics(sim_params,file_inputs,output_params,passive_params,hs_params,cell_io
 
 
         tarray.append(t)
+        for  m in range(no_of_int_points):
+
+            for k in range(n_array_length):
+
+                dumped_populations[l, m, k] = y_vec_array[m * n_array_length + k]
+
         #hslarray.append(hsl_array[0])
         #strarray.append(cb_f_array[0])
         #pstrarray.append(p_f_array[0])
@@ -337,7 +341,6 @@ def fenics(sim_params,file_inputs,output_params,passive_params,hs_params,cell_io
     #    _Ca_params = {"time_point": l};
     #    Myosim.Ca_params.update(_Ca_params)
 
-        y_vec.vector()[:] = y_vec_array # for PDE
 
         #print p_f[l]
 
@@ -364,10 +367,23 @@ def fenics(sim_params,file_inputs,output_params,passive_params,hs_params,cell_io
         temp_overlap, y_vec_array_new = implement.update_simulation(hs, step_size, delta_hsl_array, hsl_array, y_vec_array, p_f_array, cb_f_array, calcium[l], n_array_length, t,overlaparray[overlap_counter,:])
     #    print y_vec_array_new[0:53]
         y_vec_array = y_vec_array_new # for Myosim
+        y_vec.vector()[:] = y_vec_array # for PDE
+
     #    print y_vec_array[0:53]
         hsl_array_old = hsl_array
 
-        solve(Ftotal == 0, w, bcs, J = Jac, form_compiler_parameters={"representation":"uflacs"})
+        try:
+            solve(Ftotal == 0, w, bcs, J = Jac, form_compiler_parameters={"representation":"uflacs"})
+        except:
+            np.save(output_path +"dumped_populations", dumped_populations)
+            np.save(output_path + "tarray", tarray)
+            np.save(output_path + "stress_array", strarray)
+            np.save(output_path + "hsl", hslarray)
+            np.save(output_path + "overlap", overlaparray)
+            np.save(output_path + "pstress_array",pstrarray)
+            #np.save(output_path + "alpha_array",alphaarray)
+            np.save(output_path + "calcium",calarray)
+
         displacementfile << w.sub(0)
 
         hsl_old.vector()[:] = project(hsl, Quad).vector().get_local()[:] # for PDE
@@ -390,19 +406,31 @@ def fenics(sim_params,file_inputs,output_params,passive_params,hs_params,cell_io
 
         #print(cb_f_array)
 
-        if t < 10:
-            u_D.u_D += .01
-        else:
+        if t <= 100: # stretch to 1300
+            u_D.u_D += .003
+        if t < 500 and t > 100:
+            u_D.u_D =u_D.u_D
+        if t < 600 and t >= 500:
+            u_D.u_D += .0005
+        if t < 800 and t >=600:
             u_D.u_D = u_D.u_D
+        if t < 900 and t >= 800:
+            u_D.u_D -= .0005
+        if t >= 900:
+            u_D.u_D = u_D.u_D
+        """if t < 170 and t > 150:
+            u_D.u_D -= 0.005
+        else:
+            u_D.u_D = u_D.u_D"""
         t = t + step_size
 
         calarray.append(hs.Ca_conc*np.ones(no_of_int_points))
 
-        for  m in range(no_of_int_points):
+        """for  m in range(no_of_int_points):
 
             for k in range(n_array_length):
 
-                dumped_populations[l, m, k] = y_vec_array[m * n_array_length + k]
+                dumped_populations[l, m, k] = y_vec_array[m * n_array_length + k]"""
 
     rate_constants = np.zeros((no_of_x_bins,no_of_transitions + 1))
 

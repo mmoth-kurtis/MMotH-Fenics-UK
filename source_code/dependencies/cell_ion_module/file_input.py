@@ -18,12 +18,12 @@ class calcium_file_input():
         #print self.ca[0,0]
 
 
-    def calculate_concentrations(self,cycle,time,file):
+    def calculate_concentrations(self,cycle,time):
         #print time
         #if time < 0.6:
         #    calcium_value = 3e-7
         #else:
-        counter = int(2*time)
+        counter = int(5*time)
         print "counter is " + str(counter)
-        calcium_value = self.ca[counter-1,0]
+        calcium_value = self.ca[counter-1]
         return calcium_value

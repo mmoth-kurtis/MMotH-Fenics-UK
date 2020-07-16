@@ -43,4 +43,6 @@ class constant_calcium():
         if t > self.t_act:
             calcium_value = np.power(10.0,-self.pCa)
             print "calcium is " + str(calcium_value)
+        else:
+            calcium_value = np.power(10.0,-9.0)
         return calcium_value

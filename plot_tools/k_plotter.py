@@ -35,7 +35,7 @@ lang_flag = 'python'
 # For now, hard coding bin discretization information
 xmin = -10
 xmax = 10
-bin_width = 1.0
+bin_width = 0.5
 cb_domain = np.arange(xmin,xmax+bin_width,bin_width)
 num_bins = np.shape(cb_domain)
 
@@ -62,9 +62,10 @@ calcium = np.load(sim_dir + '/calcium.npy')
 HSL = np.load(sim_dir + '/hsl.npy')
 #HSL = np.load(sim_dir + '/hslarray.npy')
 pstress = np.load(sim_dir + '/pstress_array.npy')
-gucc_fiber = np.load(sim_dir + '/gucc_fiber.npy')
-gucc_trans = np.load(sim_dir + '/gucc_trans.npy')
-gucc_shear = np.load(sim_dir + '/gucc_shear.npy')
+if single_cell_sim_flag == 0:
+    gucc_fiber = np.load(sim_dir + '/gucc_fiber.npy')
+    gucc_trans = np.load(sim_dir + '/gucc_trans.npy')
+    gucc_shear = np.load(sim_dir + '/gucc_shear.npy')
 overlap = np.load(sim_dir + '/overlap.npy')
 # Define number of time steps and array length here
 sim_info = fenics_pop_file.shape
@@ -172,12 +173,14 @@ plt.ylabel("hsl (nm)")
 
 #---------------------------------------------------------------------------------
 plt.subplot(423)
-print np.shape(pstress)
-fiber_pstress, = plt.plot(tarray[0:data_range], pstress[0:data_range,gauss_point])
-gfiber, = plt.plot(tarray[0:data_range], gucc_fiber[0:data_range,gauss_point])
-gtrans, = plt.plot(tarray[0:data_range], gucc_trans[0:data_range,gauss_point])
-gshear, = plt.plot(tarray[0:data_range], gucc_shear[0:data_range,gauss_point])
-plt.legend((fiber_pstress, gfiber, gtrans, gshear), ('fiber', 'G_fiber', 'G_trans', 'G_shear'))
+if single_cell_sim_flag > 0:
+    fiber_pstress, = plt.plot(tarray[0:data_range], pstress[0:data_range])
+else:
+    fiber_pstress, = plt.plot(tarray[0:data_range], pstress[0:data_range,gauss_point])
+    gfiber, = plt.plot(tarray[0:data_range], gucc_fiber[0:data_range,gauss_point])
+    gtrans, = plt.plot(tarray[0:data_range], gucc_trans[0:data_range,gauss_point])
+    gshear, = plt.plot(tarray[0:data_range], gucc_shear[0:data_range,gauss_point])
+    plt.legend((fiber_pstress, gfiber, gtrans, gshear), ('fiber', 'G_fiber', 'G_trans', 'G_shear'))
 
 #plt.plot(tarray, pstress[0:data_range])
 plt.ylabel('Passive Stress (Pa)')
