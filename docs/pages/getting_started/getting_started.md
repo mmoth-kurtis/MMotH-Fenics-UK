@@ -1,13 +1,14 @@
 ---
+permalink: /getting_started/
 title: Getting Started
-nav_order: 1
 has_children: true
-parent: MMotH-Vent
+sidebar:
+  nav: "docs"
+toc: true
+toc_label: Getting Started
+toc_icon: "cog"
+search: true
 ---
-
-* TOC
-{:toc}
-
 * [Installation](/getting_started/installation/)
 * [Creating Input Files](/getting_started/fenics_input_readme/)
 * [Running a Simulation](/getting_started/running_demo/)
