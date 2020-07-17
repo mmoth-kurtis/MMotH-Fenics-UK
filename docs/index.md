@@ -1,7 +1,6 @@
 ---
-title: GitHub How Tos
+title: MMotH-Vent
 permalink: /
-nav_order: 1
 ---
 
 <h1><span style="color: #0292ca">M</span><span style="font-weight:normal">ultiscale </span><span style="color: #0292ca">M</span><span style="font-weight:normal">odel </span><span style="color: #0292ca">o</span><span style="font-weight:normal">f </span><span style="color: #0292ca">t</span><span style="font-weight:normal">he </span><span style="color: #0292ca">H</span><span style="font-weight:normal">eart: </span><span style="color: #0292ca">Vent</span><span style="font-weight:normal">ricle Simulations </span></h1>
@@ -15,4 +14,4 @@ MMotH is a collaborative project led by:
 * [Dr. Lik Chuan Lee](https://researchgroups.msu.edu/compbiomech/), Michigan State University
 * [Dr. Chris Yengo](https://sites.psu.edu/yengolab1/), Penn State University
 
-Get started with MMotH-Vent by installing it [here](/MMotH-Vent/getting_started/installation/).
+Get started with MMotH-Vent by installing it [here](/MMotH-Vent/getting_started/installation/installation.md).
