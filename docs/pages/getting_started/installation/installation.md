@@ -1,16 +1,6 @@
 ---
 parent: Getting Started
 title: "Installation"
-permalink: /getting_started/installation/
-gallery:
-  - url: /assets/images/lvmesh.png
-    image_path: /assets/images/lvmesh.png
-    alt: "Representative LV mesh"
-    title: "Built Rat LV Mesh"
-  - url: /assets/images/bio-photo.jpg
-    image_path: /assets/images/bio-photo.jpg
-    alt: "placeholder photo"
-    title: "biophoto"
 ---
 
 Currently, Docker is required to run MMotH-Vent. Docker is a program that creates "containers" that allows code to be run in a controlled environment using the host computer's resources. A switch from Docker to Singularity may be made in the future to allow the code to be executed on a computing cluster. To get started, follow these steps:  
