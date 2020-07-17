@@ -47,7 +47,6 @@ Verify that the container has been created by executing the following at the com
 docker ps -a
 ```
 This displays something similar to the following, showing all containers created on the local machine.   
-{% include figure image_path="/assets/images/docker_display_images.png" alt="Display containers" %}
 Once the container has been created, it needs to be started. Use the following command and replace "Container ID" with the created container's ID which can be found from the previous command.
 ```
 docker start [CONTAINER_ID]
