@@ -35,8 +35,8 @@ which should yield the following plot:
 
 Finally, the mesh and displacement solutions are saved as ParaView files. It is recommended to download Paraview to view these solutions.
 
-<a href="/MMotH-Vent/getting_started/installation/" class="btn btn--primary"><< Installation</a>
-<a href="/MMotH-Vent/getting_started/fenics_input_readme/" class="btn btn--primary">Creating Input Files >></a>
-
 # Ventricle Demo
 Under construction
+
+<a href="/MMotH-Vent/getting_started/installation/" class="btn btn--primary"><< Installation</a>
+<a href="/MMotH-Vent/getting_started/fenics_input_readme/" class="btn btn--primary">Creating Input Files >></a>
