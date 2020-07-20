@@ -1,5 +1,6 @@
 ---
 parent: Getting Started
+permalink: /getting_started/installation/
 title: "Installation"
 nav_order: 1
 ---
@@ -32,7 +33,7 @@ to check that the ```MMotH-Vent``` image has been loaded correctly.
 ## Create Container
 Once Docker has loaded the image, a container can be created in which MMoth-Vent will be executed. To access the cloned repository, the directory containing MMotH-Vent source code needs to be shared with the container. To create the container, and mount the directory to be shared, execute the following at the command line:  
 ```
-sudo docker run -it --mount src=[/path_to_MMotH-Vent_directory_on_machine],target=[/home/fenics/shared/,type=bind image_name]
+sudo docker run -it --mount src=[/path_to_MMotH-Vent_directory_on_machine],target=/home/fenics/shared/,type=bind [image_name]
 ```
 The directory structure within the new container is  
 ```
@@ -48,6 +49,8 @@ Verify that the container has been created by executing the following at the com
 docker ps -a
 ```
 This displays something similar to the following, showing all containers created on the local machine.   
+![List of containers](docker_display_images.png)
+{% include figure image_path="/assets/images/docker_display_images.png" alt="Display containers" %}
 Once the container has been created, it needs to be started. Use the following command and replace "Container ID" with the created container's ID which can be found from the previous command.
 ```
 docker start [CONTAINER_ID]
@@ -64,4 +67,4 @@ It is recommended to create an alias shortcut to issue this command regularly. A
 * Enter the command line in the container using ```sudo docker exec -ti -u fenics [CONTAINER_NAME] /bin/bash -l```
 The container can be exited by issuing the ```exit``` command. Continue to the next page to see how to run an MMotH-Vent simulation.
 
-<a href="/MMotH-Vent/getting_started/running_demo/" class="btn btn--primary">Running a Simulation >></a>
+<a href="/getting_started/running_demo/" class="btn btn--primary">Running a Simulation >></a>
