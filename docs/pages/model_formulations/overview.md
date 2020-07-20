@@ -1,6 +1,7 @@
 ---
 permalink: /model_formulation/overview/
 title: "Coupling the Systems"
+parent: Model Formulations
 ---
 
 <div class="notice--info">

@@ -1,6 +1,7 @@
 ---
 permalink: /model_formulation/hemodynamics/
 title: "Circulatory Model"
+parent: Model Formulations
 ---
 
 <div class="notice--info">

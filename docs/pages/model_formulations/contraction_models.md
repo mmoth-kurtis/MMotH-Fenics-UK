@@ -1,6 +1,7 @@
 ---
 title: Contraction Models
 permalink: /overview/cell_mechanics/contraction_models/
+parent: Model Formulations
 ---
 
 <div class="notice--info">
@@ -8,7 +9,7 @@ permalink: /overview/cell_mechanics/contraction_models/
   <p>This page is under  construction.</p>
 </div>
 
-MMotH-Vent utilizes MyoSim, software that utilizes Huxley-based cross-bridge distribution techniques. Detailed information can be found at [https://sites.google.com/a/campbellmusclelab.org/myosim/](https://sites.google.com/a/campbellmusclelab.org/myosim/). 
+MMotH-Vent utilizes MyoSim, software that utilizes Huxley-based cross-bridge distribution techniques. Detailed information can be found at [https://sites.google.com/a/campbellmusclelab.org/myosim/](https://sites.google.com/a/campbellmusclelab.org/myosim/).
 
 ## Two State
 Do we need text here?
