@@ -1,6 +1,5 @@
 ---
 title: Contraction Models
-permalink: /overview/cell_mechanics/contraction_models/
 parent: Cell Mechanics
 ---
 
