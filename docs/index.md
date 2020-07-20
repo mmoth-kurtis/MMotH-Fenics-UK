@@ -1,6 +1,7 @@
 ---
 title: MMotH-Vent
 permalink: /
+nav_exclude: true
 ---
 
 <h1><span style="color: #0292ca">M</span><span style="font-weight:normal">ultiscale </span><span style="color: #0292ca">M</span><span style="font-weight:normal">odel </span><span style="color: #0292ca">o</span><span style="font-weight:normal">f </span><span style="color: #0292ca">t</span><span style="font-weight:normal">he </span><span style="color: #0292ca">H</span><span style="font-weight:normal">eart: </span><span style="color: #0292ca">Vent</span><span style="font-weight:normal">ricle Simulations </span></h1>
