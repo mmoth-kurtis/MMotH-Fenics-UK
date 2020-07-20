@@ -1,8 +1,10 @@
 ---
 page-title: Cell Level Modeling
 permalink: /model_formulation/cell_mechanics/
-title: "Cell Mechanics"
+title: Cell Mechanics
 parent: Model Formulations
+has_children: true
+nav_order: 1
 ---
 
 <div class="notice--info">

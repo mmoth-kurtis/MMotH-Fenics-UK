@@ -1,7 +1,7 @@
 ---
 title: Contraction Models
 permalink: /overview/cell_mechanics/contraction_models/
-parent: Model Formulations
+parent: Cell Mechanics
 ---
 
 <div class="notice--info">

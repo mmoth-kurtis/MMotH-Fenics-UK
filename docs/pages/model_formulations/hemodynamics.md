@@ -2,6 +2,7 @@
 permalink: /model_formulation/hemodynamics/
 title: "Circulatory Model"
 parent: Model Formulations
+nav_order: 3
 ---
 
 <div class="notice--info">
