@@ -1,5 +1,6 @@
 ---
 parent: Getting Started
+permalink: /getting_started/installation/
 title: "Installation"
 nav_order: 1
 ---
@@ -49,7 +50,6 @@ docker ps -a
 ```
 This displays something similar to the following, showing all containers created on the local machine.   
 ![List of containers](docker_display_images.png)
-{% include figure image_path="/assets/images/docker_display_images.png" alt="Display containers" %}
 Once the container has been created, it needs to be started. Use the following command and replace "Container ID" with the created container's ID which can be found from the previous command.
 ```
 docker start [CONTAINER_ID]
