@@ -1,6 +1,5 @@
 ---
 parent: Getting Started
-permalink: /getting_started/installation/
 title: "Installation"
 nav_order: 1
 ---
