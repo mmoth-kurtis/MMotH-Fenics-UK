@@ -4,7 +4,7 @@ parent: Getting Started
 nav_order: 2
 ---
 
-Two demo instruction files are included for the user to test the installation and gain familiarity with functionality. Make sure Docker is running and enter the command line of your container by following the instructions at the bottom of the [previous page](/MMotH-Vent/getting_started/installation/#enter-container-command-line).
+Two demo instruction files are included for the user to test the installation and gain familiarity with functionality. Make sure Docker is running and enter the command line of your container by following the instructions at the bottom of the [previous page](../installation/installation.md#enter-container-command-line).
 
 Navigate to ```/home/fenics/shared/demos/```, where you will see two directories:  
 * ```single_cell_length_control_demo/```
