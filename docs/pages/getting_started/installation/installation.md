@@ -4,7 +4,7 @@ title: "Installation"
 nav_order: 1
 ---
 
-Currently, Docker is required to run MMotH-Vent. Docker is a program that creates "containers" that allows code to be run in a controlled environment using the host computer's resources. A switch from Docker to Singularity may be made in the future to allow the code to be executed on a computing cluster. To get started, follow these steps:  
+Currently, Docker is required to run MMotH-Vent. Docker is a program that creates "containers" that allows code to be run in a controlled environment using the host computer's resources. A switch from Docker to Singularity may be made in the future to allow the code to be executed on a computing cluster. To get started, follow these steps (Note, command line text can be copied and pasted into a terminal, but items in [] need to be replaced with user specific information):  
   * [Install Docker](#install-docker)
   * [Clone Repository](#clone-the-mmoth-vent-repository)
   * [Load Image](#load-image)
@@ -42,14 +42,14 @@ The directory structure within the new container is
 |  |  +-- local/  
 |  |  +-- shared/  
 ```
-and the contents of the MMotH-Vent will be located under the ```shared``` directory.  
+and the contents of the MMotH-Vent repository will be located under the ```shared``` directory.  
 Verify that the container has been created by executing the following at the command line:
 ```
 docker ps -a
 ```
-This displays something similar to the following, showing all containers created on the local machine.   
+This displays a list of all containers created on the local machine.   
 ![List of containers](docker_display_images.png)
-Once the container has been created, it needs to be started. Use the following command and replace "Container ID" with the created container's ID which can be found from the previous command.
+Once the container has been created, it needs to be started. Using "Container ID" from the previous command,
 ```
 docker start [CONTAINER_ID]
 ```
@@ -59,10 +59,10 @@ Now that the container is started, the following command takes the user to a com
 ```
 sudo docker exec -ti -u fenics [CONTAINER_NAME] /bin/bash -l
 ```
-It is recommended to create an alias shortcut to issue this command regularly. As a recap, once the container is created from the image, the regular workflow to use MMotH-Vent is:
+It is recommended to create an alias shortcut to issue this command regularly. Once the container is created from the image, the regular workflow to use MMotH-Vent is:
 * Start Docker
 * From the command line, start the created container using ```docker start [CONTAINER_ID]```
-* Enter the command line in the container using ```sudo docker exec -ti -u fenics [CONTAINER_NAME] /bin/bash -l```
-The container can be exited by issuing the ```exit``` command. Continue to the next page to see how to run an MMotH-Vent simulation.
+* Enter the command line in the container using ```sudo docker exec -ti -u fenics [CONTAINER_NAME] /bin/bash -l```.
+* When finished, exit the container by issuing the ```exit``` command.  
 
 <a href="../running_a_simulation/running_demo.html" class="btn btn--primary">Running a Simulation >></a>
