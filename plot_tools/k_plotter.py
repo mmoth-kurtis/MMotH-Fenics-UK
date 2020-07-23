@@ -35,7 +35,7 @@ lang_flag = 'python'
 # For now, hard coding bin discretization information
 xmin = -10
 xmax = 10
-bin_width = 0.5
+bin_width = 1.0
 cb_domain = np.arange(xmin,xmax+bin_width,bin_width)
 num_bins = np.shape(cb_domain)
 
@@ -224,7 +224,7 @@ else:
 # Animate cross-bridges during simulation
 max_nbound = np.max(fenics_pop_data[:,2])
 #print max_nbound
-ax1 = plt.subplot(427,xlim=(xmin-1,xmax+1),ylim=(-.001,max_nbound/2))
+ax1 = plt.subplot(427,xlim=(xmin-1,xmax+1),ylim=(0.00,max_nbound/2))
 #ax = plt.axes(xlim=(xmin,xmax),ylim=(0,1))
 line1, = ax1.plot([],[],lw=3)
 line2, = ax2.plot([],[])
@@ -249,7 +249,7 @@ def animate(i):
     print np.shape(y)
     line[0].set_data(cb_domain,y)
     line[1].set_data(t,m)
-    time.sleep(0.1)
+    time.sleep(0.5)
     return line
 
 

@@ -1,5 +1,4 @@
 ---
-permalink: /model_formulation/overview/
 title: "Coupling the Systems"
 parent: Model Formulations
 nav_order: 4
@@ -18,6 +17,6 @@ This code features a multi-scale model of the left-ventricle. Below is a figure 
 
 For more detail about individual model formulations, see below:
 
-[Cell Mechanics](/MMotH-Vent/model_formulation/cell_mechanics/)  
-[Tissue Mechanics](/MMotH-Vent/model_formulation/tissue_mechanics/)  
-[Hemodynamics](/MMotH-Vent/model_formulation/hemodynamics/)  
+[Cell Mechanics](../cell_mechanics/cell_mechanics.md)  
+[Tissue Mechanics](../tissue_mechanics/tissue_mechanics.md)  
+[Hemodynamics](../hemodynamics/hemodynamics.md)  

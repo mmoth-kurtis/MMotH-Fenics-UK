@@ -135,8 +135,6 @@ def fenics(sim_params,file_inputs,output_params,passive_params,hs_params,cell_io
     os.system("rm " + output_path + "*.vtu")
 
     #--------------- Load in mesh -------------------------------------
-    #meshfilename = rc_input_path + casename + ".hdf5"
-
     mesh = Mesh()
 
     f = HDF5File(mpi_comm_world(), meshfilename, 'r')
@@ -180,34 +178,6 @@ def fenics(sim_params,file_inputs,output_params,passive_params,hs_params,cell_io
     f.read(facetboundaries, casename+"/"+"facetboundaries")
     f.read(edgeboundaries, casename+"/"+"edgeboundaries")
 
-    #f00 = Function(fiberFS)
-    #s00 = Function(fiberFS)
-    #n00 = Function(fiberFS)
-
-
-    #f.read(f00, casename+"/"+"eF")
-    #f0 = project(f00, VectorFunctionSpace(mesh, "CG", 1))
-    #f0 = project(f0/sqrt(inner(f0,f0)), VectorFunctionSpace(mesh, "CG", 1))
-    #f.read(s00, casename+"/"+"eS")
-    #s0CG = project(s00, VectorFunctionSpace(mesh, "CG", 1))
-    #s0CG = project(s0CG/sqrt(inner(s0CG,s0CG)), VectorFunctionSpace(mesh, "CG", 1))
-    #f.read(n00, casename+"/"+"eN")
-    #n0CG = project(n00, VectorFunctionSpace(mesh, "CG", 1))
-    #n0CG = project(n0CG/sqrt(inner(n0CG,n0CG)), VectorFunctionSpace(mesh, "CG", 1))
-
-    ### Export as a vector and normalize directly
-    """for p in v2d:
-        #fvec = np.array([f0.vector().array()[p[0]], f0.vector().array()[p[1]], f0.vector().array()[p[2]]])
-        #normfvec = fvec/np.linalg.norm(fvec)
-        svec = np.array([s0CG.vector().array()[p[0]], s0CG.vector().array()[p[1]], s0CG.vector().array()[p[2]]])
-        normsvec = svec/np.linalg.norm(svec)
-        #nvec = np.array([n0CG.vector().array()[p[0]], n0CG.vector().array()[p[1]], n0CG.vector().array()[p[2]]])
-        #normnvec = nvec/np.linalg.norm(nvec)
-        for k in range(0,3):
-        	#f0.vector()[p[k]] = normfvec[k]
-        	s0CG.vector()[p[k]] = normsvec[k]
-        	#n0CG.vector()[p[k]] = normnvec[k]"""
-
     f.close()
     File(output_path + "facetboundaries.pvd") << facetboundaries
     File(output_path + "edgeboundaries.pvd") << edgeboundaries
@@ -223,19 +193,13 @@ def fenics(sim_params,file_inputs,output_params,passive_params,hs_params,cell_io
     File(output_path + "sheet-normal.pvd") << project(n0, VectorFunctionSpace(mesh, "CG", 1))
 
     ##############################################################################
-
-
     isincomp = True#False
     N = FacetNormal (mesh)
     X = SpatialCoordinate (mesh)
-    #print dir()
+
     Press = Expression(("P"), P=0.0, degree=0)
     Kspring = Constant(100)
     LVCavityvol = Expression(("vol"), vol=0.0, degree=2)
-    #C2 = Constant(0.5)
-    #C3 = Constant(25.0)
-    #Cparam = Constant(5.0e2)
-
 
     V = VectorFunctionSpace(mesh, 'CG', 2)
     TF = TensorFunctionSpace(mesh, 'DG', 1)
@@ -247,11 +211,6 @@ def fenics(sim_params,file_inputs,output_params,passive_params,hs_params,cell_io
     Qelem._quad_scheme = 'default'
     Relem = FiniteElement("Real", mesh.ufl_cell(), 0, quad_scheme="default")
     Relem._quad_scheme = 'default'
-    #LMelem = FiniteElement("Real", mesh.ufl_cell(topid), 0, quad_scheme="default")
-    #LMelem._quad_scheme = 'default'
-    #Quadelem = FiniteElement("Quadrature", mesh.ufl_cell(), degree=deg, quad_scheme="default")
-    #Quadelem = FiniteElement("Quadrature", tetrahedron, degree=deg, quad_scheme="default")
-    #Quadelem._quad_scheme = 'default'
 
     Telem2 = TensorElement("Quadrature", mesh.ufl_cell(), degree=deg, shape=2*(3,), quad_scheme='default')
     Telem2._quad_scheme = 'default'
@@ -264,15 +223,13 @@ def fenics(sim_params,file_inputs,output_params,passive_params,hs_params,cell_io
     # From L.C. Lee
     ####### Mixed element for rigid body motion #####################################
     VRelem = MixedElement([Relem, Relem, Relem, Relem, Relem])
-    #### Mixed element for lagrange multiplier for base bc
-    # Kurtis 05/21
-    LMelem = MixedElement([Relem, Relem])
+
     #################################################################################
     if(ispressurectrl):
         W = FunctionSpace(mesh, MixedElement([Velem,Qelem,VRelem]))
     else:
         #W = FunctionSpace(mesh, MixedElement([Velem,Qelem,Relem,VRelem]))
-        W = FunctionSpace(mesh, MixedElement([Velem,Qelem,Relem,VRelem,LMelem]))
+        W = FunctionSpace(mesh, MixedElement([Velem,Qelem,Relem,VRelem]))
     #Quad = FunctionSpace(mesh, Quadelem)
 
     Quad_vectorized_Fspace = FunctionSpace(mesh, MixedElement(n_array_length*[Quadelem]))
@@ -342,10 +299,10 @@ def fenics(sim_params,file_inputs,output_params,passive_params,hs_params,cell_io
     	(u,p,c11) = split(w)
     	(v,q,v11) = TestFunctions(W)
     else:
-        du,dp,dpendo,dc11,dlm11 = TrialFunctions(W)
-      	(u,p, pendo,c11,lm11) = split(w)
+        du,dp,dpendo,dc11 = TrialFunctions(W)
+      	(u,p, pendo,c11) = split(w)
         #(u,p, pendo,c11,lm11) = w.split(True)
-      	(v,q, qendo,v11,vm11) = TestFunctions(W)
+      	(v,q, qendo,v11) = TestFunctions(W)
 
 
     if(ispressurectrl):
@@ -485,25 +442,23 @@ def fenics(sim_params,file_inputs,output_params,passive_params,hs_params,cell_io
                     "mode": 0
                     }
 
-
+    # Define solver, for now using default solver. NSolver is from LCLee
     solver= NSolver(solverparams)
-
 
     LVCavityvol.vol = uflforms.LVcavityvol()
 
     print("cavity-vol = ", LVCavityvol.vol)
 
+    # Define paraview files to visualize on mesh
     displacementfile = File(output_path + "u_disp.pvd")
     stressfile = File(output_path + "Stress.pvd")
     pk1file = File(output_path + "pk1_act_on_f0.pvd")
-
-    #cauchystressfile = File(output_path + "cauchystress.pvd")
     hsl_file = File(output_path + "hsl_mesh.pvd")
     alpha_file = File(output_path + "alpha_mesh.pvd")
+    # Saving pressure/volume data
     if(MPI.rank(comm) == 0):
         fdataPV = open(output_path + "PV_.txt", "w", 0)
         fdataCa = open(output_path + "calcium_.txt", "w", 0)
-        #fdataPops = open(output_path + "populations", "w", 0)
 
     tstep = 0
     t = 0
@@ -512,9 +467,9 @@ def fenics(sim_params,file_inputs,output_params,passive_params,hs_params,cell_io
     Pcav_array = [uflforms.LVcavitypressure()*0.0075]
 
     # Contraction phase
-
     tarray = []
 
+    # Initialize arrays for saving myosim information
     hslarray = np.zeros((no_of_time_steps+1,no_of_int_points))
     calarray = np.zeros((no_of_time_steps+1,no_of_int_points))
     strarray = np.zeros((no_of_time_steps+1,no_of_int_points))
@@ -524,7 +479,10 @@ def fenics(sim_params,file_inputs,output_params,passive_params,hs_params,cell_io
     gucc_shear = np.zeros((no_of_time_steps+1,no_of_int_points))
     alphaarray = np.zeros((no_of_time_steps+1,no_of_int_points))
     overlaparray = np.zeros((no_of_time_steps+1,no_of_int_points))
+    deltahslarray = np.zeros((no_of_time_steps+1,no_of_int_points))
     calcium = np.zeros(no_of_time_steps+1)
+
+    # Get array of cross-bridge populations
     y_vec_array = y_vec.vector().get_local()[:]
 
     hsl_array = project(sqrt(dot(f0, Cmat*f0))*hsl0, Quad).vector().get_local()[:]
@@ -869,18 +827,6 @@ def fenics(sim_params,file_inputs,output_params,passive_params,hs_params,cell_io
         # Now print out volumes, pressures, calcium
         if(MPI.rank(comm) == 0):
             print >>fdataPV, tstep, p_cav*0.0075 , Part*.0075, Pven*.0075, V_cav, V_ven, V_art, calcium[counter]
-            """if save_output:
-                print "saving output"
-                np.save(output_path +"dumped_populations", dumped_populations)
-                np.save(output_path + "tarray", tarray)
-                np.save(output_path + "stress_array", strarray)
-                np.save(output_path + "hsl", hslarray)
-                np.save(output_path + "overlap", overlaparray)
-                #np.save(output_path + "dumped_populations",dumped_populations)
-                np.save(output_path + "pstress_array",pstrarray)
-                #np.save(output_path + "alpha_array",alphaarray)
-                np.save(output_path + "calcium",calarray)
-                #np.save(output_path + "HSL",hslarray)"""
 
         # Quick hack
         if counter == 0:
@@ -925,11 +871,10 @@ def fenics(sim_params,file_inputs,output_params,passive_params,hs_params,cell_io
             np.save(output_path + "gucc_fiber", gucc_fiber)
             np.save(output_path + "gucc_trans", gucc_trans)
             np.save(output_path + "gucc_shear", gucc_shear)
-            #np.save(output_path + "dumped_populations",dumped_populations)
+            np.save(output_path + "deltahsl", deltahslarray)
             np.save(output_path + "pstress_array",pstrarray)
             #np.save(output_path + "alpha_array",alphaarray)
             np.save(output_path + "calcium",calarray)
-            #np.save(output_path + "HSL",hslarray)
         #++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++
         cb_f_array = project(cb_force, Quad).vector().get_local()[:]
 	#print max(cb_f_array), min(cb_f_array)
@@ -939,6 +884,7 @@ def fenics(sim_params,file_inputs,output_params,passive_params,hs_params,cell_io
 
         hsl_array = project(hsl, Quad).vector().get_local()[:]           # for Myosim
 
+        delta_hsl_array = hsl_array - hsl_array_old
         #delta_hsl_array = project(sqrt(dot(f0, Cmat*f0))*hsl0_transmural, Quad).vector().get_local()[:] - hsl_array_old # for Myosim
         #delta_hsl_array = project(scalefactor_hsl*hsl0_transmural,Quad).vector().get_local()[:] - hsl_array_old
 
@@ -1012,6 +958,20 @@ def fenics(sim_params,file_inputs,output_params,passive_params,hs_params,cell_io
         alpha_file << alpha_temp
 
 
+        # Go ahead and save information occasionally in case process is killed
+        if int(tstep/50.0) == tstep/50.0:
+                np.save(output_path +"dumped_populations", dumped_populations)
+                np.save(output_path + "tarray", tarray)
+                np.save(output_path + "stress_array", strarray)
+                np.save(output_path + "hsl", hslarray)
+                np.save(output_path + "overlap", overlaparray)
+                np.save(output_path + "gucc_fiber", gucc_fiber)
+                np.save(output_path + "gucc_trans", gucc_trans)
+                np.save(output_path + "gucc_shear", gucc_shear)
+                np.save(output_path + "deltahsl", deltahslarray)
+                np.save(output_path + "pstress_array",pstrarray)
+                #np.save(output_path + "alpha_array",alphaarray)
+                np.save(output_path + "calcium",calarray)
         tarray.append(tstep)
 
 
@@ -1023,6 +983,7 @@ def fenics(sim_params,file_inputs,output_params,passive_params,hs_params,cell_io
         gucc_shear[counter,:] = pgs_array
         alphaarray[counter,:] = alpha_array
         overlaparray[counter,:] = temp_overlap
+        deltahslarray[counter,:] = delta_hsl_array
 
 
     if(MPI.rank(comm) == 0):
