@@ -1,5 +1,4 @@
 ---
-permalink: /getting_started/running_demo/
 title: "Running a Simulation"
 parent: Getting Started
 nav_order: 2

@@ -1,6 +1,5 @@
 ---
 title: "Input Files"
-permalink: /getting_started/fenics_input_readme/
 parent: Getting Started
 nav_order: 3
 ---

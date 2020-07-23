@@ -1,5 +1,4 @@
 ---
-permalink: /model_formulation/tissue_mechanics/
 title: "Tissue Mechanics"
 parent: Model Formulations
 nav_order: 2

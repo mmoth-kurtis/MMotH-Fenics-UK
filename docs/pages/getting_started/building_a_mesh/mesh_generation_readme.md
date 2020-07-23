@@ -1,6 +1,5 @@
 ---
 title: "Building a Mesh"
-permalink: /getting_started/mesh_generation_readme/
 parent: Getting Started
 nav_order: 4
 ---
