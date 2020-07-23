@@ -154,5 +154,5 @@ This code currently uses a 3 compartment Windkessel model. The three compartment
   **"Rven":**  
   **"V_ven":**  
   **"V_art":**  
-<a href="/MMotH-Vent/getting_started/running_demo/" class="btn btn--primary"><< Running a Simulation</a>
-<a href="/MMotH-Vent/getting_started/mesh_generation_readme/" class="btn btn--primary">Building a Mesh >></a>
+<a href="../running_a_simulation/running_demo.html" class="btn btn--primary"><< Running a Simulation</a>
+<a href="../building_a_mesh/mesh_generation_readme.html" class="btn btn--primary">Building a Mesh >></a>

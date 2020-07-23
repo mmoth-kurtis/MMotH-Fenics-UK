@@ -37,5 +37,5 @@ Finally, the mesh and displacement solutions are saved as ParaView files. It is 
 # Ventricle Demo
 Under construction
 
-<a href="/MMotH-Vent/getting_started/installation/" class="btn btn--primary"><< Installation</a>
-<a href="/MMotH-Vent/getting_started/fenics_input_readme/" class="btn btn--primary">Creating Input Files >></a>
+<a href="../installation/installation.html" class="btn btn--primary"><< Installation</a>
+<a href="../creating_input_files/fenics_input_readme.html" class="btn btn--primary">Creating Input Files >></a>
