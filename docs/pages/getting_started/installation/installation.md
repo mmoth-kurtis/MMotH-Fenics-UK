@@ -65,4 +65,4 @@ It is recommended to create an alias shortcut to issue this command regularly. A
 * Enter the command line in the container using ```sudo docker exec -ti -u fenics [CONTAINER_NAME] /bin/bash -l```
 The container can be exited by issuing the ```exit``` command. Continue to the next page to see how to run an MMotH-Vent simulation.
 
-<a href="../running_a_simulation/running_demo.md" class="btn btn--primary">Running a Simulation >></a>
+<a href="../running_a_simulation/running_demo.html" class="btn btn--primary">Running a Simulation >></a>
