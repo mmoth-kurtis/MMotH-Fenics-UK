@@ -21,9 +21,9 @@ Therefore to execute this instruction file, use the following command:
 python ../../source_code/fenics_driver.py singlecell_demo.json
 ```
 
-The default option in this instruction file is to save all of the output in the same directory in which MMotH-Vent is called. MMotH-Vent output a number of numpy arrays that contain cell-level information. The cell data at any gauss point can be plotted by executing
+The default option in this instruction file is to save all of the output in the same directory from which MMotH-Vent is called. MMotH-Vent outputs a number of numpy arrays that contain cell-level information. The cell data at any gauss point can be plotted by executing
 ```
-python [path to k_plotter] [gauss point]
+python [path to k_plotter] [integer gauss point]
 ```
 Assuming the path hierarchy is unchanged from the master repository, after running the demo the MyoSim data can be visualized by
 ```
