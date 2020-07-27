@@ -347,20 +347,14 @@ def fenics(sim_params,file_inputs,output_params,passive_params,hs_params,cell_io
 
     #Active force calculation------------------------------------------------------
     y_vec = Function(Quad_vectorized_Fspace)
-    #print hsl0_transmural
     hsl = sqrt(dot(f0, Cmat*f0))*hsl0_transmural
     #hsl = project(sqrt(dot(f0, Cmat*f0))*hsl0_transmural, Quad)
-    #hsl = scalefactor_hsl*hsl0_transmural
-    #print type(hsl)
     # Forcing hsl
     #hsl = scalefactor_hsl.a*hsl0_transmural
     hsl_old = Function(Quad)
-    #print np.shape(hsl)
-    #print np.shape(hsl_old)
+
     delta_hsl = hsl - hsl_old
 
-    #f_holder = Constant(0.0)
-    #k_time = 0.0
     cb_force = Constant(0.0)
     y_vec_split = split(y_vec)
 
@@ -379,9 +373,9 @@ def fenics(sim_params,file_inputs,output_params,passive_params,hs_params,cell_io
 
                 n_pop = y_vec_split[n_vector_indices[jj][0] + k]
 
-                temp_holder = n_pop * k_cb_multiplier[jj] * (dxx + cb_ext) * conditional(dxx + cb_ext > 0.0, k_cb_pos, k_cb_neg)
+                temp_holder = n_pop * k_cb_multiplier[jj] * (dxx + cb_ext) * conditional(gt(dxx + cb_ext,0.0), k_cb_pos, k_cb_neg)
 
-                f_holder = f_holder + conditional(temp_holder < 0.0, 0.0, temp_holder)
+                f_holder = f_holder + conditional(gt(temp_holder,0.0),temp_holder,0.0)
 
             f_holder = f_holder * cb_number_density * 1e-9
 
@@ -389,7 +383,7 @@ def fenics(sim_params,file_inputs,output_params,passive_params,hs_params,cell_io
 
         cb_force = cb_force + f_holder
 
-    Scalefactor = Constant(0.5)
+    #Scalefactor = Constant(0.5)
     cb_force2 = Expression(("f"), f=0, degree=1)
     #Pactive = Scalefactor * cb_force2 * as_tensor(f0[i]*f0[j], (i,j)) #+ 0.25*cb_force * as_tensor(s0[i]*s0[j], (i,j))+ 0.25*cb_force * as_tensor(n0[i]*n0[j], (i,j))
     #Pactive, cb_force = uflforms.TempActiveStress(af_time.af_time)
@@ -573,7 +567,7 @@ def fenics(sim_params,file_inputs,output_params,passive_params,hs_params,cell_io
         solve(Ftotal == 0, w, bcs, J = Jac, form_compiler_parameters={"representation":"uflacs"})
 
         #hsl_old.vector()[:] = project(hsl, Quad).vector().get_local()[:] # for active stress
-        hsl_old = project(hsl, Quad).vector().get_local()[:]
+        #hsl_old = project(hsl, Quad).vector().get_local()[:]
         hsl_array = project(hsl, Quad).vector().get_local()[:]           # for Myosim
 
         #delta_hsl_array = project(sqrt(dot(f0, Cmat*f0))*hsl0_transmural, Quad).vector().get_local()[:] - hsl_array_old # for Myosim
@@ -843,6 +837,9 @@ def fenics(sim_params,file_inputs,output_params,passive_params,hs_params,cell_io
 
         hsl_array_old = hsl_array
 
+        # Kurtis assigning hsl_old function for newton iteration
+        hsl_old.vector()[:] = hsl_array_old
+
         # Hack update cb_force
 	"""t_trans = 30
 	t0 = 20
@@ -880,7 +877,7 @@ def fenics(sim_params,file_inputs,output_params,passive_params,hs_params,cell_io
 	#print max(cb_f_array), min(cb_f_array)
 
         #hsl_old.vector()[:] = project(hsl, Quad).vector().get_local()[:] # for active stress
-        hsl_old = project(hsl, Quad).vector().get_local()[:]
+        #hsl_old = project(hsl, Quad).vector().get_local()[:]
 
         hsl_array = project(hsl, Quad).vector().get_local()[:]           # for Myosim
 
