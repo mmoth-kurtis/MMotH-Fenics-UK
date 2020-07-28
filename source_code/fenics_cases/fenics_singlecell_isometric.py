@@ -236,6 +236,7 @@ def fenics(sim_params,file_inputs,output_params,passive_params,hs_params,cell_io
                 n_pop = y_vec_split[n_vector_indices[jj][0] + kk]
 
                 temp_holder = n_pop * k_cb_multiplier[jj] * (dxx + cb_ext) * conditional(gt(dxx + cb_ext,0.0), k_cb_pos, k_cb_neg)
+                temp_holder = temp_holder*conditional(gt(abs(dxx),x_bin_max),0.0,1.0)
                 f_holder = f_holder + conditional(gt(temp_holder,0.0),temp_holder,0.0)
 
             f_holder = f_holder * cb_number_density * 1e-9
@@ -408,7 +409,7 @@ def fenics(sim_params,file_inputs,output_params,passive_params,hs_params,cell_io
 
         #print(cb_f_array)
 
-        if t <= 100: # stretch to 1300
+        """if t <= 100: # stretch to 1300
             u_D.u_D += .003
         if t < 500 and t > 100:
             u_D.u_D =u_D.u_D
@@ -419,11 +420,15 @@ def fenics(sim_params,file_inputs,output_params,passive_params,hs_params,cell_io
         if t < 900 and t >= 800:
             u_D.u_D -= .0005
         if t >= 900:
-            u_D.u_D = u_D.u_D
+            u_D.u_D = u_D.u_D"""
         """if t < 170 and t > 150:
             u_D.u_D -= 0.005
         else:
             u_D.u_D = u_D.u_D"""
+        if t < 1:
+            u_D.u_D += 0.1
+        else:
+            u_D.u_D = u_D.u_D
         t = t + step_size
 
         calarray.append(hs.Ca_conc*np.ones(no_of_int_points))

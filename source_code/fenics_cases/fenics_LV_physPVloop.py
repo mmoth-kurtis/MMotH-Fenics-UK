@@ -374,7 +374,7 @@ def fenics(sim_params,file_inputs,output_params,passive_params,hs_params,cell_io
                 n_pop = y_vec_split[n_vector_indices[jj][0] + k]
 
                 temp_holder = n_pop * k_cb_multiplier[jj] * (dxx + cb_ext) * conditional(gt(dxx + cb_ext,0.0), k_cb_pos, k_cb_neg)
-
+                temp_holder = temp_holder * conditional(gt(abs(dxx),x_bin_max),0.0,1.0)
                 f_holder = f_holder + conditional(gt(temp_holder,0.0),temp_holder,0.0)
 
             f_holder = f_holder * cb_number_density * 1e-9

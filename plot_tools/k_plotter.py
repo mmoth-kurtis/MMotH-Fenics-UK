@@ -33,9 +33,9 @@ lang_flag = 'python'
 #lang_flag = 'c++'
 
 # For now, hard coding bin discretization information
-xmin = -12
-xmax = 12
-bin_width = 0.5
+xmin = -10
+xmax = 10
+bin_width = 1.0
 cb_domain = np.arange(xmin,xmax+bin_width,bin_width)
 num_bins = np.shape(cb_domain)
 
@@ -143,9 +143,9 @@ plt.legend((state_3_pops_fenics, binding_sites), ('Xbridges', 'Binding sites'))
 plt.xlabel('time (s)')
 plt.ylabel("Proportions")
 #------------------------------------------------------------------------------
-plt.subplot(426)
+ax3 = plt.subplot(426)
 if single_cell_sim_flag > 0:
-    plt.plot(tarray,stress_array[0:data_range])
+    plt.plot(tarray[0:data_range],stress_array[0:data_range])
 else:
     plt.plot(tarray[0:data_range], stress_array[0:data_range,gauss_point])
 #plt.plot(tarray, stress_array[0:data_range])
@@ -163,7 +163,7 @@ plt.ylabel("Calcium [M]")
 #------------------------------------------------------------------------------
 ax2 = plt.subplot(421)
 if single_cell_sim_flag > 0:
-    plt.plot(tarray,HSL[0:data_range])
+    plt.plot(tarray[0:data_range],HSL[0:data_range])
 else:
     plt.plot(tarray[0:data_range], HSL[0:data_range,gauss_point])
 #plt.plot(tarray, HSL[0:data_range])
@@ -228,27 +228,32 @@ ax1 = plt.subplot(427,xlim=(xmin-1,xmax+1),ylim=(0.00,max_nbound/2))
 #ax = plt.axes(xlim=(xmin,xmax),ylim=(0,1))
 line1, = ax1.plot([],[],lw=3)
 line2, = ax2.plot([],[])
-line = [line1, line2]
+line3, = ax3.plot([],[])
+line = [line1, line2, line3]
 
 def init():
     line[0].set_data([],[])
     line[1].set_data([],[])
+    line[2].set_data([],[])
     return line
 
-t, m = [], []
+t, m, m2 = [], [], []
 y = np.zeros(np.shape(cb_domain))
 def animate(i):
     # array_length -1 for cpp, -2 for python
     y = fenics_pop_file[i,gauss_point,2:array_length-2]
     if single_cell_sim_flag > 0:
         m.append(HSL[i])
+        m2.append(stress_array[i])
     else:
         m.append(HSL[i,gauss_point])
-    print np.shape(cb_domain)
+        m2.append(stress_array[i,gauss_point])
+    #print np.shape(cb_domain)
     t.append(tarray[i])
-    print np.shape(y)
+    #print np.shape(y)
     line[0].set_data(cb_domain,y)
     line[1].set_data(t,m)
+    line[2].set_data(t,m2)
     time.sleep(0.5)
     return line
 
