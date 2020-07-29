@@ -785,11 +785,11 @@ def fenics(sim_params,file_inputs,output_params,passive_params,hs_params,cell_io
         cell_counter += 1
 
         print "cell_counter = ", cell_counter
-        for  i in range(no_of_int_points):
+        """for  i in range(no_of_int_points):
 
             for j in range(n_array_length):
 
-                dumped_populations[counter, i, j] = y_vec_array[i * n_array_length + j]
+                dumped_populations[counter, i, j] = y_vec_array[i * n_array_length + j]"""
 
 
         #y_vec.vector()[:] = y_vec_array # for PDE
@@ -797,26 +797,8 @@ def fenics(sim_params,file_inputs,output_params,passive_params,hs_params,cell_io
         # Initialize MyoSim solution holder
         y_vec_array_new = np.zeros(no_of_int_points*n_array_length)
 
-       # Checking size of things passed if __name__ == '__main__':
-        #print np.shape(hsl_array)
-        #print np.shape(delta_hsl_array)
-        #print np.shape(p_f_array)
-        #print np.shape(y_vec_array_new)
-
-        # force update to hsl
-        #scalefactor_hsl.a = 1.09+.09*(np.sin(cell_time*3.14/100 + 3.14/2))
-        #scalefactor_hsl.t = cell_time
-
-        #scalefactor_hsl_f = project(scalefactor_hsl_f,Quad)
         # Update calcium
         calcium[counter] = cell_ion.model_class.calculate_concentrations(cycle,cell_time,fdataCa) #LCL Commented off
-        #cb_force = homogeneous_stress.calculate_force(tstep)
-        #Pactive = cb_force * as_tensor(f0[i]*f0[j], (i,j))
-        #k_time = tstep
-        #scalefactor_epi.a = 0.93*np.sin((3.14*(np.exp(-((((tstep+20.*step_size)/850.)-.01)*23.5)**2.35)))*2*3.14/360.)
-        #scalefactor_endo.a = 1.56*np.sin((3.14*(np.exp(-((((tstep+20.*step_size)/850.)-.01)*23.5)**2.35)))*2*3.14/360.)
-        #print "scale factor is " + str(scalefactor.a)
-
 
         # Now print out volumes, pressures, calcium
         if(MPI.rank(comm) == 0):
@@ -828,7 +810,13 @@ def fenics(sim_params,file_inputs,output_params,passive_params,hs_params,cell_io
         else:
             overlap_counter = counter
     # Going to try to loop through integration points in python, not in fenics script
-        temp_overlap, y_vec_array_new = implement.update_simulation(hs, step_size, delta_hsl_array, hsl_array, y_vec_array, p_f_array, cb_f_array, calcium[counter], n_array_length, cell_time, overlaparray[overlap_counter,:])
+        temp_overlap, y_interp, y_vec_array_new = implement.update_simulation(hs, step_size, delta_hsl_array, hsl_array, y_vec_array, p_f_array, cb_f_array, calcium[counter], n_array_length, cell_time, overlaparray[overlap_counter,:])
+
+        for  i in range(no_of_int_points):
+
+            for j in range(n_array_length):
+
+                dumped_populations[counter, i, j] = y_interp[i * n_array_length + j]
 
         y_vec_array = y_vec_array_new # for Myosim
 

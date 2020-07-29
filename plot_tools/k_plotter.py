@@ -224,7 +224,7 @@ else:
 # Animate cross-bridges during simulation
 max_nbound = np.max(fenics_pop_data[:,2])
 #print max_nbound
-ax1 = plt.subplot(427,xlim=(xmin-1,xmax+1),ylim=(0.00,max_nbound/2))
+ax1 = plt.subplot(427,xlim=(xmin-1,xmax+1),ylim=(0.00,max_nbound/3))
 #ax = plt.axes(xlim=(xmin,xmax),ylim=(0,1))
 line1, = ax1.plot([],[],lw=3)
 line2, = ax2.plot([],[])
@@ -254,7 +254,7 @@ def animate(i):
     line[0].set_data(cb_domain,y)
     line[1].set_data(t,m)
     line[2].set_data(t,m2)
-    time.sleep(0.5)
+    time.sleep(0.1)
     return line
 
 

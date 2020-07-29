@@ -19,6 +19,7 @@ def update_simulation(self, time_step, delta_hsl, hsl, y0, pf, cbf, calcium, n_a
     num_int_points = np.shape(hsl)
     num_int_points = num_int_points[0]
     y_pops = np.zeros(np.size(y0))
+    y_interp = np.zeros(np.size(y0))
     self.temp_overlaps = np.zeros(num_int_points)
     #print y0[0:53]
     for i in range(num_int_points):
@@ -36,7 +37,7 @@ def update_simulation(self, time_step, delta_hsl, hsl, y0, pf, cbf, calcium, n_a
         if (np.abs(delta_hsl[i]) > 0.0):
             # Need to move some things
             self.myof.move_cb_distributions(delta_hsl[i])
-
+        y_interp[i*n_array_length:(i+1)*n_array_length] = self.myof.y[0:n_array_length]
         # passed in overlaps from previous timestep
         old_overlap = overlap_array[i]
         self.myof.evolve_kinetics(time_step, self.Ca_conc, cell_time)
@@ -62,7 +63,7 @@ def update_simulation(self, time_step, delta_hsl, hsl, y0, pf, cbf, calcium, n_a
     #self.myof.set_myofilament_forces()
     #self.hs_force = self.myof.total_force
     #print y_pops[0:53]
-    return self.temp_overlaps, y_pops
+    return self.temp_overlaps, y_interp, y_pops
 
 def return_rates_fenics(self):
     fluxes, rates = self.myof.return_fluxes(self.myof.y, self.Ca_conc)
