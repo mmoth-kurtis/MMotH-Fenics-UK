@@ -43,9 +43,11 @@ num_bins = np.shape(cb_domain)
 # Assuming the dumped npy files from FEniCS always take these names
 # Note, these arrays include info for every Gauss point
 fenics_pop_file = np.load(sim_dir + '/dumped_populations.npy')
-tarray = np.load(sim_dir + '/tarray.npy')
-#tarray = np.arange(0,340,0.1)
-tarray = tarray[:-1]
+tarray0 = np.load(sim_dir + '/tarray.npy')
+step_size = tarray0[2]-tarray0[1]
+new_value = tarray0[len(tarray0)-1] + step_size
+tarray = np.append(tarray0,new_value)
+
 stress_array = np.load(sim_dir + '/stress_array.npy')
 
 #print stress_array.ndim
@@ -126,7 +128,7 @@ plt.scatter(tarray[::10], myosim_pop_data[::10,2], color = 'r')"""
 
 plt.legend((state_1_pops_fenics, state_2_pops_fenics, state_3_pops_fenics), ('OFF', 'ON', 'FG'))
 plt.title("Myosin Populations")
-plt.xlabel('time (s)')
+plt.xlabel('time (ms)')
 plt.ylabel("Proportions")
 
 
@@ -139,8 +141,8 @@ binding_sites, = plt.plot(tarray[0:data_range], fenics_pop_file[0:data_range,gau
 #plt.scatter(tarray, myosim_pop_data[:,2], color = 'r')
 #plt.scatter(tarray[::10], myosim_pop_data[::10,2], color = 'r')
 
-plt.legend((state_3_pops_fenics, binding_sites), ('Xbridges', 'Binding sites'))
-plt.xlabel('time (s)')
+plt.legend((binding_sites,state_3_pops_fenics), ('Binding sites','Xbridges'))
+plt.xlabel('time (ms)')
 plt.ylabel("Proportions")
 #------------------------------------------------------------------------------
 ax3 = plt.subplot(426)
@@ -151,14 +153,14 @@ else:
 #plt.plot(tarray, stress_array[0:data_range])
 #plt.scatter(myosim_summary_data[:,0], myosim_summary_data[:,1],color='r')
 #plt.scatter(myosim_summary_data[::10,0], myosim_summary_data[::10,1],color='r')
-plt.xlabel('time (s)')
+plt.xlabel('time (ms)')
 plt.ylabel("Stress (Pa)")
 
 #------------------------------------------------------------------------------
 plt.subplot(428)
 plt.plot(tarray[0:data_range], calcium[0:data_range,0])
 #plt.scatter(myosim_summary_data[:,0], myosim_summary_data[:,1],color='r')
-plt.xlabel('time (s)')
+plt.xlabel('time (ms)')
 plt.ylabel("Calcium [M]")
 #------------------------------------------------------------------------------
 ax2 = plt.subplot(421)
@@ -168,7 +170,7 @@ else:
     plt.plot(tarray[0:data_range], HSL[0:data_range,gauss_point])
 #plt.plot(tarray, HSL[0:data_range])
 #plt.scatter(myosim_summary_data[:,0], myosim_summary_data[:,1],color='r')
-plt.xlabel('time [s]')
+plt.xlabel('time [ms]')
 plt.ylabel("hsl (nm)")
 
 #---------------------------------------------------------------------------------
@@ -254,7 +256,7 @@ def animate(i):
     line[0].set_data(cb_domain,y)
     line[1].set_data(t,m)
     line[2].set_data(t,m2)
-    time.sleep(0.1)
+    time.sleep(0.25)
     return line
 
 
