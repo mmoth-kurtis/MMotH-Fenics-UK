@@ -64,7 +64,9 @@ def fenics(sim_params,file_inputs,output_params,passive_params,hs_params,cell_io
     # We don't do pressure control simulations, probably will get rid of this.
     ispressurectrl = False
 
-    #------------------## Load in all information and set up simulation #-----------------
+
+    #------------------## Load in all information and set up simulation --------
+
     ## Assign input/output parameters
     output_path = output_params["output_path"][0]
     casename = file_inputs["casename"][0]
@@ -82,7 +84,9 @@ def fenics(sim_params,file_inputs,output_params,passive_params,hs_params,cell_io
     V_ven = windkessel_params["V_ven"][0]
     V_art = windkessel_params["V_art"][0]
 
+
     # --------  Assign parameters for active force calculation  ----------------
+
     filament_compliance_factor = hs_params["myofilament_parameters"]["filament_compliance_factor"][0]
     no_of_states = hs_params["myofilament_parameters"]["num_states"][0]
     no_of_attached_states = hs_params["myofilament_parameters"]["num_attached_states"][0]
@@ -102,6 +106,7 @@ def fenics(sim_params,file_inputs,output_params,passive_params,hs_params,cell_io
     hsl_max_threshold = hs_params["myofilament_parameters"]["hsl_max_threshold"][0]
     xfiber_fraction = hs_params["myofilament_parameters"]["xfiber_fraction"][0]
 
+
     ## ---------  Set up information for active force calculation --------------
 
     # Create x interval for cross-bridges
@@ -115,6 +120,7 @@ def fenics(sim_params,file_inputs,output_params,passive_params,hs_params,cell_io
 
     # Need to work out a general way to set this based on the scheme
     n_vector_indices = [[0,0], [1,1], [2,2+no_of_x_bins-1]]
+
 
     #------------  Start setting up simulation ---------------------------------
     sim_duration = sim_params["sim_duration"][0]
@@ -141,7 +147,9 @@ def fenics(sim_params,file_inputs,output_params,passive_params,hs_params,cell_io
     os.system("rm " + output_path + "*.pvd")
     os.system("rm " + output_path + "*.vtu")
 
-    #--------------- Load in mesh -------------------------------------
+
+    #--------------- Load in mesh, initialize things from it -------------------
+
     mesh = Mesh()
     f = HDF5File(mpi_comm_world(), meshfilename, 'r')
     f.read(mesh, casename, False)
@@ -162,6 +170,17 @@ def fenics(sim_params,file_inputs,output_params,passive_params,hs_params,cell_io
 
     facetboundaries = MeshFunction("size_t", mesh, 2)
     edgeboundaries = MeshFunction("size_t", mesh, 1)
+
+    # set surface id numbers:
+    topid = 4
+    LVendoid = 2
+    epiid = 1
+
+    # Define referential facet normal
+    N = FacetNormal (mesh)
+
+    # Define spatial coordinate system used in rigid motion constraint
+    X = SpatialCoordinate (mesh)
 
     # ---------  Initialize finite elements  -----------------------------------
 
@@ -215,108 +234,41 @@ def fenics(sim_params,file_inputs,output_params,passive_params,hs_params,cell_io
     #TF = TensorFunctionSpace(mesh, 'DG', 1)
     #Q = FunctionSpace(mesh,'CG',1)
 
+
+    # ------ Initalize functions on above spaces -------------------------------
+
+    # fiber, sheet, and sheet-normal functions
     f0 = Function(fiberFS)
     s0 = Function(fiberFS)
     n0 = Function(fiberFS)
+
+    # function for original hsl distribution
     hsl0_transmural = Function(Quad)
 
+    # Go ahead and read in rest of info from mesh file and close
     f.read(hsl0_transmural, casename+"/"+"hsl0")
     f.read(f0, casename+"/"+"eF")
     f.read(s0, casename+"/"+"eS")
     f.read(n0, casename+"/"+"eN")
 
+    # read in more mesh info, using MeshFunction for these
     f.read(facetboundaries, casename+"/"+"facetboundaries")
     f.read(edgeboundaries, casename+"/"+"edgeboundaries")
 
+    # finished with the mesh file, close it
     f.close()
-    File(output_path + "facetboundaries.pvd") << facetboundaries
-    File(output_path + "edgeboundaries.pvd") << edgeboundaries
-    topid = 4
-    LVendoid = 2
-    epiid = 1
-    ##############################################################################
 
-    comm = mesh.mpi_comm()
-
-    File(output_path + "fiber.pvd") << project(f0, VectorFunctionSpace(mesh, "CG", 1))
-    File(output_path + "sheet.pvd") << project(s0, VectorFunctionSpace(mesh, "CG", 1))
-    File(output_path + "sheet-normal.pvd") << project(n0, VectorFunctionSpace(mesh, "CG", 1))
-
-    ##############################################################################
-    isincomp = True#False
-    N = FacetNormal (mesh)
-    X = SpatialCoordinate (mesh)
-
-    Press = Expression(("P"), P=0.0, degree=0)
-    Kspring = Constant(100)
-    LVCavityvol = Expression(("vol"), vol=0.0, degree=2)
-
-
-
-
-    #################################################################################
-
-
-
-    #bctop1 = DirichletBC(W.sub(0).sub(0), s0(), facetboundaries, topid)
-    #bctop2 = DirichletBC(W.sub(0).sub(1), W.sub(0).sub(0), facetboundaries, topid)
-    bctop = DirichletBC(W.sub(0).sub(2), Expression(("0.0"), degree = 2), facetboundaries, topid)
-    #bctop = DirichletBC(W.sub(0), Expression((("0.0", "0.0", "0.0")), degree = 2), facetboundaries, topid)
-
-    ######### Define an expression for epicardial edge radial displacement field ######################
-    class MyExpr(Expression):
-
-        def __init__(self, param, **kwargs):
-        	self.param = param
-
-    	def eval(self, values, x):
-            nvec = self.param["nvec"]
-            rdir = np.array(nvec(x))/np.linalg.norm(nvec(x))
-
-            scalefactor = self.param["scalefactor"]
-
-
-            values[0] = scalefactor.a*rdir[0]
-            values[1] = scalefactor.a*rdir[1]
-            values[2] = 0.0
-
-
-        def value_shape(self):
-            return (3,)
-
-
-
-    #s0CG.set_allow_extrapolation(True)
-    scalefactor_epi = Expression('a', a=0.0, degree=1)
-    scalefactor_endo = Expression('a', a=0.0, degree=1)
-    #scalefactor_hsl = Expression('a+b*sin(t*c/d+c/2)', a=1.09, b=0.09, c=3.14, d=100, t=0.0, degree=1)
-    """param_endo={"nvec": s0CG,
-           "scalefactor": scalefactor_endo
-            };
-    param_epi={"nvec": s0CG,
-           "scalefactor": scalefactor_epi
-            };"""
-
-    #radexp = MyExpr(param=param, degree=1)
-    #endo_exp = MyExpr(param=param_endo, degree=1)
-    #epi_exp = MyExpr(param=param_epi, degree=1)
-    ###################################################################################################
-
-    # edgeboundaries 1 is epi, 2 is endo
-    endoring = pick_endoring_bc(method="cpp")(edgeboundaries, 2)
-    epiring = pick_endoring_bc(method="cpp")(edgeboundaries, 1)
-    # CKM trying to have radial expansion for entire top
-    #endoring = pick_endoring_bc(method="cpp")(facetboundaries, topid)
-    #bcedge = DirichletBC(W.sub(0), Expression(("0.0", "0.0", "0.0"), degree = 0), endoring, method="pointwise")
-    #bcedge_endo = DirichletBC(W.sub(0), endo_exp, endoring, method="pointwise")
-    #bcedge_epi = DirichletBC(W.sub(0), epi_exp, epiring, method="pointwise")
-    #bcs = [bctop, bcedge_endo, bcedge_epi]
-    bcs = [bctop]
-
+    # define rest of needed functions
+    # mixed function for solver
     w = Function(W)
+
+    # define trial function
     dw = TrialFunction(W)
+
+    # define test function
     wtest = TestFunction(W)
 
+    # separate out individual functions for displacement, pressure, bdry
     if(ispressurectrl):
         du,dp,dc11 = TrialFunctions(W)
     	(u,p,c11) = split(w)
@@ -327,11 +279,56 @@ def fenics(sim_params,file_inputs,output_params,passive_params,hs_params,cell_io
         #(u,p, pendo,c11,lm11) = w.split(True)
       	(v,q, qendo,v11) = TestFunctions(W)
 
+    # function for myosim populations
+    y_vec = Function(Quad_vectorized_Fspace)
+
+    # not explicitly defined as a function, but product
+    #hsl = sqrt(dot(f0, Cmat*f0))*hsl0_transmural
+
+    # Store old hsl and use for calculation of delta_hsl
+    hsl_old = Function(Quad)
+
+
+    # ------- Set up files for saving information -----------------------------
+
+    # save initial mesh information
+    File(output_path + "facetboundaries.pvd") << facetboundaries
+    File(output_path + "edgeboundaries.pvd") << edgeboundaries
+    File(output_path + "fiber.pvd") << project(f0, VectorFunctionSpace(mesh, "CG", 1))
+    File(output_path + "sheet.pvd") << project(s0, VectorFunctionSpace(mesh, "CG", 1))
+    File(output_path + "sheet-normal.pvd") << project(n0, VectorFunctionSpace(mesh, "CG", 1))
+
+    # Define paraview files to visualize on mesh
+    displacementfile = File(output_path + "u_disp.pvd")
+    pk1file = File(output_path + "pk1_act_on_f0.pvd")
+    hsl_file = File(output_path + "hsl_mesh.pvd")
+    alpha_file = File(output_path + "alpha_mesh.pvd")
+
+    # Saving pressure/volume data
+    # define communicator
+    comm = mesh.mpi_comm()
+
+    if(MPI.rank(comm) == 0):
+        fdataPV = open(output_path + "PV_.txt", "w", 0)
+        fdataCa = open(output_path + "calcium_.txt", "w", 0)
+
+
+    #--------- some miscellaneous definitions ----------------------------------
+    isincomp = True#False
+
+    #Press = Expression(("P"), P=0.0, degree=0)
+    #Kspring = Constant(100)
+    LVCavityvol = Expression(("vol"), vol=0.0, degree=2)
 
     if(ispressurectrl):
     	pendo = []
-    #dt = Expression(("dt"), dt=0.0, degree=1)
 
+    # ------- Dirichlet bdry for fixing base in z ------------------------------
+    bctop = DirichletBC(W.sub(0).sub(2), Expression(("0.0"), degree = 2), facetboundaries, topid)
+    bcs = [bctop]
+
+
+    # ------- Set parameters for forms file, where stresses and things are calculated
     params= {"mesh": mesh,
              "facetboundaries": facetboundaries,
              "facet_normal": N,
@@ -352,26 +349,36 @@ def fenics(sim_params,file_inputs,output_params,passive_params,hs_params,cell_io
     # Update params from loaded in parameters from json file
     params.update(passive_params)
 
+    # initialize the forms module
     uflforms = Forms(params)
 
+
+    # --------- Calculate quantities from form file used in weak form ----------
+
+    # Get deformation gradient
     Fmat = uflforms.Fmat()
+
+    # Get right cauchy stretch tensor
     Cmat = (Fmat.T*Fmat)
+
+    # Get Green strain tensor
     Emat = uflforms.Emat()
+
+    # jacobian of deformation gradient
     J = uflforms.J()
 
     n = J*inv(Fmat.T)*N
+
+    # integration measure
     dx = dolfin.dx(mesh,metadata = {"integration_order":2})
 
     #Ematrix = project(Emat, TF) not used?
+
+    # get passive material strain energy function
     Wp = uflforms.PassiveMatSEF()
 
     #Active force calculation------------------------------------------------------
-    y_vec = Function(Quad_vectorized_Fspace)
-    hsl = sqrt(dot(f0, Cmat*f0))*hsl0_transmural
-    #hsl = project(sqrt(dot(f0, Cmat*f0))*hsl0_transmural, Quad)
-    # Forcing hsl
-    #hsl = scalefactor_hsl.a*hsl0_transmural
-    hsl_old = Function(Quad)
+    hsl = sqrt(dot(f0, Cmat*f0))*hsl0_transmural # must project if want to set directly
 
     delta_hsl = hsl - hsl_old
 
@@ -425,7 +432,7 @@ def fenics(sim_params,file_inputs,output_params,passive_params,hs_params,cell_io
     	 inner(as_vector([c11[3], 0.0, 0.0]), cross(X, u))*dx + \
     	 inner(as_vector([0.0, c11[4], 0.0]), cross(X, u))*dx
     F4 = derivative(L4, w, wtest)
-    F5 = -Kspring*inner(dot(u,n),dot(v,n))*ds(epiid)  # traction applied as Cauchy stress!, Pactive is 1PK
+    #F5 = -Kspring*inner(dot(u,n),dot(v,n))*ds(epiid)  # traction applied as Cauchy stress!, Pactive is 1PK
 
     # Define circumferential direction
     zaxis = Expression(("0", "0", "1"), degree=2)
@@ -443,7 +450,7 @@ def fenics(sim_params,file_inputs,output_params,passive_params,hs_params,cell_io
     Jac2 = derivative(F2, w, dw)
     Jac3 = derivative(F3, w, dw)
     Jac4 = derivative(F4, w, dw)
-    Jac5 = derivative(F5, w, dw)
+    #Jac5 = derivative(F5, w, dw)
     #Jac6 = derivative(F6, w, dw)
 
     Jac = Jac1 + Jac2 + Jac3 + Jac4 #+ Jac5 #Jac6 + Jac4#+ Jac5 + Jac4
@@ -465,16 +472,8 @@ def fenics(sim_params,file_inputs,output_params,passive_params,hs_params,cell_io
 
     print("cavity-vol = ", LVCavityvol.vol)
 
-    # Define paraview files to visualize on mesh
-    displacementfile = File(output_path + "u_disp.pvd")
-    stressfile = File(output_path + "Stress.pvd")
-    pk1file = File(output_path + "pk1_act_on_f0.pvd")
-    hsl_file = File(output_path + "hsl_mesh.pvd")
-    alpha_file = File(output_path + "alpha_mesh.pvd")
-    # Saving pressure/volume data
-    if(MPI.rank(comm) == 0):
-        fdataPV = open(output_path + "PV_.txt", "w", 0)
-        fdataCa = open(output_path + "calcium_.txt", "w", 0)
+
+
 
     tstep = 0
     t = 0
@@ -546,9 +545,6 @@ def fenics(sim_params,file_inputs,output_params,passive_params,hs_params,cell_io
     print("cavity-vol = ", LVCavityvol.vol)
     for lmbda_value in range(0, loading_number):
 
-        scalefactor_epi.a = lmbda_value*0.002
-        scalefactor_endo.a = lmbda_value*0.00345238
-
         print "Loading phase step = ", lmbda_value
 
         LVCavityvol.vol += 0.004 #LCL change to smaller value
@@ -593,10 +589,6 @@ def fenics(sim_params,file_inputs,output_params,passive_params,hs_params,cell_io
 
             print >>fdataPV, 0.0, p_cav*0.0075 , 0.0, 0.0, V_cav, 0.0, 0.0, 0.0
             displacementfile << w.sub(0)
-            stresstemp = project(Pactive,TensorFunctionSpace(mesh,'DG',0))
-            #stresstemp = project(cb_force,FunctionSpace(mesh,'DG',0))
-            stresstemp.rename("Pactive","Pactive")
-            stressfile << stresstemp
             pk1temp = project(inner(f0,Pactive*f0),FunctionSpace(mesh,'DG',1))
             pk1temp.rename("pk1temp","pk1temp")
             pk1file << pk1temp
@@ -831,9 +823,6 @@ def fenics(sim_params,file_inputs,output_params,passive_params,hs_params,cell_io
 
         counter += 1
         displacementfile << w.sub(0)
-        stresstemp = project(Pactive,TensorFunctionSpace(mesh,'DG',0))
-        stresstemp.rename("Pactive","Pactive")
-        stressfile << stresstemp
         pk1temp = project(inner(f0,Pactive*f0),FunctionSpace(mesh,'DG',1))
         pk1temp.rename("pk1temp","pk1temp")
         pk1file << pk1temp
