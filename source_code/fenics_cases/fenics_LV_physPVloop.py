@@ -18,6 +18,7 @@ import vtk_py
 from cell_ion_module import cell_ion_driver
 import homogeneous_stress
 from edgetypebc import *
+import objgraph as obg
 
 ## Fenics simulation function
 #
@@ -62,16 +63,26 @@ def fenics(sim_params,file_inputs,output_params,passive_params,hs_params,cell_io
 
     # We don't do pressure control simulations, probably will get rid of this.
     ispressurectrl = False
-    #------------------## Load in all information and set up simulation #-----------------
 
+    #------------------## Load in all information and set up simulation #-----------------
     ## Assign input/output parameters
     output_path = output_params["output_path"][0]
-    #output_path = "./"
-    #input_path = file_inputs["input_directory_path"][0]
     casename = file_inputs["casename"][0]
-    #casename = "New_mesh"
 
-    # Assign parameters for active force calculation
+    # Assign parameters for Windkessel
+    # will be moving circulatory to its own module and pass in dictionary
+    # similar to cell_ion module
+    Cao = windkessel_params["Cao"][0]
+    Cven = windkessel_params["Cven"][0]
+    Vart0 = windkessel_params["Vart0"][0]
+    Vven0 = windkessel_params["Vven0"][0]
+    Rao = windkessel_params["Rao"][0]
+    Rven = windkessel_params["Rven"][0]
+    Rper = windkessel_params["Rper"][0]
+    V_ven = windkessel_params["V_ven"][0]
+    V_art = windkessel_params["V_art"][0]
+
+    # --------  Assign parameters for active force calculation  ----------------
     filament_compliance_factor = hs_params["myofilament_parameters"]["filament_compliance_factor"][0]
     no_of_states = hs_params["myofilament_parameters"]["num_states"][0]
     no_of_attached_states = hs_params["myofilament_parameters"]["num_attached_states"][0]
@@ -87,13 +98,12 @@ def fenics(sim_params,file_inputs,output_params,passive_params,hs_params,cell_io
     x_bin_min = hs_params["myofilament_parameters"]["bin_min"][0]
     x_bin_max = hs_params["myofilament_parameters"]["bin_max"][0]
     x_bin_increment = hs_params["myofilament_parameters"]["bin_width"][0]
-    # using passive_l_slack as hsl minimum
     hsl_min_threshold = hs_params["myofilament_parameters"]["passive_l_slack"][0]
     hsl_max_threshold = hs_params["myofilament_parameters"]["hsl_max_threshold"][0]
-
     xfiber_fraction = hs_params["myofilament_parameters"]["xfiber_fraction"][0]
 
-    ## Set up information for active force calculation
+    ## ---------  Set up information for active force calculation --------------
+
     # Create x interval for cross-bridges
     xx = np.arange(x_bin_min, x_bin_max + x_bin_increment, x_bin_increment)
 
@@ -106,7 +116,7 @@ def fenics(sim_params,file_inputs,output_params,passive_params,hs_params,cell_io
     # Need to work out a general way to set this based on the scheme
     n_vector_indices = [[0,0], [1,1], [2,2+no_of_x_bins-1]]
 
-    #----------------------- Start setting up simulation ---------------------------------------------------------
+    #------------  Start setting up simulation ---------------------------------
     sim_duration = sim_params["sim_duration"][0]
     save_output = sim_params["save_output"][0]
     step_size = sim_params["sim_timestep"][0]
@@ -116,15 +126,12 @@ def fenics(sim_params,file_inputs,output_params,passive_params,hs_params,cell_io
         cycles = sim_params["sim_type"][1]
         meshfilename = sim_params["sim_type"][2]
     # Cardiac cycle length and number of cycles will be general
-    # This will be tricky since cardiac period may change
     # For now, just including this info in the input file
     BCL = sim_duration # ms
-    #cycles = 1
 
-    hsl0 = hs_params["initial_hs_length"][0]
+    hsl0 = hs_params["initial_hs_length"][0] # this is now set when creating mesh
     no_of_time_steps = int(cycles*BCL/step_size)
     no_of_cell_time_steps = int(BCL/step_size)
-
 
     deg = 4
     parameters["form_compiler"]["quadrature_degree"]=deg
@@ -136,7 +143,6 @@ def fenics(sim_params,file_inputs,output_params,passive_params,hs_params,cell_io
 
     #--------------- Load in mesh -------------------------------------
     mesh = Mesh()
-
     f = HDF5File(mpi_comm_world(), meshfilename, 'r')
     f.read(mesh, casename, False)
 
@@ -156,12 +162,48 @@ def fenics(sim_params,file_inputs,output_params,passive_params,hs_params,cell_io
 
     facetboundaries = MeshFunction("size_t", mesh, 2)
     edgeboundaries = MeshFunction("size_t", mesh, 1)
+
+    # ---------  Initialize finite elements  -----------------------------------
+
+    # Vector element at gauss points (for fibers)
     VQuadelem = VectorElement("Quadrature", mesh.ufl_cell(), degree=deg, quad_scheme="default")
     VQuadelem._quad_scheme = 'default'
+
+    # General quadrature element whose points we will evaluate myosim at?
     Quadelem = FiniteElement("Quadrature", tetrahedron, degree=deg, quad_scheme="default")
     Quadelem._quad_scheme = 'default'
+
+    # Vector element for displacement
+    Velem = VectorElement("CG", mesh.ufl_cell(), 2, quad_scheme="default")
+    Velem._quad_scheme = 'default'
+
+    # Quadrature element for pressure
+    Qelem = FiniteElement("CG", mesh.ufl_cell(), 1, quad_scheme="default")
+    Qelem._quad_scheme = 'default'
+
+    # Real element for rigid body motion boundary condition
+    Relem = FiniteElement("Real", mesh.ufl_cell(), 0, quad_scheme="default")
+    Relem._quad_scheme = 'default'
+
+    # Tensor element spaces. May not be used?
+    Telem2 = TensorElement("Quadrature", mesh.ufl_cell(), degree=deg, shape=2*(3,), quad_scheme='default')
+    Telem2._quad_scheme = 'default'
+    for e in Telem2.sub_elements():
+        e._quad_scheme = 'default'
+    Telem4 = TensorElement("Quadrature", mesh.ufl_cell(), degree=deg, shape=4*(3,), quad_scheme='default')
+    Telem4._quad_scheme = 'default'
+    for e in Telem4.sub_elements():
+        e._quad_scheme = 'default'
+
     Quad = FunctionSpace(mesh, Quadelem)
     fiberFS = FunctionSpace(mesh, VQuadelem)
+
+    V = VectorFunctionSpace(mesh, 'CG', 2)
+    TF = TensorFunctionSpace(mesh, 'DG', 1)
+    Q = FunctionSpace(mesh,'CG',1)
+
+
+
     v2d = vertex_to_dof_map(VectorFunctionSpace(mesh, "CG", 1))
     v2d = v2d.reshape((-1, mesh.geometry().dim()))
 
@@ -201,25 +243,7 @@ def fenics(sim_params,file_inputs,output_params,passive_params,hs_params,cell_io
     Kspring = Constant(100)
     LVCavityvol = Expression(("vol"), vol=0.0, degree=2)
 
-    V = VectorFunctionSpace(mesh, 'CG', 2)
-    TF = TensorFunctionSpace(mesh, 'DG', 1)
-    Q = FunctionSpace(mesh,'CG',1)
 
-    Velem = VectorElement("CG", mesh.ufl_cell(), 2, quad_scheme="default")
-    Velem._quad_scheme = 'default'
-    Qelem = FiniteElement("CG", mesh.ufl_cell(), 1, quad_scheme="default")
-    Qelem._quad_scheme = 'default'
-    Relem = FiniteElement("Real", mesh.ufl_cell(), 0, quad_scheme="default")
-    Relem._quad_scheme = 'default'
-
-    Telem2 = TensorElement("Quadrature", mesh.ufl_cell(), degree=deg, shape=2*(3,), quad_scheme='default')
-    Telem2._quad_scheme = 'default'
-    for e in Telem2.sub_elements():
-        e._quad_scheme = 'default'
-    Telem4 = TensorElement("Quadrature", mesh.ufl_cell(), degree=deg, shape=4*(3,), quad_scheme='default')
-    Telem4._quad_scheme = 'default'
-    for e in Telem4.sub_elements():
-        e._quad_scheme = 'default'
     # From L.C. Lee
     ####### Mixed element for rigid body motion #####################################
     VRelem = MixedElement([Relem, Relem, Relem, Relem, Relem])
@@ -323,9 +347,6 @@ def fenics(sim_params,file_inputs,output_params,passive_params,hs_params,cell_io
              "fiber": f0,
              "sheet": s0,
              "sheet-normal": n0,
-    #         "C2": C2,
-    #         "C3": C3,
-    #         "Cparam": Cparam,
              "incompressible": isincomp,
              "Kappa":Constant(1e5)}
 
@@ -482,8 +503,6 @@ def fenics(sim_params,file_inputs,output_params,passive_params,hs_params,cell_io
     y_vec_array = y_vec.vector().get_local()[:]
 
     hsl_array = project(sqrt(dot(f0, Cmat*f0))*hsl0, Quad).vector().get_local()[:]
-    #print scalefactor_hsl.a
-    #hsl_array = project(scalefactor_hsl*hsl0_transmural, Quad).vector().get_local()[:]
 
     delta_hsl_array = np.zeros(no_of_int_points)
 
@@ -521,85 +540,38 @@ def fenics(sim_params,file_inputs,output_params,passive_params,hs_params,cell_io
 
     cb_f_array = project(cb_force, Quad).vector().get_local()[:]
 
-    #temp_DG_1 = project(alpha, FunctionSpace(mesh, "DG", 1), form_compiler_parameters={"representation":"uflacs"})
-    #alphas = interpolate(temp_DG_1, Quad)
-
     # Loading phase
+    print "memory growth before loading:"
+    obg.show_growth()
+
     print("cavity-vol = ", LVCavityvol.vol)
     for lmbda_value in range(0, loading_number):
 
         scalefactor_epi.a = lmbda_value*0.002
         scalefactor_endo.a = lmbda_value*0.00345238
-        #scalefactor_hsl.a = ((.17/loading_number)*lmbda_value + .1)+1
-        #print scalefactor_hsl.a
-#        print "scale factor is " + str(scalefactor.a)
+
         print "Loading phase step = ", lmbda_value
 
-# Kurtis understanding circulatory
-        #print "volume before loading = " + str(LVCavityvol.vol)
-        #print "pressure before loading = " + str(p_cav)
         LVCavityvol.vol += 0.004 #LCL change to smaller value
 
-        #print "volume after loading, before calling forms = " + str(LVCavityvol.vol)
-        #print "pressure after loading, before calling forms = " + str(p_cav)
         p_cav = uflforms.LVcavitypressure()
         V_cav = uflforms.LVcavityvol()
 
-        #print "volume after calling forms = " + str(LVCavityvol.vol)
-        #print "pressure after calling forms = " + str(p_cav)
-        #print "LV Pressure" + str(p_cav)
-        #print "LV Volume" + str(V_cav)
         hsl_array_old = hsl_array
-
-
-        #Trying to save before any loading to look at hsl
-        """displacementfile << w.sub(0)
-        stresstemp = project(Pactive,TensorFunctionSpace(mesh,'DG',0))
-        stresstemp.rename("Pactive","Pactive")
-        stressfile << stresstemp
-        hsl_temp = project(hsl,FunctionSpace(mesh,'DG',0))
-        hsl_temp.rename("hsl_temp","hsl")
-        hsl_file << hsl_temp
-        alpha_temp = project(alphas,FunctionSpace(mesh,'DG',0))
-        alpha_temp.rename("alpha_temp","alpha_temp")
-        alpha_file << alpha_temp"""
-
 
         #solver.solvenonlinear()
         solve(Ftotal == 0, w, bcs, J = Jac, form_compiler_parameters={"representation":"uflacs"})
 
-        #hsl_old.vector()[:] = project(hsl, Quad).vector().get_local()[:] # for active stress
-        #hsl_old = project(hsl, Quad).vector().get_local()[:]
         hsl_array = project(hsl, Quad).vector().get_local()[:]           # for Myosim
 
-        #delta_hsl_array = project(sqrt(dot(f0, Cmat*f0))*hsl0_transmural, Quad).vector().get_local()[:] - hsl_array_old # for Myosim
-        #delta_hsl_array = project(scalefactor_hsl*hsl0_transmural, Quad).vector().get_local()[:] - hsl_array_old
 
         temp_DG = project(Pff, FunctionSpace(mesh, "DG", 1), form_compiler_parameters={"representation":"uflacs"})
         p_f = interpolate(temp_DG, Quad)
         p_f_array = p_f.vector().get_local()[:]
 
-        #print np.shape(hsl_array)
-        #print np.shape(hsl_old)
         for ii in range(np.shape(hsl_array)[0]):
-            """if hsl_array[ii] > hsl_max_threshold:
-                #print "hsl exceeded max, index is " + str(ii)
-                hsl_array[ii] = hsl_max_threshold
-            if hsl_array[ii] < hsl_min_threshold:
-                #print "hsl below min, index is " + str(ii)
-                hsl_array[ii] = hsl_min_threshold
-            if hsl_old[ii] > hsl_max_threshold:
-                hsl_old[ii] = hsl_max_threshold
-            if hsl_old[ii] < hsl_min_threshold:
-                hsl_old[ii] = hsl_min_threshold"""
             if p_f_array[ii] < 0.0:
                 p_f_array[ii] = 0.0
-
-        #hsl.vector()[:] = hsl_array
-
-        #assign(hsl,hsl_array)
-        #temp_function = project(hsl_array[:],FunctionSpace(mesh, "DG", 1), form_compiler_parameters={"representation":"uflacs"})
-        #assign(hsl,temp_function)
 
         delta_hsl_array = hsl_array - hsl_array_old
 
@@ -617,11 +589,6 @@ def fenics(sim_params,file_inputs,output_params,passive_params,hs_params,cell_io
         pgs = interpolate(temp_DG_4, Quad)
         pgs_array = pgs.vector().get_local()[:]
 
-        """for ii in range(np.shape(alpha_array)[0]):
-            #if (alpha_array[ii] < 1.0):
-             #   p_f_array[ii] = 0.0
-             if(p_f_array[ii] < 0.0):
-                 p_f_array[ii] = 0.0"""
 
         if(MPI.rank(comm) == 0):
 
@@ -635,11 +602,6 @@ def fenics(sim_params,file_inputs,output_params,passive_params,hs_params,cell_io
             pk1temp.rename("pk1temp","pk1temp")
             pk1file << pk1temp
             hsl_temp = project(hsl,FunctionSpace(mesh,'DG',1))
-            #hsl_temp = project(hsl,Quad)
-            #print np.shape(hsl_temp.vector())
-            #hsl_temp.vector()[:] = hsl_array
-            #hsl_temp = project(hsl,Quad)
-            #hsl_temp2 = project(hsl_temp,FunctionSpace(mesh,'DG',1))
             hsl_temp.rename("hsl_temp","hsl")
             hsl_file << hsl_temp
             alpha_temp = project(alphas,FunctionSpace(mesh,'DG',0))
@@ -656,7 +618,6 @@ def fenics(sim_params,file_inputs,output_params,passive_params,hs_params,cell_io
     hs = half_sarcomere.half_sarcomere(hs_params,1)
 
     # Initialize cell ion module
-    #print cell_ion_params
     cell_ion = cell_ion_driver.cell_ion_driver(cell_ion_params)
 
     # Initialize calcium
@@ -665,28 +626,6 @@ def fenics(sim_params,file_inputs,output_params,passive_params,hs_params,cell_io
     dumped_populations = np.zeros((no_of_time_steps+1, no_of_int_points, n_array_length))
 
 
-    """Cao = 0.02/1000.0; #5.0e-5; #Cao = 0.005;
-    Cven = 2.0/1000.0 #0.02;#Cven = 0.2*10;
-    Vart0 = 0.0#100.0/1000.0#/2000;
-    Vven0 = 0.0#1000.0/1000.0#0.001 * 2200.0/1000.0#/2000;
-    Rao = 10*1000.0*1000.0#Rao = 10*1000.0;
-    Rven = 1000*1000.0#Rven = 1000.0;
-    Rper = 200000 * 50 #1000.0;
-    V_ven = 1200.0/1000.0#/2000;
-    V_art = 250.0/1000.0#/2000;"""
-
-    Cao = windkessel_params["Cao"][0]
-    Cven = windkessel_params["Cven"][0]
-    Vart0 = windkessel_params["Vart0"][0]
-    Vven0 = windkessel_params["Vven0"][0]
-    Rao = windkessel_params["Rao"][0]
-    Rven = windkessel_params["Rven"][0]
-    Rper = windkessel_params["Rper"][0]
-    V_ven = windkessel_params["V_ven"][0]
-    V_art = windkessel_params["V_art"][0]
-
-    #stop
-
 
     counter = 0
     cell_counter = 0
@@ -694,6 +633,9 @@ def fenics(sim_params,file_inputs,output_params,passive_params,hs_params,cell_io
     AV_old = 0
     MV_old = 1
     systole = 0
+
+    #print "memory growth before closed loop"
+    #obg.show_growth()
     while(cycle < cycles):
 
         p_cav = uflforms.LVcavitypressure()
@@ -793,9 +735,6 @@ def fenics(sim_params,file_inputs,output_params,passive_params,hs_params,cell_io
 
                 dumped_populations[counter, i, j] = y_vec_array[i * n_array_length + j]"""
 
-
-        #y_vec.vector()[:] = y_vec_array # for PDE
-
         # Initialize MyoSim solution holder
         y_vec_array_new = np.zeros(no_of_int_points*n_array_length)
 
@@ -864,39 +803,18 @@ def fenics(sim_params,file_inputs,output_params,passive_params,hs_params,cell_io
             np.save(output_path + "calcium",calarray)
         #++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++
         cb_f_array = project(cb_force, Quad).vector().get_local()[:]
-	#print max(cb_f_array), min(cb_f_array)
-
-        #hsl_old.vector()[:] = project(hsl, Quad).vector().get_local()[:] # for active stress
-        #hsl_old = project(hsl, Quad).vector().get_local()[:]
 
         hsl_array = project(hsl, Quad).vector().get_local()[:]           # for Myosim
 
         delta_hsl_array = hsl_array - hsl_array_old
-        #delta_hsl_array = project(sqrt(dot(f0, Cmat*f0))*hsl0_transmural, Quad).vector().get_local()[:] - hsl_array_old # for Myosim
-        #delta_hsl_array = project(scalefactor_hsl*hsl0_transmural,Quad).vector().get_local()[:] - hsl_array_old
 
         temp_DG = project(Pff, FunctionSpace(mesh, "DG", 1), form_compiler_parameters={"representation":"uflacs"})
         p_f = interpolate(temp_DG, Quad)
         p_f_array = p_f.vector().get_local()[:]
 
         for ii in range(np.shape(hsl_array)[0]):
-            """if hsl_array[ii] > hsl_max_threshold:
-                #print "hsl exceeded max, index is " + str(ii)
-                hsl_array[ii] = hsl_max_threshold
-            if hsl_array[ii] < hsl_min_threshold:
-                #print "hsl below min, index is " + str(ii)
-                hsl_array[ii] = hsl_min_threshold
-            if hsl_old[ii] > hsl_max_threshold:
-                hsl_old[ii] = hsl_max_threshold
-            if hsl_old[ii] < hsl_min_threshold:
-                hsl_old[ii] = hsl_min_threshold"""
             if p_f_array[ii] < 0.0:
                 p_f_array[ii] = 0.0
-
-        #hsl.vector()[:] = hsl_array
-
-        #assign(hsl,interpolate(project(hsl_array,FunctionSpace(mesh,"DG",1),form_compiler_parameters={"representation":"uflacs"}),Quad))
-
 
         temp_DG_1 = project(alpha, FunctionSpace(mesh, "DG", 1), form_compiler_parameters={"representation":"uflacs"})
         alphas = interpolate(temp_DG_1, Quad)
@@ -912,20 +830,6 @@ def fenics(sim_params,file_inputs,output_params,passive_params,hs_params,cell_io
         pgs = interpolate(temp_DG_4, Quad)
         pgs_array = pgs.vector().get_local()[:]
 
-        """for ii in range(np.shape(alpha_array)[0]):
-            #if (alpha_array[ii] < 1.0):
-             #   p_f_array[ii] = 0.0
-             if(p_f_array[ii] < 0.0):
-                 p_f_array[ii] = 0.0
-             if hsl_array[ii] > hsl_max_threshold:
-                 print "hsl exceeded threshold"
-                 hsl_array[ii] = hsl_max_threshold
-             if hsl_array[ii] < hsl_min_threshold:
-                 print "hsl under threshold"
-                 hsl_array[ii] = hsl_min_threshold"""
-
-        calarray[counter,:] = hs.Ca_conc * np.ones(no_of_int_points)
-
         counter += 1
         displacementfile << w.sub(0)
         stresstemp = project(Pactive,TensorFunctionSpace(mesh,'DG',0))
@@ -935,30 +839,12 @@ def fenics(sim_params,file_inputs,output_params,passive_params,hs_params,cell_io
         pk1temp.rename("pk1temp","pk1temp")
         pk1file << pk1temp
         hsl_temp = project(hsl,FunctionSpace(mesh,'DG',1))
-        #hsl_temp.vector().set_local(hsl_array)
-
-        #hsl_temp = project(hsl,Quad)
         hsl_temp.rename("hsl_temp","hsl")
         hsl_file << hsl_temp
         alpha_temp = project(alphas,FunctionSpace(mesh,'DG',0))
         alpha_temp.rename("alpha_temp","alpha_temp")
         alpha_file << alpha_temp
 
-
-        # Go ahead and save information occasionally in case process is killed
-        if int(tstep/50.0) == tstep/50.0:
-                np.save(output_path +"dumped_populations", dumped_populations)
-                np.save(output_path + "tarray", tarray)
-                np.save(output_path + "stress_array", strarray)
-                np.save(output_path + "hsl", hslarray)
-                np.save(output_path + "overlap", overlaparray)
-                np.save(output_path + "gucc_fiber", gucc_fiber)
-                np.save(output_path + "gucc_trans", gucc_trans)
-                np.save(output_path + "gucc_shear", gucc_shear)
-                np.save(output_path + "deltahsl", deltahslarray)
-                np.save(output_path + "pstress_array",pstrarray)
-                #np.save(output_path + "alpha_array",alphaarray)
-                np.save(output_path + "calcium",calarray)
         tarray.append(tstep)
 
 
@@ -971,33 +857,15 @@ def fenics(sim_params,file_inputs,output_params,passive_params,hs_params,cell_io
         alphaarray[counter,:] = alpha_array
         overlaparray[counter,:] = temp_overlap
         deltahslarray[counter,:] = delta_hsl_array
+        calarray[counter,:] = hs.Ca_conc * np.ones(no_of_int_points)
 
 
     if(MPI.rank(comm) == 0):
         fdataPV.close()
         fdataCa.close()
-        #fdataPops.close()
-
-    #rate_constants = np.zeros((no_of_x_bins,no_of_transitions + 1))
 
     fluxes, rates = implement.return_rates_fenics(hs)
 
-    #np.save("/home/fenics/shared/test_python_myosim/rates",rate_constants)
-    #np.save(output_path + "rates",rates)
-    #
-    #np.save(output_path + "dumped_populations",dumped_populations)
-    #
-    #np.save(output_path + "tarray",tarray)
-    #
-    #np.save(output_path + "stress_array",strarray)
-    #
-    #np.save(output_path + "pstress_array",pstrarray)
-    #
-    #np.save(output_path + "alpha_array",alphaarray)
-    #
-    #np.save(output_path + "calcium",calarray)
-    #
-    #np.save(output_path + "HSL",hslarray)
 
     # Generate dictionary for output
     outputs = {
