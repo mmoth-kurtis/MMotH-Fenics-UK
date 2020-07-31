@@ -169,7 +169,7 @@ def fenics(sim_params,file_inputs,output_params,passive_params,hs_params,cell_io
     VQuadelem = VectorElement("Quadrature", mesh.ufl_cell(), degree=deg, quad_scheme="default")
     VQuadelem._quad_scheme = 'default'
 
-    # General quadrature element whose points we will evaluate myosim at?
+    # General quadrature element whose points we will evaluate myosim at
     Quadelem = FiniteElement("Quadrature", tetrahedron, degree=deg, quad_scheme="default")
     Quadelem._quad_scheme = 'default'
 
@@ -185,27 +185,35 @@ def fenics(sim_params,file_inputs,output_params,passive_params,hs_params,cell_io
     Relem = FiniteElement("Real", mesh.ufl_cell(), 0, quad_scheme="default")
     Relem._quad_scheme = 'default'
 
-    # Tensor element spaces. May not be used?
-    Telem2 = TensorElement("Quadrature", mesh.ufl_cell(), degree=deg, shape=2*(3,), quad_scheme='default')
-    Telem2._quad_scheme = 'default'
-    for e in Telem2.sub_elements():
-        e._quad_scheme = 'default'
-    Telem4 = TensorElement("Quadrature", mesh.ufl_cell(), degree=deg, shape=4*(3,), quad_scheme='default')
-    Telem4._quad_scheme = 'default'
-    for e in Telem4.sub_elements():
-        e._quad_scheme = 'default'
+    # Mixed element for rigid body motion. One each for x, y displacement. One each for
+    # x, y, z rotation
+    VRelem = MixedElement([Relem, Relem, Relem, Relem, Relem])
 
+
+    # ------- Define function spaces on mesh using above elements --------------
+
+    # Quadrature space for information needed at gauss points, such as
+    # hsl, cb_force, passive forces, etc.
     Quad = FunctionSpace(mesh, Quadelem)
+
+    # Function space for myosim populations
+    Quad_vectorized_Fspace = FunctionSpace(mesh, MixedElement(n_array_length*[Quadelem]))
+
+    # Function space for local coordinate system (fiber, sheet, sheet-normal)
     fiberFS = FunctionSpace(mesh, VQuadelem)
 
-    V = VectorFunctionSpace(mesh, 'CG', 2)
-    TF = TensorFunctionSpace(mesh, 'DG', 1)
-    Q = FunctionSpace(mesh,'CG',1)
+    # Mixed function space for displacement, pressure, rigid body constraint
+    if(ispressurectrl):
+        W = FunctionSpace(mesh, MixedElement([Velem,Qelem,VRelem]))
+    else:
+        W = FunctionSpace(mesh, MixedElement([Velem,Qelem,Relem,VRelem]))
 
-
-
-    v2d = vertex_to_dof_map(VectorFunctionSpace(mesh, "CG", 1))
-    v2d = v2d.reshape((-1, mesh.geometry().dim()))
+    # V isn't used? Could define function spaces V: Velem, Q:Qelem,VR: VRelem, then W = V*W*VR
+    # but below W is explicitly defined using the elements?
+    # could define these once and use them for all projections
+    #V = VectorFunctionSpace(mesh, 'CG', 2)
+    #TF = TensorFunctionSpace(mesh, 'DG', 1)
+    #Q = FunctionSpace(mesh,'CG',1)
 
     f0 = Function(fiberFS)
     s0 = Function(fiberFS)
@@ -244,19 +252,10 @@ def fenics(sim_params,file_inputs,output_params,passive_params,hs_params,cell_io
     LVCavityvol = Expression(("vol"), vol=0.0, degree=2)
 
 
-    # From L.C. Lee
-    ####### Mixed element for rigid body motion #####################################
-    VRelem = MixedElement([Relem, Relem, Relem, Relem, Relem])
+
 
     #################################################################################
-    if(ispressurectrl):
-        W = FunctionSpace(mesh, MixedElement([Velem,Qelem,VRelem]))
-    else:
-        #W = FunctionSpace(mesh, MixedElement([Velem,Qelem,Relem,VRelem]))
-        W = FunctionSpace(mesh, MixedElement([Velem,Qelem,Relem,VRelem]))
-    #Quad = FunctionSpace(mesh, Quadelem)
 
-    Quad_vectorized_Fspace = FunctionSpace(mesh, MixedElement(n_array_length*[Quadelem]))
 
 
     #bctop1 = DirichletBC(W.sub(0).sub(0), s0(), facetboundaries, topid)
@@ -363,7 +362,7 @@ def fenics(sim_params,file_inputs,output_params,passive_params,hs_params,cell_io
     n = J*inv(Fmat.T)*N
     dx = dolfin.dx(mesh,metadata = {"integration_order":2})
 
-    Ematrix = project(Emat, TF)
+    #Ematrix = project(Emat, TF) not used?
     Wp = uflforms.PassiveMatSEF()
 
     #Active force calculation------------------------------------------------------
