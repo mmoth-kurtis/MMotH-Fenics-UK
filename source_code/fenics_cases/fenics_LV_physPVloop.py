@@ -316,9 +316,11 @@ def fenics(sim_params,file_inputs,output_params,passive_params,hs_params,cell_io
     #--------- some miscellaneous definitions ----------------------------------
     isincomp = True#False
 
+    # initialize LV cavity volume
+    LVCavityvol = Expression(("vol"), vol=0.0, degree=2)
+
     #Press = Expression(("P"), P=0.0, degree=0)
     #Kspring = Constant(100)
-    LVCavityvol = Expression(("vol"), vol=0.0, degree=2)
 
     if(ispressurectrl):
     	pendo = []
@@ -355,6 +357,9 @@ def fenics(sim_params,file_inputs,output_params,passive_params,hs_params,cell_io
 
     # --------- Calculate quantities from form file used in weak form ----------
 
+    LVCavityvol.vol = uflforms.LVcavityvol()
+    print("cavity-vol = ", LVCavityvol.vol)
+
     # Get deformation gradient
     Fmat = uflforms.Fmat()
 
@@ -367,21 +372,20 @@ def fenics(sim_params,file_inputs,output_params,passive_params,hs_params,cell_io
     # jacobian of deformation gradient
     J = uflforms.J()
 
+    # facet normal in current config
     n = J*inv(Fmat.T)*N
 
     # integration measure
     dx = dolfin.dx(mesh,metadata = {"integration_order":2})
 
-    #Ematrix = project(Emat, TF) not used?
-
     # get passive material strain energy function
     Wp = uflforms.PassiveMatSEF()
 
     #Active force calculation------------------------------------------------------
+    # can we move this to the forms file?
+    # define 'active_params' as dict and send to forms?
     hsl = sqrt(dot(f0, Cmat*f0))*hsl0_transmural # must project if want to set directly
-
     delta_hsl = hsl - hsl_old
-
     cb_force = Constant(0.0)
     y_vec_split = split(y_vec)
 
@@ -410,76 +414,22 @@ def fenics(sim_params,file_inputs,output_params,passive_params,hs_params,cell_io
             f_holder = f_holder * alpha_value
 
         cb_force = cb_force + f_holder
+
     cb_force = cb_force * conditional(gt(cb_force,0.0),1.0,0.0)
 
-    #Scalefactor = Constant(0.5)
-    cb_force2 = Expression(("f"), f=0, degree=1)
-    #Pactive = Scalefactor * cb_force2 * as_tensor(f0[i]*f0[j], (i,j)) #+ 0.25*cb_force * as_tensor(s0[i]*s0[j], (i,j))+ 0.25*cb_force * as_tensor(n0[i]*n0[j], (i,j))
-    #Pactive, cb_force = uflforms.TempActiveStress(af_time.af_time)
-    Scalefactor2 = Constant(1)
-    Pactive = Scalefactor2 * cb_force * as_tensor(f0[i]*f0[j], (i,j)) + xfiber_fraction*cb_force * as_tensor(s0[i]*s0[j], (i,j))+ xfiber_fraction*cb_force * as_tensor(n0[i]*n0[j], (i,j))
-    # Automatic differentiation  #####################################################################################################
-    F1 = derivative(Wp, w, wtest)*dx
-    F2 = inner(Fmat*Pactive, grad(v))*dx
-    if(ispressurectrl):
-        pressure = Expression(("p"), p=0.0, degree=2)
-        F3 = inner(pressure*n, v)*ds(LVendoid)
-    else:
-        Wvol = uflforms.LVV0constrainedE()
-        F3 = derivative(Wvol, w, wtest)
-    L4 = inner(as_vector([c11[0], c11[1], 0.0]), u)*dx + \
-    	 inner(as_vector([0.0, 0.0, c11[2]]), cross(X, u))*dx + \
-    	 inner(as_vector([c11[3], 0.0, 0.0]), cross(X, u))*dx + \
-    	 inner(as_vector([0.0, c11[4], 0.0]), cross(X, u))*dx
-    F4 = derivative(L4, w, wtest)
-    #F5 = -Kspring*inner(dot(u,n),dot(v,n))*ds(epiid)  # traction applied as Cauchy stress!, Pactive is 1PK
-
-    # Define circumferential direction
-    zaxis = Expression(("0", "0", "1"), degree=2)
-    #caxis = cross(s0CG, zaxis)
-    #File(output_path + "caxis.pvd") << project(caxis, VectorFunctionSpace(mesh, "CG", 1))
-
-    # Penalty method for enforcing no displacement in circumferential direction
-    Kpen = Constant(1000000)
-    #F6 = Kpen*inner(dot(u,caxis)*caxis, v)*ds(topid)
+    # use cb_force to form active stress tensor
+    Pactive = cb_force * as_tensor(f0[i]*f0[j], (i,j)) + xfiber_fraction*cb_force * as_tensor(s0[i]*s0[j], (i,j))+ xfiber_fraction*cb_force * as_tensor(n0[i]*n0[j], (i,j))
 
 
-    Ftotal = F1 + F2 + F3 + F4 #+ F5#F6 + F4 #+ F5 + F4
-
-    Jac1 = derivative(F1, w, dw)
-    Jac2 = derivative(F2, w, dw)
-    Jac3 = derivative(F3, w, dw)
-    Jac4 = derivative(F4, w, dw)
-    #Jac5 = derivative(F5, w, dw)
-    #Jac6 = derivative(F6, w, dw)
-
-    Jac = Jac1 + Jac2 + Jac3 + Jac4 #+ Jac5 #Jac6 + Jac4#+ Jac5 + Jac4
-    ##################################################################################################################################
-
-    solverparams = {"Jacobian": Jac,
-                    "F": Ftotal,
-                    "w": w,
-                    "boundary_conditions": bcs,
-                    "Type": 0,
-                    "mesh": mesh,
-                    "mode": 0
-                    }
-
-    # Define solver, for now using default solver. NSolver is from LCLee
-    solver= NSolver(solverparams)
-
-    LVCavityvol.vol = uflforms.LVcavityvol()
-
-    print("cavity-vol = ", LVCavityvol.vol)
-
-
-
+    # -------- pre-allocation and initialization -------------------------------
 
     tstep = 0
-    t = 0
+    #t = 0
 
-    LVcav_array = [uflforms.LVcavityvol()]
-    Pcav_array = [uflforms.LVcavitypressure()*0.0075]
+    LVcav_array = np.zeros(no_of_time_steps+1)
+    LVcav_array[0] = uflforms.LVcavityvol()
+    Pcav_array = np.zeros(no_of_time_steps+1)
+    Pcav_array[0] = uflforms.LVcavitypressure()*0.0075
 
     # Contraction phase
     tarray = []
@@ -504,11 +454,11 @@ def fenics(sim_params,file_inputs,output_params,passive_params,hs_params,cell_io
 
     delta_hsl_array = np.zeros(no_of_int_points)
 
-    for counter in range(0,n_array_length * no_of_int_points,n_array_length):
+    for init_counter in range(0,n_array_length * no_of_int_points,n_array_length):
         # Initializing myosin heads in the off state
-        y_vec_array[counter] = 1
+        y_vec_array[init_counter] = 1
         # Initialize all binding sites to off state
-        y_vec_array[counter-2] = 1
+        y_vec_array[init_counter-2] = 1
 
     Pg, Pff, alpha = uflforms.stress()
     # Pg is guccione stress tensor as first Piola-Kirchhoff
@@ -537,6 +487,55 @@ def fenics(sim_params,file_inputs,output_params,passive_params,hs_params,cell_io
     pgs_array = pgs.vector().get_local()[:]
 
     cb_f_array = project(cb_force, Quad).vector().get_local()[:]
+
+
+    # ------ Define terms for variational problem ------------------------------
+
+    # passive material contribution
+    F1 = derivative(Wp, w, wtest)*dx
+
+    # active stress contribution (Pactive is PK1, transform to PK2)
+    F2 = inner(Fmat*Pactive, grad(v))*dx
+
+    # volumetric stress
+    if(ispressurectrl):
+        pressure = Expression(("p"), p=0.0, degree=2)
+        F3 = inner(pressure*n, v)*ds(LVendoid)
+    else:
+        Wvol = uflforms.LVV0constrainedE()
+        F3 = derivative(Wvol, w, wtest)
+
+    # constrain rigid body motion
+    L4 = inner(as_vector([c11[0], c11[1], 0.0]), u)*dx + \
+    	 inner(as_vector([0.0, 0.0, c11[2]]), cross(X, u))*dx + \
+    	 inner(as_vector([c11[3], 0.0, 0.0]), cross(X, u))*dx + \
+    	 inner(as_vector([0.0, c11[4], 0.0]), cross(X, u))*dx
+    F4 = derivative(L4, w, wtest)
+
+    Ftotal = F1 + F2 + F3 + F4
+
+    Jac1 = derivative(F1, w, dw)
+    Jac2 = derivative(F2, w, dw)
+    Jac3 = derivative(F3, w, dw)
+    Jac4 = derivative(F4, w, dw)
+
+    Jac = Jac1 + Jac2 + Jac3 + Jac4
+
+    # ----- Set up solver, using default but can use LCLee nsolver -------------
+    solverparams = {"Jacobian": Jac,
+                    "F": Ftotal,
+                    "w": w,
+                    "boundary_conditions": bcs,
+                    "Type": 0,
+                    "mesh": mesh,
+                    "mode": 0
+                    }
+
+    solver= NSolver(solverparams)
+
+
+    # -----------------------------
+
 
     # Loading phase
     print "memory growth before loading:"
@@ -711,8 +710,10 @@ def fenics(sim_params,file_inputs,output_params,passive_params,hs_params,cell_io
                 print "V_art = ", V_art;
 
 
-        LVcav_array.append(V_cav)
-        Pcav_array.append(p_cav*0.0075)
+        #LVcav_array.append(V_cav)
+        LVcav_array[counter] = V_cav
+        Pcav_array[counter] = p_cav*0.0075
+        #Pcav_array.append(p_cav*0.0075)
 
         if (counter > 0 and (int(counter/no_of_cell_time_steps) == (counter/no_of_cell_time_steps))):
             cell_counter = 0
@@ -760,17 +761,6 @@ def fenics(sim_params,file_inputs,output_params,passive_params,hs_params,cell_io
         # Kurtis assigning hsl_old function for newton iteration
         hsl_old.vector()[:] = hsl_array_old
 
-        # Hack update cb_force
-	"""t_trans = 30
-	t0 = 20
-	tr = 15
-	if(cell_time < t_trans):
-        	#cb_force2.f = 70000*sin(cell_time/40.0*3.14)
-        	cb_force2.f = 120000*0.5*(1 - cos(pi*cell_time/t0))
-		#print cb_force2.f
-	else:
-		A =  120000*0.5*(1 - cos(pi*t_trans/t0))
-		cb_force2.f = A*exp(-1.0*(cell_time - t_trans)/tr)"""
 
 ###########################################################################
 
