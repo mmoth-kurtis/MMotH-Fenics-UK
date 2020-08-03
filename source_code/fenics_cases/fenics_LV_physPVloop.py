@@ -4,19 +4,15 @@ sys.path.append("/home/fenics/shared/Research/FEniCS-Myosim/MMotH-Fenics-UK/sour
 import os as os
 from dolfin import *
 import numpy as np
-from matplotlib import pylab as plt
 from petsc4py import PETSc
 from forms import Forms
 from nsolver import NSolver as NSolver
 import math
 import json
-import recode_dictionary
-import load_parameters
 import Python_MyoSim.half_sarcomere.half_sarcomere as half_sarcomere
 import Python_MyoSim.half_sarcomere.implement as implement
 import vtk_py
 from cell_ion_module import cell_ion_driver
-import homogeneous_stress
 from edgetypebc import *
 import objgraph as obg
 
