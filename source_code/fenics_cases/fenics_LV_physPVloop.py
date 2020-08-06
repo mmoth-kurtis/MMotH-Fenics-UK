@@ -342,7 +342,7 @@ def fenics(sim_params,file_inputs,output_params,passive_params,hs_params,cell_io
     pgs_array_ds =pd.DataFrame(np.zeros(no_of_int_points),index=None)
     pgs_array_ds = pgs_array_ds.transpose()
 
-    overlaparray = np.zeros((no_of_time_steps+1,no_of_int_points)) # need from previous step
+    #overlaparray = np.zeros((no_of_time_steps+1,no_of_int_points)) # need from previous step
     temp_overlap_ds = pd.DataFrame(np.zeros(no_of_int_points),index=None)
     temp_overlap_ds = temp_overlap_ds.transpose()
 
@@ -794,7 +794,8 @@ def fenics(sim_params,file_inputs,output_params,passive_params,hs_params,cell_io
         else:
             overlap_counter = counter
     # Going to try to loop through integration points in python, not in fenics script
-        temp_overlap, y_interp, y_vec_array_new = implement.update_simulation(hs, step_size, delta_hsl_array, hsl_array, y_vec_array, p_f_array, cb_f_array, calcium[counter], n_array_length, cell_time, overlaparray[overlap_counter,:])
+        #temp_overlap, y_interp, y_vec_array_new = implement.update_simulation(hs, step_size, delta_hsl_array, hsl_array, y_vec_array, p_f_array, cb_f_array, calcium[counter], n_array_length, cell_time, overlaparray[overlap_counter,:])
+        temp_overlap, y_interp, y_vec_array_new = implement.update_simulation(hs, step_size, delta_hsl_array, hsl_array, y_vec_array, p_f_array, cb_f_array, calcium[counter], n_array_length, cell_time)
 
         for  i in range(no_of_int_points):
 
@@ -880,51 +881,53 @@ def fenics(sim_params,file_inputs,output_params,passive_params,hs_params,cell_io
 
         tarray[counter] = tstep
 
-        active_stress_ds.iloc[0,:] = cb_f_array[:]
-        active_stress_ds.to_csv(output_path + 'active_stress.csv',mode='a',header=False)
+        if save_output:
 
-        #active_stress_ds = active_stress_ds.transpose()
-        hsl_array_ds.iloc[0,:] = hsl_array[:]
-        hsl_array_ds.to_csv(output_path + 'half_sarcomere_lengths.csv',mode='a',header=False)
+            active_stress_ds.iloc[0,:] = cb_f_array[:]
+            active_stress_ds.to_csv(output_path + 'active_stress.csv',mode='a',header=False)
 
-        calcium_ds.iloc[0,:] = calcium[counter]
-        calcium_ds.to_csv(output_path + 'calcium.csv',mode='a',header=False)
+            #active_stress_ds = active_stress_ds.transpose()
+            hsl_array_ds.iloc[0,:] = hsl_array[:]
+            hsl_array_ds.to_csv(output_path + 'half_sarcomere_lengths.csv',mode='a',header=False)
 
-        for i in range(no_of_int_points):
-            dumped_populations_ds.iloc[i,:] = dumped_populations[i,:]
-        dumped_populations_ds.to_csv(output_path + 'populations.csv',mode='a',header=False)
+            calcium_ds.iloc[0,:] = calcium[counter]
+            calcium_ds.to_csv(output_path + 'calcium.csv',mode='a',header=False)
 
-        tarray_ds[counter] = tarray[counter]
-        tarray_ds.to_csv(output_path + 'time.csv',mode='a',header=False)
+            for i in range(no_of_int_points):
+                dumped_populations_ds.iloc[i,:] = dumped_populations[i,:]
+            dumped_populations_ds.to_csv(output_path + 'populations.csv',mode='a',header=False)
 
-        p_f_array_ds.iloc[0,:] = p_f_array[:]
-        p_f_array_ds.to_csv(output_path + 'myofiber_passive.csv',mode='a',header=False)
+            tarray_ds[counter] = tarray[counter]
+            tarray_ds.to_csv(output_path + 'time.csv',mode='a',header=False)
 
-        pgf_array_ds.iloc[0,:] = pgf_array[:]
-        pgf_array_ds.to_csv(output_path + 'gucc_fiber_pstress.csv',mode='a',header=False)
+            p_f_array_ds.iloc[0,:] = p_f_array[:]
+            p_f_array_ds.to_csv(output_path + 'myofiber_passive.csv',mode='a',header=False)
 
-        pgt_array_ds.iloc[0,:] = pgt_array[:]
-        pgt_array_ds.to_csv(output_path + 'gucc_trans_pstress.csv',mode='a',header=False)
+            pgf_array_ds.iloc[0,:] = pgf_array[:]
+            pgf_array_ds.to_csv(output_path + 'gucc_fiber_pstress.csv',mode='a',header=False)
 
-        pgs_array_ds.iloc[0,:] = pgs_array[:]
-        pgs_array_ds.to_csv(output_path + 'gucc_shear_pstress.csv',mode='a',header=False)
+            pgt_array_ds.iloc[0,:] = pgt_array[:]
+            pgt_array_ds.to_csv(output_path + 'gucc_trans_pstress.csv',mode='a',header=False)
 
-        temp_overlap_ds.iloc[0,:] = temp_overlap[:]
-        temp_overlap_ds.to_csv(output_path + 'overlap.csv',mode='a',header=False)
+            pgs_array_ds.iloc[0,:] = pgs_array[:]
+            pgs_array_ds.to_csv(output_path + 'gucc_shear_pstress.csv',mode='a',header=False)
 
-        alpha_array_ds.iloc[0,:] = alpha_array[:]
-        alpha_array_ds.to_csv(output_path + 'alpha.csv',mode='a',header=False)
+            temp_overlap_ds.iloc[0,:] = temp_overlap[:]
+            temp_overlap_ds.to_csv(output_path + 'overlap.csv',mode='a',header=False)
 
-        delta_hsl_array_ds.iloc[0,:] = delta_hsl_array[:]
-        delta_hsl_array_ds.to_csv(output_path + 'delta_hsl.csv',mode='a',header=False)
+            alpha_array_ds.iloc[0,:] = alpha_array[:]
+            alpha_array_ds.to_csv(output_path + 'alpha.csv',mode='a',header=False)
 
-        overlaparray[counter,:] = temp_overlap
+            delta_hsl_array_ds.iloc[0,:] = delta_hsl_array[:]
+            delta_hsl_array_ds.to_csv(output_path + 'delta_hsl.csv',mode='a',header=False)
+
+        #overlaparray[counter,:] = temp_overlap
 
     if(MPI.rank(comm) == 0):
         fdataPV.close()
         #fdataCa.close()
 
-    fluxes, rates = implement.return_rates_fenics(hs)
+    #fluxes, rates = implement.return_rates_fenics(hs)
 
 
     # Generate dictionary for output

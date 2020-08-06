@@ -3,7 +3,7 @@ import numpy as np
 import pandas as pd
 
 
-def update_simulation(self, time_step, delta_hsl, hsl, y0, pf, cbf, calcium, n_array_length, cell_time,overlap_array,set_data = 0):
+def update_simulation(self, time_step, delta_hsl, hsl, y0, pf, cbf, calcium, n_array_length, cell_time,set_data = 0):
 
     # Need to do some kinetics stuff
     time_step = time_step/1000.0
@@ -39,7 +39,7 @@ def update_simulation(self, time_step, delta_hsl, hsl, y0, pf, cbf, calcium, n_a
             self.myof.move_cb_distributions(delta_hsl[i])
         y_interp[i*n_array_length:(i+1)*n_array_length] = self.myof.y[0:n_array_length]
         # passed in overlaps from previous timestep
-        old_overlap = overlap_array[i]
+        #old_overlap = overlap_array[i]
         self.myof.evolve_kinetics(time_step, self.Ca_conc, cell_time)
         #if i==1:
             #print self.myof.y
