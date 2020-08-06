@@ -18,7 +18,7 @@ class three_state_ca():
 
 
 
-    def calculate_concentrations(self,cycle,time,file):
+    def calculate_concentrations(self,cycle,time):
 
         # cycle doesn't matter, using cell time instead
         cycle = 0.0

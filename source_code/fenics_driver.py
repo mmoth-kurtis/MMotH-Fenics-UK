@@ -8,10 +8,11 @@ import fenics_cases
 import pso
 from pso import pso_driver
 from fenics_cases import fenics_singlecell_isometric
-from fenics_cases import fenics_LV
+#from fenics_cases import fenics_LV
 from dependencies import recode_dictionary
 from dependencies import load_parameters
 import numpy as np
+import pandas as pd
 
 
 def sim_driver(input_file_name):
@@ -100,19 +101,15 @@ def sim_driver(input_file_name):
         output_dictionary = script_name.fenics(sim_params,file_inputs,output_params,passive_params,hs_params,cell_ion_params,monodomain_params,windkessel_params)
 
     # Save the appropriate output information
-    np.save(output_path + "rates",output_dictionary["rates"])
-    np.save(output_path + "dumped_populations",output_dictionary["dumped_populations"])
-    np.save(output_path + "tarray",output_dictionary["tarray"])
-    np.save(output_path + "stress_array",output_dictionary["strarray"])
-    np.save(output_path + "pstress_array",output_dictionary["pstrarray"])
-    #np.save(output_path + "gucc_fiber",output_dictionary["gucc_fiber"])
-    #np.save(output_path + "gucc_trans",output_dictionary["gucc_trans"])
-    #np.save(output_path + "gucc_shear",output_dictionary["gucc_shear"])
-    #np.save(output_path + "pbulk_array",output_dictionary["pbulkarray"])
-    np.save(output_path + "alpha_array",output_dictionary["alphaarray"])
-    np.save(output_path + "calcium",output_dictionary["calarray"])
-    np.save(output_path + "hsl",output_dictionary["hsl"])
-    np.save(output_path + "overlap",output_dictionary["overlap"])
+    output_data['calcium'][0].to_csv(output_path + 'gauss_calcium.csv')
+    output_data['active_stress'][0].to_csv(output_path + 'gauss_active_stress.csv')
+    output_data['myofiber_passive_stress'][0].to_csv(output_path + 'gauss_fiber_passive_stress.csv')
+    output_data['gucc_fiber_pstress'][0].to_csv(output_path + 'gauss_gucc_fiber_pstress.csv')
+    output_data['gucc_trans_pstress'][0].to_csv(output_path + 'gauss_gucc_trans_pstress.csv')
+    output_data['gucc_shear_pstress'][0].to_csv(output_path + 'gauss_gucc_shear_pstress.csv')
+    output_data['alpha'][0].to_csv(output_path + 'gauss_alpha.csv')
+    #output_data['filament_overlap'][0].to_csv(output_path + 'gauss_overlap.csv')
+    output_data['delta_hsl'][0].to_csv(output_path + 'gauss_deltahsl.csv')
 
 # Execute script if input file is given
 if np.shape(sys.argv) > 0:

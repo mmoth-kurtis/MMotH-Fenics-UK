@@ -8,13 +8,14 @@ from petsc4py import PETSc
 from forms import Forms
 from nsolver import NSolver as NSolver
 import math
-import json
 import Python_MyoSim.half_sarcomere.half_sarcomere as half_sarcomere
 import Python_MyoSim.half_sarcomere.implement as implement
 import vtk_py
 from cell_ion_module import cell_ion_driver
 from edgetypebc import *
 import objgraph as obg
+import pandas as pd
+#np.set_printoptions(threshold=np.inf)
 
 ## Fenics simulation function
 #
@@ -66,6 +67,8 @@ def fenics(sim_params,file_inputs,output_params,passive_params,hs_params,cell_io
     ## Assign input/output parameters
     output_path = output_params["output_path"][0]
     casename = file_inputs["casename"][0]
+
+
 
     # Assign parameters for Windkessel
     # will be moving circulatory to its own module and pass in dictionary
@@ -223,6 +226,8 @@ def fenics(sim_params,file_inputs,output_params,passive_params,hs_params,cell_io
     else:
         W = FunctionSpace(mesh, MixedElement([Velem,Qelem,Relem,VRelem]))
 
+
+
     # V isn't used? Could define function spaces V: Velem, Q:Qelem,VR: VRelem, then W = V*W*VR
     # but below W is explicitly defined using the elements?
     # could define these once and use them for all projections
@@ -300,20 +305,83 @@ def fenics(sim_params,file_inputs,output_params,passive_params,hs_params,cell_io
     hsl_file = File(output_path + "hsl_mesh.pvd")
     alpha_file = File(output_path + "alpha_mesh.pvd")
 
+    # Instead, initialize file for each of these arrays, and append each time step?
+    """calcium_df = pd.DataFrame(np.zeros((no_of_time_steps+1,no_of_int_points)),dtype='f8')
+    active_stress_df = pd.DataFrame(np.zeros((no_of_time_steps+1,no_of_int_points)),dtype='f8')
+    myofiber_passive_stress_df = pd.DataFrame(np.zeros((no_of_time_steps+1,no_of_int_points)),dtype='f8')
+    gucc_fiber_pstress_df = pd.DataFrame(np.zeros((no_of_time_steps+1,no_of_int_points)),dtype='f8')
+    gucc_trans_pstress_df = pd.DataFrame(np.zeros((no_of_time_steps+1,no_of_int_points)),dtype='f8')
+    gucc_shear_pstress_df = pd.DataFrame(np.zeros((no_of_time_steps+1,no_of_int_points)),dtype='f8')
+    alpha_df = pd.DataFrame(np.zeros((no_of_time_steps+1,no_of_int_points)),dtype='f8')
+    filament_overlap_df = pd.DataFrame(np.zeros((no_of_time_steps+1,no_of_int_points)),dtype='f8')
+    delta_hsl_df = pd.DataFrame(np.zeros((no_of_time_steps+1,no_of_int_points)),dtype='f8')"""
+
+    # initialize one big pandas array to store all output data
+    calcium = np.zeros(no_of_time_steps)
+    calcium_ds = pd.DataFrame(np.zeros(no_of_int_points),index=None)
+    calcium_ds = calcium_ds.transpose()
+
+    active_stress_ds = pd.DataFrame(np.zeros(no_of_int_points),index=None)
+    active_stress_ds = active_stress_ds.transpose()
+
+    dumped_populations_ds = pd.DataFrame(np.zeros((no_of_int_points,n_array_length)))
+
+    tarray_ds = pd.DataFrame(np.zeros(no_of_time_steps+1),index=None)
+    tarray_ds = tarray_ds.transpose()
+    tarray = np.zeros(no_of_time_steps)
+
+    p_f_array_ds = pd.DataFrame(np.zeros(no_of_int_points),index=None)
+    p_f_array_ds = p_f_array_ds.transpose()
+
+    pgf_array_ds = pd.DataFrame(np.zeros(no_of_int_points),index=None)
+    pgf_array_ds = pgf_array_ds.transpose()
+
+    pgt_array_ds = pd.DataFrame(np.zeros(no_of_int_points),index=None)
+    pgt_array_ds = pgt_array_ds.transpose()
+
+    pgs_array_ds =pd.DataFrame(np.zeros(no_of_int_points),index=None)
+    pgs_array_ds = pgs_array_ds.transpose()
+
+    overlaparray = np.zeros((no_of_time_steps+1,no_of_int_points)) # need from previous step
+    temp_overlap_ds = pd.DataFrame(np.zeros(no_of_int_points),index=None)
+    temp_overlap_ds = temp_overlap_ds.transpose()
+
+    alpha_array_ds = pd.DataFrame(np.zeros(no_of_int_points),index=None)
+    alpha_array_ds = alpha_array_ds.transpose()
+
+    hsl_array_ds =pd.DataFrame(np.zeros(no_of_int_points),index=None)
+    hsl_array_ds = hsl_array_ds.transpose()
+
+    delta_hsl_array_ds = pd.DataFrame(np.zeros(no_of_int_points),index=None)
+    delta_hsl_array_ds = delta_hsl_array_ds.transpose()
+
+    #test_cbf_storage = pd.Series(np.zeros(no_of_int_points))
+
+
+
     # Saving pressure/volume data
     # define communicator
     comm = mesh.mpi_comm()
 
     if(MPI.rank(comm) == 0):
         fdataPV = open(output_path + "PV_.txt", "w", 0)
-        fdataCa = open(output_path + "calcium_.txt", "w", 0)
-
+        """hsl_data_file = open(output_path + "hsl_file.txt", "w", 0)
+        cbforce_file = open(output_path + "cbforce.txt", "w", 0)
+        calcium_data_file = open(output_path + "calcium.txt", "w", 0)
+        myosim_fiber_passive_file = open(output_path + "fiber_passive.txt", "w", 0)
+        guccione_fiber_pstress_file = open(output_path + "gucc_fiber.txt", "w", 0)
+        guccione_trans_pstress_file = open(output_path + "gucc_trans.txt", "w", 0)
+        guccione_shear_pstress_file = open(output_path + "gucc_shear.txt", "w", 0)
+        alpha_txt_file = open(output_path + "alpha.txt", "w", 0)
+        overlap_file = open(output_path + "overlap.txt", "w", 0)"""
 
     #--------- some miscellaneous definitions ----------------------------------
     isincomp = True#False
 
     # initialize LV cavity volume
     LVCavityvol = Expression(("vol"), vol=0.0, degree=2)
+
+    y_vec_array_new = np.zeros(no_of_int_points*n_array_length)
 
     #Press = Expression(("P"), P=0.0, degree=0)
     #Kspring = Constant(100)
@@ -428,27 +496,16 @@ def fenics(sim_params,file_inputs,output_params,passive_params,hs_params,cell_io
     Pcav_array[0] = uflforms.LVcavitypressure()*0.0075
 
     # Contraction phase
-    tarray = []
+    #tarray = []
 
-    # Initialize arrays for saving myosim information
-    hslarray = np.zeros((no_of_time_steps+1,no_of_int_points))
-    calarray = np.zeros((no_of_time_steps+1,no_of_int_points))
-    strarray = np.zeros((no_of_time_steps+1,no_of_int_points))
-    pstrarray = np.zeros((no_of_time_steps+1,no_of_int_points))
-    gucc_fiber = np.zeros((no_of_time_steps+1,no_of_int_points))
-    gucc_trans = np.zeros((no_of_time_steps+1,no_of_int_points))
-    gucc_shear = np.zeros((no_of_time_steps+1,no_of_int_points))
-    alphaarray = np.zeros((no_of_time_steps+1,no_of_int_points))
-    overlaparray = np.zeros((no_of_time_steps+1,no_of_int_points))
-    deltahslarray = np.zeros((no_of_time_steps+1,no_of_int_points))
-    calcium = np.zeros(no_of_time_steps+1)
+
 
     # Get array of cross-bridge populations
     y_vec_array = y_vec.vector().get_local()[:]
 
     hsl_array = project(sqrt(dot(f0, Cmat*f0))*hsl0, Quad).vector().get_local()[:]
 
-    delta_hsl_array = np.zeros(no_of_int_points)
+    #delta_hsl_array = np.zeros(no_of_int_points)
 
     for init_counter in range(0,n_array_length * no_of_int_points,n_array_length):
         # Initializing myosin heads in the off state
@@ -483,7 +540,6 @@ def fenics(sim_params,file_inputs,output_params,passive_params,hs_params,cell_io
     pgs_array = pgs.vector().get_local()[:]
 
     cb_f_array = project(cb_force, Quad).vector().get_local()[:]
-
 
     # ------ Define terms for variational problem ------------------------------
 
@@ -534,8 +590,8 @@ def fenics(sim_params,file_inputs,output_params,passive_params,hs_params,cell_io
 
 
     # Loading phase
-    print "memory growth before loading:"
-    obg.show_growth()
+    #print "memory growth before loading:"
+    #obg.show_growth()
 
     print("cavity-vol = ", LVCavityvol.vol)
     for lmbda_value in range(0, loading_number):
@@ -607,11 +663,10 @@ def fenics(sim_params,file_inputs,output_params,passive_params,hs_params,cell_io
     cell_ion = cell_ion_driver.cell_ion_driver(cell_ion_params)
 
     # Initialize calcium
-    calcium[0] = cell_ion.model_class.calculate_concentrations(0,0,fdataCa)
+    calcium[0] = cell_ion.model_class.calculate_concentrations(0,0)
 
-    dumped_populations = np.zeros((no_of_time_steps+1, no_of_int_points, n_array_length))
-
-
+    #dumped_populations = np.zeros((no_of_time_steps+1, no_of_int_points, n_array_length))
+    dumped_populations = np.zeros((no_of_int_points,n_array_length))
 
     counter = 0
     cell_counter = 0
@@ -688,10 +743,10 @@ def fenics(sim_params,file_inputs,output_params,passive_params,hs_params,cell_io
                 else:
                     print "***diastole***"
 
-        V_cav_prev = V_cav
+        """V_cav_prev = V_cav
         V_art_prev = V_art
         V_ven_prev = V_ven
-        p_cav_prev = p_cav
+        p_cav_prev = p_cav"""
 
         V_cav = V_cav + step_size*(Qmv - Qao);
         V_art = V_art + step_size*(Qao - Qper);
@@ -724,10 +779,10 @@ def fenics(sim_params,file_inputs,output_params,passive_params,hs_params,cell_io
                 dumped_populations[counter, i, j] = y_vec_array[i * n_array_length + j]"""
 
         # Initialize MyoSim solution holder
-        y_vec_array_new = np.zeros(no_of_int_points*n_array_length)
+        #y_vec_array_new = np.zeros(no_of_int_points*n_array_length)
 
         # Update calcium
-        calcium[counter] = cell_ion.model_class.calculate_concentrations(cycle,cell_time,fdataCa) #LCL Commented off
+        calcium[counter] = cell_ion.model_class.calculate_concentrations(cycle,cell_time) #LCL Commented off
 
         # Now print out volumes, pressures, calcium
         if(MPI.rank(comm) == 0):
@@ -745,7 +800,8 @@ def fenics(sim_params,file_inputs,output_params,passive_params,hs_params,cell_io
 
             for j in range(n_array_length):
 
-                dumped_populations[counter, i, j] = y_interp[i * n_array_length + j]
+                dumped_populations[i, j] = y_interp[i * n_array_length + j]
+
 
         y_vec_array = y_vec_array_new # for Myosim
 
@@ -754,15 +810,18 @@ def fenics(sim_params,file_inputs,output_params,passive_params,hs_params,cell_io
 
         hsl_array_old = hsl_array
 
+        #print hsl_array_old
         # Kurtis assigning hsl_old function for newton iteration
-        hsl_old.vector()[:] = hsl_array_old
+        hsl_old.vector()[:] = hsl_array_old[:]
 
 
 ###########################################################################
 
         #solver.solvenonlinear()
         #++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++
-        try:
+        solve(Ftotal == 0, w, bcs, J = Jac, form_compiler_parameters={"representation":"uflacs"})
+
+        """try:
             solve(Ftotal == 0, w, bcs, J = Jac, form_compiler_parameters={"representation":"uflacs"})
         except:
             print "Newton Iteration non-convergence, saving myosim info"
@@ -777,9 +836,9 @@ def fenics(sim_params,file_inputs,output_params,passive_params,hs_params,cell_io
             np.save(output_path + "deltahsl", deltahslarray)
             np.save(output_path + "pstress_array",pstrarray)
             #np.save(output_path + "alpha_array",alphaarray)
-            np.save(output_path + "calcium",calarray)
+            np.save(output_path + "calcium",calarray)"""
         #++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++
-        cb_f_array = project(cb_force, Quad).vector().get_local()[:]
+        cb_f_array[:] = project(cb_force, Quad).vector().get_local()[:]
 
         hsl_array = project(hsl, Quad).vector().get_local()[:]           # for Myosim
 
@@ -819,30 +878,57 @@ def fenics(sim_params,file_inputs,output_params,passive_params,hs_params,cell_io
         alpha_temp.rename("alpha_temp","alpha_temp")
         alpha_file << alpha_temp
 
-        tarray.append(tstep)
+        tarray[counter] = tstep
 
+        active_stress_ds.iloc[0,:] = cb_f_array[:]
+        active_stress_ds.to_csv(output_path + 'active_stress.csv',mode='a',header=False)
 
-        hslarray[counter,:] = hsl_array
-        strarray[counter,:] = cb_f_array
-        pstrarray[counter,:] = p_f_array
-        gucc_fiber[counter,:] = pgf_array
-        gucc_trans[counter,:] = pgt_array
-        gucc_shear[counter,:] = pgs_array
-        alphaarray[counter,:] = alpha_array
+        #active_stress_ds = active_stress_ds.transpose()
+        hsl_array_ds.iloc[0,:] = hsl_array[:]
+        hsl_array_ds.to_csv(output_path + 'half_sarcomere_lengths.csv',mode='a',header=False)
+
+        calcium_ds.iloc[0,:] = calcium[counter]
+        calcium_ds.to_csv(output_path + 'calcium.csv',mode='a',header=False)
+
+        for i in range(no_of_int_points):
+            dumped_populations_ds.iloc[i,:] = dumped_populations[i,:]
+        dumped_populations_ds.to_csv(output_path + 'populations.csv',mode='a',header=False)
+
+        tarray_ds[counter] = tarray[counter]
+        tarray_ds.to_csv(output_path + 'time.csv',mode='a',header=False)
+
+        p_f_array_ds.iloc[0,:] = p_f_array[:]
+        p_f_array_ds.to_csv(output_path + 'myofiber_passive.csv',mode='a',header=False)
+
+        pgf_array_ds.iloc[0,:] = pgf_array[:]
+        pgf_array_ds.to_csv(output_path + 'gucc_fiber_pstress.csv',mode='a',header=False)
+
+        pgt_array_ds.iloc[0,:] = pgt_array[:]
+        pgt_array_ds.to_csv(output_path + 'gucc_trans_pstress.csv',mode='a',header=False)
+
+        pgs_array_ds.iloc[0,:] = pgs_array[:]
+        pgs_array_ds.to_csv(output_path + 'gucc_shear_pstress.csv',mode='a',header=False)
+
+        temp_overlap_ds.iloc[0,:] = temp_overlap[:]
+        temp_overlap_ds.to_csv(output_path + 'overlap.csv',mode='a',header=False)
+
+        alpha_array_ds.iloc[0,:] = alpha_array[:]
+        alpha_array_ds.to_csv(output_path + 'alpha.csv',mode='a',header=False)
+
+        delta_hsl_array_ds.iloc[0,:] = delta_hsl_array[:]
+        delta_hsl_array_ds.to_csv(output_path + 'delta_hsl.csv',mode='a',header=False)
+
         overlaparray[counter,:] = temp_overlap
-        deltahslarray[counter,:] = delta_hsl_array
-        calarray[counter,:] = hs.Ca_conc * np.ones(no_of_int_points)
-
 
     if(MPI.rank(comm) == 0):
         fdataPV.close()
-        fdataCa.close()
+        #fdataCa.close()
 
     fluxes, rates = implement.return_rates_fenics(hs)
 
 
     # Generate dictionary for output
-    outputs = {
+    """outputs = {
     "rates": rates,
     "dumped_populations": dumped_populations,
     "tarray": tarray,
@@ -855,9 +941,9 @@ def fenics(sim_params,file_inputs,output_params,passive_params,hs_params,cell_io
     "calarray": calarray,
     "hsl": hslarray,
     "overlap": overlaparray
-    }
+    }"""
 
 
-    return(outputs)
+    #return(output_data)
 
     ######################################################################################################
