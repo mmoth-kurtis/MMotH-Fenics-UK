@@ -53,13 +53,14 @@ Follow the remaining instructions set out in FEniCS_LV_Segmentation.pdf (current
 
 * Some clarification for the Transform World Matrix: Change the entries in the last column so that the contours are in the center of the viewing volume. **Make sure to use the same transformation for both endo and epi volumes.**  
 
-<img src="https://github.com/mmoth-kurtis/MMotH-Vent/blob/master/docs/assets/images/FEniCS_LV_segmentation_Page_12.jpg?raw=true" alt="titlepage" width="800"/>
+![Page12](FEniCS_LV_segmentation_Page_12.jpg)   
 
-<img src="https://github.com/mmoth-kurtis/MMotH-Vent/blob/master/docs/assets/images/FEniCS_LV_segmentation_Page_13.jpg?raw=true" alt="titlepage" width="800"/>
+![Page13](FEniCS_LV_segmentation_Page_13.jpg)   
 
-<img src="https://github.com/mmoth-kurtis/MMotH-Vent/blob/master/docs/assets/images/FEniCS_LV_segmentation_Page_14.jpg?raw=true" alt="titlepage" width="800"/>
+![Page14](FEniCS_LV_segmentation_Page_14.jpg)  
 
-<img src="https://github.com/mmoth-kurtis/MMotH-Vent/blob/master/docs/assets/images/FEniCS_LV_segmentation_Page_15.jpg?raw=true" alt="titlepage" width="800"/>
+![Page15](FEniCS_LV_segmentation_Page_15.jpg)  
+
 
 * Run the 1.createLV.py script on the stl files (creating json input for this now to be able to specify output directory and mesh name). This creates .vtk files.
   * Note: in the 1.createLV.py file, line 51, the user can control mesh refinement  
