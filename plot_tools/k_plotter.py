@@ -23,14 +23,8 @@ no_of_time_steps = 7408
 n_array_length = 45
 Commented out by Kurtis 10/9/2019, hope to get this info from loaded arrays"""
 
-# base_dir should be shared directory with FEniCS container
-# sim_dir should be location of simulation to plot relative to base_dir
-#base_dir = '/Users/charlesmann/Academic/UK/MMotH-Fenics-UK/working_directory_untracked/'
-#sim_dir = '082315/mouse_wk_params/fixed_fibers/angle_60/more_refined/timestep_small/k3_1000/'
+
 sim_dir = os.getcwd()
-lang_flag = 'python'
-#sim_dir = 'cpp_stable/test_17/'
-#lang_flag = 'c++'
 
 # For now, hard coding bin discretization information
 xmin = -10
@@ -47,10 +41,8 @@ tarray0 = np.load(sim_dir + '/tarray.npy')
 step_size = tarray0[2]-tarray0[1]
 new_value = tarray0[len(tarray0)-1] + step_size
 tarray = np.append(tarray0,new_value)
-
 stress_array = np.load(sim_dir + '/stress_array.npy')
 
-#print stress_array.ndim
 if stress_array.ndim > 1:
     # single cell sims only save for one gauss point, dimension is one less than
     # ventricle simulation

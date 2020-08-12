@@ -247,7 +247,8 @@ def fenics(sim_params,file_inputs,output_params,passive_params,hs_params,cell_io
     hsl0_transmural = Function(Quad)
 
     # Go ahead and read in rest of info from mesh file and close
-    f.read(hsl0_transmural, casename+"/"+"hsl0")
+    # mesh lclee created doesn't have hsl0 variation
+    #f.read(hsl0_transmural, casename+"/"+"hsl0")
     f.read(f0, casename+"/"+"eF")
     f.read(s0, casename+"/"+"eS")
     f.read(n0, casename+"/"+"eN")
@@ -448,7 +449,8 @@ def fenics(sim_params,file_inputs,output_params,passive_params,hs_params,cell_io
     #Active force calculation------------------------------------------------------
     # can we move this to the forms file?
     # define 'active_params' as dict and send to forms?
-    hsl = sqrt(dot(f0, Cmat*f0))*hsl0_transmural # must project if want to set directly
+    #hsl = sqrt(dot(f0, Cmat*f0))*hsl0_transmural # must project if want to set directly
+    hsl = sqrt(dot(f0, Cmat*f0))*hsl0
     delta_hsl = hsl - hsl_old
     cb_force = Constant(0.0)
     y_vec_split = split(y_vec)

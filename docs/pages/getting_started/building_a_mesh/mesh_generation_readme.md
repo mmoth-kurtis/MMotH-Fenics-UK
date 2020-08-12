@@ -32,23 +32,24 @@ Follow the remaining instructions set out in FEniCS_LV_Segmentation.pdf (current
 
 **Note, for rat meshes, instead of using black_blood_3SA_C2h images for the short axis, use "Dense_newFS_6SA_AveMag_Slc0" for the short axis slices, and "Dense_newFS_2LA_AveMag_Slc0" & "Dense_newFS_2LA_AveMag_Slc1" for the long axis images.**
 
-<img src="https://github.com/mmoth-kurtis/MMotH-Vent/blob/master/docs/assets/images/FEniCS_LV_segmentation_Page_03.jpg?raw=true" alt="titlepage" width="800"/>
+![Page3](FEniCS_LV_segmentation_Page_03.jpg)  
 
-<img src="https://github.com/mmoth-kurtis/MMotH-Vent/blob/master/docs/assets/images/FEniCS_LV_segmentation_Page_04.jpg?raw=true" alt="titlepage" width="800"/>
+![Page4](FEniCS_LV_segmentation_Page_04.jpg)  
 
-<img src="https://github.com/mmoth-kurtis/MMotH-Vent/blob/master/docs/assets/images/FEniCS_LV_segmentation_Page_05.jpg?raw=true" alt="titlepage" width="800"/>
+![Page5](FEniCS_LV_segmentation_Page_05.jpg)  
 
-<img src="https://github.com/mmoth-kurtis/MMotH-Vent/blob/master/docs/assets/images/FEniCS_LV_segmentation_Page_06.jpg?raw=true" alt="titlepage" width="800"/>
+![Page6](FEniCS_LV_segmentation_Page_06.jpg)  
 
-<img src="https://github.com/mmoth-kurtis/MMotH-Fenics-UK/blob/master/docs/assets/images/FEniCS_LV_segmentation_Page_07.jpg?raw=true" alt="titlepage" width="800"/>
+![Page7](FEniCS_LV_segmentation_Page_07.jpg)  
 
-<img src="https://github.com/mmoth-kurtis/MMotH-Vent/blob/master/docs/assets/images/FEniCS_LV_segmentation_Page_08.jpg?raw=true" alt="titlepage" width="800"/>
+![Page8](FEniCS_LV_segmentation_Page_08.jpg)  
 
-<img src="https://github.com/mmoth-kurtis/MMotH-Vent/blob/master/docs/assets/images/FEniCS_LV_segmentation_Page_09.jpg?raw=true" alt="titlepage" width="800"/>
+![Page9](FEniCS_LV_segmentation_Page_09.jpg)  
 
-<img src="https://github.com/mmoth-kurtis/MMotH-Vent/blob/master/docs/assets/images/FEniCS_LV_segmentation_Page_10.jpg?raw=true" alt="titlepage" width="800"/>
+![Page10](FEniCS_LV_segmentation_Page_10.jpg)  
 
-<img src="https://github.com/mmoth-kurtis/MMotH-Vent/blob/master/docs/assets/images/FEniCS_LV_segmentation_Page_11.jpg?raw=true" alt="titlepage" width="800"/>
+![Page11](FEniCS_LV_segmentation_Page_11.jpg)  
+
 
 * Some clarification for the Transform World Matrix: Change the entries in the last column so that the contours are in the center of the viewing volume. **Make sure to use the same transformation for both endo and epi volumes.**  
 

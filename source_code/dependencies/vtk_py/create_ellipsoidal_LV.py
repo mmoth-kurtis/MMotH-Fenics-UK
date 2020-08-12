@@ -40,4 +40,4 @@ def create_ellipsoidal_LV(casename="ellipsoidal", meshsize=0.05, gmshcmd="gmsh",
 	ugrid = vtk_py.readUGrid(meshfilename)
 
 	return ugrid
-returned_grid = create_ellipsoidal_LV(casename="ellipsoidal", meshsize=0.05, gmshcmd="gmsh", iswritemesh=True, verbose=True)
+#returned_grid = create_ellipsoidal_LV(casename="ellipsoidal", meshsize=0.05, gmshcmd="gmsh", iswritemesh=True, verbose=True)
