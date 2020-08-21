@@ -1,20 +1,26 @@
 import numpy as np
 import random
+import test_working_dictionaries
+import json
+import copy
 
 
 ## Class for particles in the particle swarm optimization
 class fenicsParticle:
 
 ## Initialization _____________________________________________________________
-    def __init__(self, dimensionality, target_force, variables_and_bounds, params):
+    def __init__(self, dimensionality, variables_and_bounds, params):
 
         # x0 is the initial position for this particle
         # randomly selected within the bounds.
 
-        #bounds consists of {[xi_min, xi_max]} pairs for i = 1,..,dimensionality
+        #bounds consists of {[xi_min, xi_max]} pairs for i = 1, ... ,dimensionality
 
         # Store a copy of all of the parameters used in fenics simulations
-        self.all_fenics_params = params
+        self.all_fenics_params = copy.deepcopy(params)
+
+        #self.fenics_params = {}
+
 
         # Unpack parameters to pass to fenics script
         self.sim_params = self.all_fenics_params[0]
@@ -26,9 +32,10 @@ class fenicsParticle:
         self.monodomain_params = self.all_fenics_params[6]
         self.windkessel_params = self.all_fenics_params[7]
 
+
         # Create a "working dictionary" to be updated
         # Each key in this dictionary has value [[bounds],position,velocity]
-        self.working_dict = variables_and_bounds
+        self.working_dict = copy.deepcopy(variables_and_bounds)
 
         # initialize output dictionary to hold results from fenics script
         self.output_dict = {}
@@ -47,7 +54,7 @@ class fenicsParticle:
         #self.bounds = bounds
 
         # For now, just have a single cell target force
-        self.target = target_force
+        #self.target = target_force
 
         #!!!!!!!!!!!!!!!! Need to initiate proper x0 value !!!!!!!!!!!!!!!!!!!!
         # initialize position to x0, to come from pso_driver
@@ -64,29 +71,48 @@ class fenicsParticle:
             # Should this be zero? - Yes
             self.working_dict[key][2] = 0.0
 
-            # For now, creating random starting position
-            #self.working_dict[key][1] = random.uniform(self.working_dict[key][0][0],self.working_dict[key][0][1])
-            # Need to randomly/uniformly assign positions. Hard coding for now
-            #self.position.append(np.random.uniform(dim_lb,dim_ub))
+
+        # Update simulation parameters to include initialized positions
+        for l in range(len(self.all_fenics_params)):
+            #print np.shape(self.all_fenics_params[l])
+            self.update_all_fenics_params_list(self.all_fenics_params[l])
+
+        self.sim_params = self.all_fenics_params[0]
+        self.file_inputs = self.all_fenics_params[1]
+        self.output_params = self.all_fenics_params[2]
+        self.passive_params = self.all_fenics_params[3]
+        self.hs_params = self.all_fenics_params[4]
+        self.cell_ion_params = self.all_fenics_params[5]
+        self.monodomain_params = self.all_fenics_params[6]
+        self.windkessel_params = self.all_fenics_params[7]
+        #for var in self.sim_params:
+            #test_working_dictionaries.compare_keys(self.working_dict,self.sim_params)
+
 
 
 # Methods ______________________________________________________________________
 
     ## Evaluate objective function at current position and check against previous errors
-    def evaluate_objective(self, objFunction):
+    """def evaluate_objective(self, fenics_script):
 
         # Passing base parameters from input file, will update with new particle values
         # Need to map from "position" to param values
         # For now, hard coding
         #hs_params["myofilament_parameters"]["k_3"] = [self.position[0], "text"]
 
-        # Just to test, objective function is this
-        self.output_dict = objFunction.fenics(self.sim_params,self.file_inputs,self.output_params, \
+        # Run simulation, and get output information
+        # Need to include information to use multiple cores
+        self.output_dict = fenics_script.fenics(self.sim_params,self.file_inputs,self.output_params, \
         self.passive_params,self.hs_params,self.cell_ion_params,self.monodomain_params, \
         self.windkessel_params)
 
-        predicted_force = self.output_dict["strarray"][-1]
-        self.current_error = np.power(self.target-predicted_force,2)
+        # this was a hard coded objective function.
+        #import module like for cell ion params for objective function?
+
+
+
+        #predicted_force = self.output_dict["strarray"][-1]
+        #self.current_error = np.power(self.target-predicted_force,2)
 
         # Need to map self.position to keyword dictionary for inputs
         # Will need something like
@@ -97,7 +123,30 @@ class fenicsParticle:
         if self.current_error < self.best_ind_error or self.best_ind_error == -1:
             # We have a new best error (or we are initializing)
             self.best_particle_position = self.working_dict
-            self.best_ind_error = self.current_error
+            self.best_ind_error = self.current_error"""
+
+    def run_simulation(self, fenics_script, iter, p_num,base_output_dir):
+        #self.update_all_fenics_params_list(self.sim_params)
+
+        self.output_params["output_path"][0] = base_output_dir + "iter_" + str(iter) + "_particle_" + str(p_num) +"/"
+
+        print self.output_params["output_path"][0]
+        
+        self.output_dict = fenics_script.fenics(self.sim_params,self.file_inputs,self.output_params, \
+            self.passive_params, self.hs_params, self.cell_ion_params, self.monodomain_params, \
+            self.windkessel_params)
+
+        with open(self.output_params["output_path"][0] + 'particle_inputs.json', 'w') as fp2:
+            json.dump([self.all_fenics_params], fp2,indent=2, separators=(',', ': '))
+
+        return self.output_dict
+
+    def update_particle_errors(self,current_error):
+            self.current_error = current_error
+            if self.current_error < self.best_ind_error or self.best_ind_error == -1:
+                # We have a new best error (or we are initializing)
+                self.best_particle_position = self.working_dict
+                self.best_ind_error = self.current_error
 
 
 
@@ -115,8 +164,8 @@ class fenicsParticle:
                         # Replace dict2, key2 with dict1 key value
                         # Just replace the parameter values
                         dict2[key2][0] = self.working_dict[key][1]
-                        # this will change the 'optimization_parameters' dictionary too, but
-                        # that shouldn't matter at this point
+                    # this will change the 'optimization_parameters' dictionary too, but
+                    # that shouldn't matter at this point
 
 
 

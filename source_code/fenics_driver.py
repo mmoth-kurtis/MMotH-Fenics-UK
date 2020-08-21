@@ -90,7 +90,7 @@ def sim_driver(input_file_name):
 
     # Call the "fenics" function within the script
     if optimization_params["num_variables"][0] > 0:
-        final_inputs, output_dictionary, opt_history = pso_driver.particle_swarm_optimization(optimization_params,sim_params,file_inputs,output_params,passive_params,hs_params,cell_ion_params,monodomain_params,windkessel_params,script_name)
+        final_inputs, opt_history = pso_driver.particle_swarm_optimization(optimization_params,sim_params,file_inputs,output_params,passive_params,hs_params,cell_ion_params,monodomain_params,windkessel_params,script_name)
         #print opt_history["best_global_error"]
         print final_inputs
         with open(output_path + 'opt_final_inputs.json', 'w') as fp2:
@@ -98,10 +98,10 @@ def sim_driver(input_file_name):
             #json.dump(opt_history, fp2, indent=2, separators=(',', ': '))
 
     else:
-        output_dictionary = script_name.fenics(sim_params,file_inputs,output_params,passive_params,hs_params,cell_ion_params,monodomain_params,windkessel_params)
+        output_data = script_name.fenics(sim_params,file_inputs,output_params,passive_params,hs_params,cell_ion_params,monodomain_params,windkessel_params)
 
     # Save the appropriate output information
-    output_data['calcium'][0].to_csv(output_path + 'gauss_calcium.csv')
+    """output_data['calcium'][0].to_csv(output_path + 'gauss_calcium.csv')
     output_data['active_stress'][0].to_csv(output_path + 'gauss_active_stress.csv')
     output_data['myofiber_passive_stress'][0].to_csv(output_path + 'gauss_fiber_passive_stress.csv')
     output_data['gucc_fiber_pstress'][0].to_csv(output_path + 'gauss_gucc_fiber_pstress.csv')
@@ -109,7 +109,10 @@ def sim_driver(input_file_name):
     output_data['gucc_shear_pstress'][0].to_csv(output_path + 'gauss_gucc_shear_pstress.csv')
     output_data['alpha'][0].to_csv(output_path + 'gauss_alpha.csv')
     #output_data['filament_overlap'][0].to_csv(output_path + 'gauss_overlap.csv')
-    output_data['delta_hsl'][0].to_csv(output_path + 'gauss_deltahsl.csv')
+    output_data['delta_hsl'][0].to_csv(output_path + 'gauss_deltahsl.csv')"""
+
+    # Right now, single cell outputs dictionary
+    
 
 # Execute script if input file is given
 if np.shape(sys.argv) > 0:

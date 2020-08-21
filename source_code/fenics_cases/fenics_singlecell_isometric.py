@@ -169,7 +169,7 @@ def fenics(sim_params,file_inputs,output_params,passive_params,hs_params,cell_io
     bcfix = DirichletBC(W.sub(0), Constant((0.0, 0.0, 0.0)), fix, method="pointwise") # at one vertex u = v = w = 0
     bclower= DirichletBC(W.sub(0).sub(2), Constant((0.0)), facetboundaries, 4)        # u3 = 0 on lower face
     bcfront= DirichletBC(W.sub(0).sub(1), Constant((0.0)), facetboundaries, 5)        # u2 = 0 on front face
-    bcs = [bcleft, bclower, bcfront, bcright]
+    bcs = [bcleft, bclower, bcfront, bcright,bcfix]
 
     du,dp = TrialFunctions(W)
     w = Function(W)
@@ -236,8 +236,9 @@ def fenics(sim_params,file_inputs,output_params,passive_params,hs_params,cell_io
                 n_pop = y_vec_split[n_vector_indices[jj][0] + kk]
 
                 temp_holder = n_pop * k_cb_multiplier[jj] * (dxx + cb_ext) * conditional(gt(dxx + cb_ext,0.0), k_cb_pos, k_cb_neg)
-                temp_holder = temp_holder*conditional(gt(abs(dxx),x_bin_max),0.0,1.0)
-                f_holder = f_holder + conditional(gt(temp_holder,0.0),temp_holder,0.0)
+                #temp_holder = temp_holder*conditional(gt(abs(dxx),x_bin_max),0.0,1.0)
+                #f_holder = f_holder + conditional(gt(temp_holder,0.0),temp_holder,0.0)
+                f_holder = f_holder + temp_holder
 
             f_holder = f_holder * cb_number_density * 1e-9
 
@@ -300,7 +301,7 @@ def fenics(sim_params,file_inputs,output_params,passive_params,hs_params,cell_io
     for counter in range(0,n_array_length * no_of_int_points,n_array_length):
         #y_vec_array[counter] = 1
         # Starting all in on state for Debugging
-        y_vec_array[counter+1] = 1
+        y_vec_array[counter] = 1
         y_vec_array[counter-2] = 1
 
     Pg, Pff, alpha = uflforms.stress()
@@ -323,6 +324,7 @@ def fenics(sim_params,file_inputs,output_params,passive_params,hs_params,cell_io
     cb_f_array = project(cb_force, Quad).vector().get_local()[:]
 
     dumped_populations = np.zeros((time_steps, no_of_int_points, n_array_length))
+    y_interp = np.zeros(no_of_int_points*n_array_length)
 
     t = 0.0
     #delta_hsls = np.zeros((time_steps,24))
@@ -335,7 +337,7 @@ def fenics(sim_params,file_inputs,output_params,passive_params,hs_params,cell_io
 
             for k in range(n_array_length):
 
-                dumped_populations[l, m, k] = y_vec_array[m * n_array_length + k]
+                dumped_populations[l, m, k] = y_interp[m * n_array_length + k]
 
         #hslarray.append(hsl_array[0])
         #strarray.append(cb_f_array[0])
@@ -367,7 +369,7 @@ def fenics(sim_params,file_inputs,output_params,passive_params,hs_params,cell_io
         else:
             overlap_counter = l
 
-        temp_overlap, y_vec_array_new = implement.update_simulation(hs, step_size, delta_hsl_array, hsl_array, y_vec_array, p_f_array, cb_f_array, calcium[l], n_array_length, t,overlaparray[overlap_counter,:])
+        temp_overlap, y_interp, y_vec_array_new = implement.update_simulation(hs, step_size, delta_hsl_array, hsl_array, y_vec_array, p_f_array, cb_f_array, calcium[l], n_array_length, t,overlaparray[overlap_counter,:])
     #    print y_vec_array_new[0:53]
         y_vec_array = y_vec_array_new # for Myosim
         y_vec.vector()[:] = y_vec_array # for PDE
@@ -375,17 +377,17 @@ def fenics(sim_params,file_inputs,output_params,passive_params,hs_params,cell_io
     #    print y_vec_array[0:53]
         hsl_array_old = hsl_array
 
-        try:
-            solve(Ftotal == 0, w, bcs, J = Jac, form_compiler_parameters={"representation":"uflacs"})
-        except:
-            np.save(output_path +"dumped_populations", dumped_populations)
-            np.save(output_path + "tarray", tarray)
-            np.save(output_path + "stress_array", strarray)
-            np.save(output_path + "hsl", hslarray)
-            np.save(output_path + "overlap", overlaparray)
-            np.save(output_path + "pstress_array",pstrarray)
-            #np.save(output_path + "alpha_array",alphaarray)
-            np.save(output_path + "calcium",calarray)
+
+        solve(Ftotal == 0, w, bcs, J = Jac, form_compiler_parameters={"representation":"uflacs"},solver_parameters={"newton_solver":{"relative_tolerance":1e-8},"newton_solver":{"maximum_iterations":50},"newton_solver":{"absolute_tolerance":1e-8}})
+
+        np.save(output_path +"dumped_populations", dumped_populations)
+        np.save(output_path + "tarray", tarray)
+        np.save(output_path + "stress_array", strarray)
+        np.save(output_path + "hsl", hslarray)
+        np.save(output_path + "overlap", overlaparray)
+        np.save(output_path + "pstress_array",pstrarray)
+        #np.save(output_path + "alpha_array",alphaarray)
+        np.save(output_path + "calcium",calarray)
 
         displacementfile << w.sub(0)
 
@@ -425,8 +427,8 @@ def fenics(sim_params,file_inputs,output_params,passive_params,hs_params,cell_io
             u_D.u_D -= 0.005
         else:
             u_D.u_D = u_D.u_D"""
-        if t < 1:
-            u_D.u_D += 0.1
+        if t < 20:
+            u_D.u_D += 0.001
         else:
             u_D.u_D = u_D.u_D
         t = t + step_size
@@ -479,6 +481,15 @@ def fenics(sim_params,file_inputs,output_params,passive_params,hs_params,cell_io
     "overlap": overlaparray
 
     }
+
+    np.save(output_path +"dumped_populations", dumped_populations)
+    np.save(output_path + "tarray", tarray)
+    np.save(output_path + "stress_array", strarray)
+    np.save(output_path + "hsl", hslarray)
+    np.save(output_path + "overlap", overlaparray)
+    np.save(output_path + "pstress_array",pstrarray)
+    #np.save(output_path + "alpha_array",alphaarray)
+    np.save(output_path + "calcium",calarray)
     fdataCa.close()
 
     return(outputs)

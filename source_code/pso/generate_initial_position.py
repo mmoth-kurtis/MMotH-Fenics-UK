@@ -5,34 +5,63 @@ import numpy as np
 
 class positionGenerator:
 
-    def init(self, num_particles, gen_string, init_dict):
+    def __init__(self, num_particles, gen_string, init_dict):
 
         self.num_particles = num_particles
         self.gen_string = gen_string
         self.num_vars = len(init_dict.keys())
+        self.return_dictionary = {}
+        self.initial_dictionary = init_dict
+
 
         # initialize things needed for certain generator algorithms
-        if self.gen_string[0] == "uniform":
-            self.refinement = int(float(num_particles)**(1.0/num_vars))
+        if self.gen_string == "uniform":
+            self.refinement = int(float(self.num_particles)**(1.0/self.num_vars))
+            self.partition = {}
+            # Use linspace to evenly assign starting vales for each variable range?
+            #print init_dict
+            for key in init_dict.keys():
+                self.partition[key] = np.linspace(init_dict[key][0][0],init_dict[key][0][1],num=self.refinement)
+
+            #if self.num_particles > self.refinement*self.num_particles*self.num_vars:
+                #print "Unused Particles. Randomly assigning them a position"
+
+            #print sorted(self.partition)
+            grid = np.array(np.meshgrid(*(v for _,v in sorted(self.partition.items()))))
+            self.grid = grid
+            self.grid = self.grid.reshape(np.prod(self.grid.shape)) # returns a 1xnum_particles (hopefully) array
+
+            var_counter = 0
+            num_coords = self.refinement**self.num_vars
+            self.coord_dict = {}
+            # partition up the array to store in the partition dictionary
+            for var in sorted(self.partition.keys()):
+                print "optimizing " + str(var)
+                #print self.grid[var_counter*self.num_particles:(var_counter+1)*(self.num_particles-1)]
+                self.coord_dict[var] = self.grid[var_counter*num_coords:(var_counter+1)*(num_coords)]
+                var_counter += 1
 
 
-    def uniform_generator(j, init_dict, num_particles):
-        print "in uniform generator now \n"
-        print init_dict
+
+    def uniform_generator(self,j, init_dict):
+        #print "in uniform generator now \n"
         # init_dict values are lists with entries bounds, position, velocity
 
+        for var in init_dict.keys():
+            self.initial_dictionary[var][1] = self.coord_dict[var][j]
 
+        return self.initial_dictionary
         # Need to work out what to do with the remainder from refinement. Should
         # be less than n, so place these points on the corners of the hypercube?
 
 
         # Need an index, and a counter for each variable
-        self.index_counter_dict = {}
+        """self.index_counter_dict = {}
         for var in init_dict.keys():
-            self.index_counter_dict[var] = [0, 0]
+            self.index_counter_dict[var] = [0, 0]"""
 
-        # Create arrays of possible values for each variable
-        self.possible_value_dictionary = {}
+
+        """self.possible_value_dictionary = {}
         for var in init_dict.keys():
 
             # Each variable has its own bounds
@@ -49,7 +78,7 @@ class positionGenerator:
                 temp[i] = lb + i*interval
 
             # Assign this list to the full tensor of possible values
-            self.possible_value_dictionary[var] = temp
+            self.possible_value_dictionary[var] = temp"""
 
         # Now we should have a "num_vars" dimensional dictionary, each value has
         # self.refinement number of elements
@@ -61,23 +90,23 @@ class positionGenerator:
 
         # for vars in init_dict.keys()
         #   if checksum less than j
-        #       
+        #
 
             # set variable value to one of the possible values based on the index
-            init_dict[var][1] = self.possible_value_dictionary[var][[self.index_counter_dict][var][0]]
-
+            #init_dict[var][1] = self.partition[var][[self.index_counter_dict][var][0]]
             # update the index and counter dictionary
 
 
-        return init_dict
 
 
-    def generate_initial_position(i, initial_dictionary):
+
+    def generate_initial_positions(self,i, initial_dictionary):
         ## function to parse which generating function to use
         #
         # for now, just going to have the uniformly distributed case
-        if self.gen_string[0] == "uniform":
+        if self.gen_string == "uniform":
 
-            return_dictionary = self.uniform_generator(i, initial_dictionary)
+            self.return_dictionary = self.uniform_generator(i, initial_dictionary)
 
-        return return_dictionary
+
+        return self.return_dictionary

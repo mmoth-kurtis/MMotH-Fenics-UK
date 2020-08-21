@@ -3,7 +3,7 @@
     "sim_geometry": ["single_cell"],
     "sim_type": ["beat", 1, "/home/fenics/shared/working_directory_untracked/ellipsoid_testcalcium/ellipsoid_input/ellipsoidal.hdf5"],
     "sim_duration": [100, "ms"],
-    "sim_timestep": [0.5, "ms"]
+    "sim_timestep": [1.0, "ms"]
   },
 
   "file_inputs": {
@@ -30,12 +30,12 @@
   "forms_parameters": {
     "passive_law_parameters": {
       "passive_law": ["semi_structural"],
-      "c": [500],
-      "c2": [0.5],
-      "c3": [25.0],
-      "bf": [29.0],
-      "bt": [13.3],
-      "bfs": [26.6],
+      "c": [220],
+      "c2": [150],
+      "c3": [8.0],
+      "bf": [10.48],
+      "bt": [3.58],
+      "bfs": [1.627],
       "phi_m": [1.0],
       "phi_g": [1.0]
     }
@@ -45,7 +45,7 @@
     "max_rate": [5000,"s^-1"],
     "temperature": [288, "Kelvin"],
     "cb_number_density": [7.67e16, "number of cb's/m^2"],
-    "initial_hs_length": [1000, "nm"],
+    "initial_hs_length": [900, "nm"],
 
     "myofilament_parameters": {
       "kinetic_scheme": ["3state_with_SRX"],
@@ -59,11 +59,11 @@
       "k_cb_neg": [0.001, "N*m^-1"],
       "alpha":[1.0],
       "k_1": [9.623166, "s^-1"],
-      "k_force": [1.96345e-4, "(N^-1)(m^2)"],
-      "k_2": [1000, "s^-1"],
-      "k_3": [5435.531288, "(nm^-1)(s^-1)"],
-      "k_4_0": [2543.864648, "s^-1"],
-      "k_4_1": [0.18911849, "nm^-4"],
+      "k_force": [8.0e-5, "(N^-1)(m^2)"],
+      "k_2": [200, "s^-1"],
+      "k_3": [235.531288, "(nm^-1)(s^-1)"],
+      "k_4_0": [543.864648, "s^-1"],
+      "k_4_1": [5.18911849, "nm^-4"],
       "k_cb": [0.001, "N*m^-1"],
       "x_ps": [4.75642, "nm"],
       "k_on": [1.5291356e8, "(M^-1)(s^-1)"],
@@ -87,12 +87,12 @@
 "electrophys_parameters": {
 
   "cell_ion_parameters": {
-    "model": ["constant_calcium"],
+    "model": ["three_state_calcium"],
     "model_inputs": {
 	"initial_calcium": [1e-7, "Molar"],
         "path_to_calcium": ["/home/fenics/shared/demos/ellipsoid_input/calcium_14.npy"],
-	"pCa": [7],
-	"t_act": [0.0]
+	"pCa": [6],
+	"t_act": [0.51]
     }
   },
 

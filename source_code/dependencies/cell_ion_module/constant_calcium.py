@@ -35,9 +35,10 @@ class constant_calcium():
     def calculate_concentrations(self,cycle,time):
 
         print "calculating calcium"
-        print "time = " + str(time)
+        print "time = " + str(time) + " (ms)"
         print "t_act = " + str(self.t_act)
         t = time/1000
+        print "t = " + str(t)
 
         calcium_value = 0.0
         if t > self.t_act:

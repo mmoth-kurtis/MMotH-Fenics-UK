@@ -27,9 +27,9 @@ Commented out by Kurtis 10/9/2019, hope to get this info from loaded arrays"""
 sim_dir = os.getcwd()
 
 # For now, hard coding bin discretization information
-xmin = -10
-xmax = 10
-bin_width = 1.0
+xmin = -12
+xmax = 12
+bin_width = 0.5
 cb_domain = np.arange(xmin,xmax+bin_width,bin_width)
 num_bins = np.shape(cb_domain)
 
@@ -71,7 +71,7 @@ array_length = sim_info[2]
 gauss_point = int(sys.argv[1])
 
 #gauss_point = 1000
-data_range = np.shape(tarray)[0]
+data_range = np.shape(tarray)[0]-2
 #data_range = 50
 # Look at how info is dumped from FEniCS. For now, hard code number of detached and attached states, and bins
 # Want to be able to visualize distributions, will need this info to set up arrays.

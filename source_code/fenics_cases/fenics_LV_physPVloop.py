@@ -948,7 +948,7 @@ def fenics(sim_params,file_inputs,output_params,passive_params,hs_params,cell_io
     "overlap": overlaparray
     }"""
 
-
-    #return(output_data)
+    success = 1
+    return(success)
 
     ######################################################################################################
