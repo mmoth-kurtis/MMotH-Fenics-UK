@@ -131,7 +131,7 @@ class fenicsParticle:
         self.output_params["output_path"][0] = base_output_dir + "iter_" + str(iter) + "_particle_" + str(p_num) +"/"
 
         print self.output_params["output_path"][0]
-        
+
         self.output_dict = fenics_script.fenics(self.sim_params,self.file_inputs,self.output_params, \
             self.passive_params, self.hs_params, self.cell_ion_params, self.monodomain_params, \
             self.windkessel_params)

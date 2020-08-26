@@ -53,9 +53,9 @@ def pig_lv():
 	Quadelem = FiniteElement("Quadrature", mesh.ufl_cell(), degree=quad_deg, quad_scheme="default")
 	Quadelem._quad_scheme = 'default'
 	hslFS = FunctionSpace(mesh, Quadelem)
-	isepiflip = False
-	isendoflip = True
-	endo_angle = 30; epi_angle = -30; casedir="./";
+	isepiflip = True
+	isendoflip = False
+	endo_angle = 60; epi_angle = -60; casedir="./";
 	hsl0_endo = 895.0
 	hsl0_epi = 955.0
 

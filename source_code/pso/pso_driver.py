@@ -38,11 +38,13 @@ def particle_swarm_optimization(pso_params,sim_params,file_inputs,output_params,
     # initalize data holders
     particle_errors = np.zeros((max_iterations,num_particles))
     opt_history = { \
-    "global_error_history": [] \
+    "global_error_history": [],
+    "best_particle_and_iter":[] \
     }
     best_global_error = -1
     best_global_position = variables_and_bounds
     particle_output = {}
+    opt_hist_datafile = open('optimization_history.txt','w')
 
     # Create instance of class to generate initial position
     pos_gen = g.positionGenerator(num_particles, point_generation_scheme,variables_and_bounds)
@@ -137,12 +139,14 @@ def particle_swarm_optimization(pso_params,sim_params,file_inputs,output_params,
             if swarm[j].current_error < best_global_error or best_global_error == -1:
                 best_global_position = swarm[j].working_dict
                 best_global_error = float(swarm[j].current_error)
+                best_particle_and_iter = [j,iter]
                 #output_dictionary = swarm[j].output_dict
 
             """print "current directory at end of sim = " + str(os.getcwd())
             os.chdir('../')"""
 
         opt_history["global_error_history"].append(best_global_error)
+        opt_history["best_particle_and_iter"].append(best_particle_and_iter)
 
         print opt_history["global_error_history"]
 
@@ -152,6 +156,13 @@ def particle_swarm_optimization(pso_params,sim_params,file_inputs,output_params,
         for j in range(0,num_particles):
             swarm[j].update_particle_velocity(w,c1,c2,best_global_position)
             swarm[j].update_particle_position()
+            opt_hist_datafile.write('Error for particle %d in iteration %d = %d ') % (j,iter,particle_errors[iter,j])
+
+        opt_hist_datafile.write("---------------------------------------------------------------")
+        opt_hist_datafile.write("Best global error = %d" ) % (opt_history["global_error_history"])
+        opt_hist_datafile.write("Best position is from particle %d in iteration %d") % (opt_history["best_particle_and_iter"][0],opt_history["best_particle_and_iter"][0])
+
+
 
         iter += 1
 
@@ -161,5 +172,5 @@ def particle_swarm_optimization(pso_params,sim_params,file_inputs,output_params,
     #def calculate_particle_error():
 
 
-
+    f.close()
     return(best_global_position,opt_history)

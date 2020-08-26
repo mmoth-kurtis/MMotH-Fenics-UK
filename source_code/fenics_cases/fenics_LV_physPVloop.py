@@ -55,8 +55,9 @@ import pandas as pd
 # @param[in] windkessel_params Dictionary for all Windkessel parameters
 # @param[out]
 def fenics(sim_params,file_inputs,output_params,passive_params,hs_params,cell_ion_params,monodomain_params,windkessel_params):
-    global i
-    global j
+    i,j = indices(2)
+    #global i
+    #global j
 
     # We don't do pressure control simulations, probably will get rid of this.
     ispressurectrl = False
@@ -869,7 +870,6 @@ def fenics(sim_params,file_inputs,output_params,passive_params,hs_params,cell_io
         pgs = interpolate(temp_DG_4, Quad)
         pgs_array = pgs.vector().get_local()[:]
 
-        counter += 1
         displacementfile << w.sub(0)
         pk1temp = project(inner(f0,Pactive*f0),FunctionSpace(mesh,'DG',1))
         pk1temp.rename("pk1temp","pk1temp")
@@ -881,7 +881,9 @@ def fenics(sim_params,file_inputs,output_params,passive_params,hs_params,cell_io
         alpha_temp.rename("alpha_temp","alpha_temp")
         alpha_file << alpha_temp
 
+        print "shape of time array" + str(np.shape(tarray))
         tarray[counter] = tstep
+        counter += 1
 
         if save_output:
 
