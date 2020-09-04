@@ -167,6 +167,7 @@ def fenics(sim_params,file_inputs,output_params,passive_params,hs_params,cell_io
         mesh = vtk_py.convertUGridToXMLMesh(ugrid)
 
     no_of_int_points = 14 * np.shape(mesh.cells())[0]
+    print "num_int_points" + str(no_of_int_points)
 
     facetboundaries = MeshFunction("size_t", mesh, 2)
     edgeboundaries = MeshFunction("size_t", mesh, 1)
@@ -241,6 +242,9 @@ def fenics(sim_params,file_inputs,output_params,passive_params,hs_params,cell_io
 
     # fiber, sheet, and sheet-normal functions
     f0 = Function(fiberFS)
+    print f0.vector().array()
+    print np.shape(f0.vector())
+    #print "free indices of f0 " + str(f0.free_indices())
     s0 = Function(fiberFS)
     n0 = Function(fiberFS)
 
@@ -260,7 +264,9 @@ def fenics(sim_params,file_inputs,output_params,passive_params,hs_params,cell_io
 
     # finished with the mesh file, close it
     f.close()
-
+    print f0[0]
+    print np.shape(f0.vector().array())
+    
     # define rest of needed functions
     # mixed function for solver
     w = Function(W)
@@ -432,6 +438,7 @@ def fenics(sim_params,file_inputs,output_params,passive_params,hs_params,cell_io
     # Get right cauchy stretch tensor
     Cmat = (Fmat.T*Fmat)
 
+
     # Get Green strain tensor
     Emat = uflforms.Emat()
 
@@ -452,9 +459,11 @@ def fenics(sim_params,file_inputs,output_params,passive_params,hs_params,cell_io
     # define 'active_params' as dict and send to forms?
     #hsl = sqrt(dot(f0, Cmat*f0))*hsl0_transmural # must project if want to set directly
     hsl = sqrt(dot(f0, Cmat*f0))*hsl0
+    #f0 = 1/k(U(f0) - f0)
     delta_hsl = hsl - hsl_old
     cb_force = Constant(0.0)
     y_vec_split = split(y_vec)
+    print "shape of y_vec_split is " + str(np.shape(y_vec_split))
 
     for jj in range(no_of_states):
 
@@ -485,6 +494,7 @@ def fenics(sim_params,file_inputs,output_params,passive_params,hs_params,cell_io
     cb_force = cb_force * conditional(gt(cb_force,0.0),1.0,0.0)
 
     # use cb_force to form active stress tensor
+    print np.shape(f0)
     Pactive = cb_force * as_tensor(f0[i]*f0[j], (i,j)) + xfiber_fraction*cb_force * as_tensor(s0[i]*s0[j], (i,j))+ xfiber_fraction*cb_force * as_tensor(n0[i]*n0[j], (i,j))
 
 

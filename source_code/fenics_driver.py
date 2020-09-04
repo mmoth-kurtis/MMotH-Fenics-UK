@@ -55,7 +55,7 @@ def sim_driver(input_file_name):
 
     # Assign input/output parameters.
     output_path = output_params["output_path"][0]
-    input_path = file_inputs["input_directory_path"][0]
+    #input_path = file_inputs["input_directory_path"][0]
 
     # This may only be needed in ventricle simulations.
     casename = file_inputs["casename"][0]
@@ -80,6 +80,10 @@ def sim_driver(input_file_name):
         fenics_script = "fenics_LV_physPVloop"
     elif sim_params["sim_geometry"][0] == "single_cell":
         fenics_script = "fenics_singlecell_isometric"
+    elif sim_params["sim_geometry"][0] == "single_cell_fiber":
+        fenics_script = "fenics_singlecell_fiber_reorientation"
+    elif sim_params["sim_geometry"][0] == "cylinder":
+	fenics_script = "myosim_cylinder"
     elif sim_params["sim_geometry"][0] == "ellipsoid_set_hsl":
         fenics_script = "fenics_LV_physPVloop_forcehsl"
     else:

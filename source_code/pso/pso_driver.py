@@ -156,11 +156,15 @@ def particle_swarm_optimization(pso_params,sim_params,file_inputs,output_params,
         for j in range(0,num_particles):
             swarm[j].update_particle_velocity(w,c1,c2,best_global_position)
             swarm[j].update_particle_position()
-            opt_hist_datafile.write('Error for particle %d in iteration %d = %d ') % (j,iter,particle_errors[iter,j])
+            print j
+            print iter
+            print particle_errors[iter, j]
+            opt_hist_datafile.write("Error for particle " + str(j) + " in iteration " + str(iter) + " = " + str(particle_errors[iter,j])+"\n")
 
-        opt_hist_datafile.write("---------------------------------------------------------------")
-        opt_hist_datafile.write("Best global error = %d" ) % (opt_history["global_error_history"])
-        opt_hist_datafile.write("Best position is from particle %d in iteration %d") % (opt_history["best_particle_and_iter"][0],opt_history["best_particle_and_iter"][0])
+        opt_hist_datafile.write("------------------------------------------------------------\n")
+        opt_hist_datafile.write("Best global error = " + str(opt_history["global_error_history"][0])+"\n")
+        # fix this
+        opt_hist_datafile.write("Best position is from: iteration " + str(opt_history["best_particle_and_iter"][0][1]) + ", particle " +str(opt_history["best_particle_and_iter"][0][1])+"\n")
 
 
 
@@ -172,5 +176,5 @@ def particle_swarm_optimization(pso_params,sim_params,file_inputs,output_params,
     #def calculate_particle_error():
 
 
-    f.close()
+    opt_hist_datafile.close()
     return(best_global_position,opt_history)

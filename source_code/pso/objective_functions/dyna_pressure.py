@@ -20,10 +20,11 @@ class dyna_pressure_objective():
     def __init__(self):
 
         # Load in target pressure here
-        exp_data = np.loadtxt('/home/fenics/shared/working_directory_untracked/test_pso_objectives/diastolic_pressure/target_sim/PV_.txt')
-        self.exp_time = exp_data[:,0]
+        self.exp_data = np.loadtxt('/home/fenics/shared/working_directory_untracked/test_pso_objectives/diastolic_pressure/target_sim/PV_.txt')
+        self.exp_time = self.exp_data[:,0]
         self.loading_num = np.arange(0,len(self.exp_time))
-        self.exp_pressure = exp_data[:,1]
+        self.exp_pressure = self.exp_data[:,1]
+        print "target pressure = " + str(self.exp_pressure)
 
         #Create interpolation function to qinterpolate experimental data to simulation time points
         self.f = interp.interp1d(self.loading_num,self.exp_pressure)
@@ -39,7 +40,7 @@ class dyna_pressure_objective():
         # but get rid of first loading_num number of points (time independent loading)
         particle_time = p_sim[:,0]
         p_loading_num = np.arange(0,len(particle_time))
-        interpolated_exp_pressure = self.f(particle_time)
+        interpolated_exp_pressure = self.f(p_loading_num)
 
         # Look at differences in experimental pressure and simulation predicted pressure
         particle_error_array = np.power(interpolated_exp_pressure-p_sim[:,1],2*np.ones(len(particle_time)))
