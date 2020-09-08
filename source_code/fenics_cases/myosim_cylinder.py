@@ -16,6 +16,7 @@ import vtk
 import vtk_py
 import mshr
 from numpy import random as r
+import copy
 
 
 def fenics(sim_params,file_inputs,output_params,passive_params,hs_params,cell_ion_params,monodomain_params,windkessel_params):
@@ -79,6 +80,28 @@ def fenics(sim_params,file_inputs,output_params,passive_params,hs_params,cell_io
 
     fx_rxn = np.zeros((time_steps))
 
+    x = 10.0
+    y = 0.0
+    z = 0.0
+
+    cyl_top = Point(x,y,z)
+    cyl_bottom = Point(0,0,0)
+    top_radius = 1.0
+    bottom_radius = 1.0
+    segments = 20
+
+    geometry = mshr.Cylinder(cyl_top,cyl_bottom,top_radius,bottom_radius,segments)
+    mesh = mshr.generate_mesh(geometry,10)
+    no_of_int_points = 4 * np.shape(mesh.cells())[0]
+
+    Quadelem = FiniteElement("Quadrature", tetrahedron, degree=2, quad_scheme="default")
+    Quadelem._quad_scheme = 'default'
+
+    Quad = FunctionSpace(mesh, Quadelem)
+
+
+
+    File('cylinder_3.pvd') << mesh
 
     #prev_ca = np.load("calcium_10.npy")
     #prev_ca = prev_ca[:,0]
@@ -86,6 +109,65 @@ def fenics(sim_params,file_inputs,output_params,passive_params,hs_params,cell_io
     #xml_struct = ut.parse('pm_test10.xml')
     #hs_params = xml_struct.single_circulation_simulation.half_sarcomere
     hs = half_sarcomere.half_sarcomere(hs_params,1)
+
+    # Need to create a list of dictionaries for parameters for each gauss point
+    hs_params_list = [{}]*no_of_int_points
+
+    for jj in np.arange(np.shape(hs_params_list)[0]):
+        hs_params_list[jj] = copy.deepcopy(hs_params)
+        #print hs_params_list[jj]["myofilament_parameters"]["k_3"][0]
+
+    """print hs_params_list[0]["myofilament_parameters"]["k_3"][0]
+    print hs_params_list[1]["myofilament_parameters"]["k_3"][0]
+    hs_params_list[1]["myofilament_parameters"]["k_3"][0] = 0.0
+    print hs_params_list[0]["myofilament_parameters"]["k_3"][0]
+    print hs_params_list[1]["myofilament_parameters"]["k_3"][0]
+    hs_params_list[1]["myofilament_parameters"]["k_3"][0] = 30.0
+    print hs_params_list[0]["myofilament_parameters"]["k_3"][0]
+    print hs_params_list[1]["myofilament_parameters"]["k_3"][0]"""
+
+
+
+    #print "hs params list first"
+    #print hs_params_list[0]
+
+    # Create a simple expression to test if x_coord is > 9.0
+    # making last 10% of cylinder spring elements
+    tester = Expression("x[0] - 9.0",degree=1)
+
+    # Project the expression onto the mesh
+    temp_tester_values = project(tester,FunctionSpace(mesh,"DG",1),form_compiler_parameters={"representation":"uflacs"})
+    # Interpolate onto the FunctionSpace for quadrature points
+    temp_tester = interpolate(temp_tester_values,Quad)
+    # Create array of the expression values
+    temp_tester_array = temp_tester.vector().get_local()
+
+    for jj in np.arange(no_of_int_points):
+
+
+        if temp_tester_array[jj] > 0.0:
+
+            # We are between x = 9 and x = 10
+            # Assign k3 to 0, no contraction
+            #print "assigning k3 "
+            #print "hs_params_list"
+            #print str(hs_params_list[jj].keys())
+            #print hs_params_list[jj]["k_3"]
+            hs_params_list[jj]["myofilament_parameters"]["k_3"][0] = 0.0
+
+            #print "temp tester" + str(temp_tester_array[jj])
+
+        #print hs_params_list[jj]["myofilament_parameters"]["k_3"][0]
+            #print "test value = " + str(temp_tester_array[jj])
+            #print jj
+            #print hs_params_list[jj]["myofilament_parameters"]["k_3"][0]
+
+    #print "myosim cylinder hs list"
+    #print hs_params_list[0]["myofilament_parameters"]["k_3"]
+
+    LVCavityvol = Expression(("vol"), vol=0.0, degree=2)
+
+
     cell_ion = cell_ion_driver.cell_ion_driver(cell_ion_params)
     calcium = np.zeros(time_steps)
     calcium[0] = cell_ion.model_class.calculate_concentrations(0,0)
@@ -124,27 +206,12 @@ def fenics(sim_params,file_inputs,output_params,passive_params,hs_params,cell_io
     #
     #mesh = UnitCubeMesh(1,1,1)
     #mesh.cells()
-    x = 10.0
-    y = 0.0
-    z = 0.0
-
-    cyl_top = Point(x,y,z)
-    cyl_bottom = Point(0,0,0)
-    top_radius = 1.0
-    bottom_radius = 1.0
-    segments = 20
-
-    geometry = mshr.Cylinder(cyl_top,cyl_bottom,top_radius,bottom_radius,segments)
-    mesh = mshr.generate_mesh(geometry,10)
-
-    File('cylinder_3.pvd') << mesh
 
         # Vector element at gauss points (for fibers)
     VQuadelem = VectorElement("Quadrature", mesh.ufl_cell(), degree=2, quad_scheme="default")
     VQuadelem._quad_scheme = 'default'
 
 
-    no_of_int_points = 4 * np.shape(mesh.cells())[0]
     #print no_of_int_points
 
     #plot(mesh)
@@ -193,13 +260,10 @@ def fenics(sim_params,file_inputs,output_params,passive_params,hs_params,cell_io
     Velem._quad_scheme = 'default'
     Qelem = FiniteElement("Lagrange", tetrahedron, 1, quad_scheme="default")
     Qelem._quad_scheme = 'default'
-    Quadelem = FiniteElement("Quadrature", tetrahedron, degree=2, quad_scheme="default")
-    Quadelem._quad_scheme = 'default'
+
 
     W = FunctionSpace(mesh, MixedElement([Velem,Qelem]))
     x_dofs = W.sub(0).sub(0).dofmap().dofs()
-
-    Quad = FunctionSpace(mesh, Quadelem)
 
     Quad_vectorized_Fspace = FunctionSpace(mesh, MixedElement(n_array_length*[Quadelem]))
 
@@ -213,20 +277,20 @@ def fenics(sim_params,file_inputs,output_params,passive_params,hs_params,cell_io
     m_x = 1.0
     m_y = 0.0
     m_z = 0.0
-    width = 0.2
+    width = 1.0
     x_comps = r.normal(m_x,width,no_of_int_points)
     y_comps = r.normal(m_y,width,no_of_int_points)
     z_comps = r.normal(m_z,width,no_of_int_points)
     for kk in np.arange(np.shape(f0.vector())[0]/3):
         kk = int(kk)
-        """f0.vector()[kk*3] = 1.0
+        f0.vector()[kk*3] = 1.0
         f0.vector()[kk*3+1] = 0.0
-        f0.vector()[kk*3+2] = 0.0"""
-        f0.vector()[kk*3] = x_comps[kk]
+        f0.vector()[kk*3+2] = 0.0
+        """f0.vector()[kk*3] = x_comps[kk]
         # assign y component
         f0.vector()[kk*3+1] = y_comps[kk]
         # z component would look like
-        f0.vector()[kk*3+2] = z_comps[kk]
+        f0.vector()[kk*3+2] = z_comps[kk]"""
 
     f0 = f0/sqrt(inner(f0,f0))
 
@@ -365,7 +429,7 @@ def fenics(sim_params,file_inputs,output_params,passive_params,hs_params,cell_io
     cb_force = Constant(0.0)
 
     y_vec_split = split(y_vec)
-    print "shape of yvecsplit " + str(np.shape(y_vec_split))
+    #print "shape of yvecsplit " + str(np.shape(y_vec_split))
 
     for jj in range(no_of_states):
 
@@ -472,11 +536,15 @@ def fenics(sim_params,file_inputs,output_params,passive_params,hs_params,cell_io
     cb_f_array = project(cb_force, Quad).vector().get_local()[:]
 
     dumped_populations = np.zeros((time_steps, no_of_int_points, n_array_length))
-    y_interp = np.zeros(no_of_int_points*n_array_length)
+    y_interp = np.zeros((no_of_int_points+1)*n_array_length)
 
     x_dofs = W.sub(0).sub(0).dofmap().dofs()
 
-
+    temp_overlap = np.zeros((no_of_int_points))
+    y_vec_array_new = np.zeros(((no_of_int_points)*n_array_length))
+    #print "shapes of stuff"
+    #print np.shape(temp_overlap)
+    #print np.shape(y_vec_array_new)
     t = 0.0
     #delta_hsls = np.zeros((time_steps,24))
     for l in range(time_steps):
@@ -520,9 +588,21 @@ def fenics(sim_params,file_inputs,output_params,passive_params,hs_params,cell_io
         else:
             overlap_counter = l
 
-        temp_overlap, y_interp, y_vec_array_new = implement.update_simulation(hs, step_size, delta_hsl_array, hsl_array, y_vec_array, p_f_array, cb_f_array, calcium[l], n_array_length, t,overlaparray[overlap_counter,:])
+        # Because we want to be able to change contractility parameters for each
+        # gauss point, we need to loop through the gauss points here
+
+        #temp_overlap, y_interp, y_vec_array_new = implement.update_simulation(hs, step_size, delta_hsl_array, hsl_array, y_vec_array, p_f_array, cb_f_array, calcium[l], n_array_length, t,overlaparray[overlap_counter,:])
+        #print "hs list dict " + str(hs_params_list
+        #print "y_vec_new " + str(y_vec_array_new)
+        for mm in np.arange(no_of_int_points):
+            #print hs_params_list[mm]["myofilament_parameters"]["k_3"]
+            temp_overlap[mm], y_interp[mm*n_array_length:(mm+1)*n_array_length], y_vec_array_new[mm*n_array_length:(mm+1)*n_array_length] = implement.update_simulation(hs, step_size, delta_hsl_array[mm], hsl_array[mm], y_vec_array[mm*n_array_length:(mm+1)*n_array_length], p_f_array[mm], cb_f_array[mm], calcium[l], n_array_length, t,overlaparray[overlap_counter,mm],hs_params_list[mm])
     #    print y_vec_array_new[0:53]
         y_vec_array = y_vec_array_new # for Myosim
+
+        #print "shapes of stuff"
+        #print np.shape(y_vec.vector())
+        #print np.shape(y_vec_array)
         y_vec.vector()[:] = y_vec_array # for PDE
 
     #    print y_vec_array[0:53]

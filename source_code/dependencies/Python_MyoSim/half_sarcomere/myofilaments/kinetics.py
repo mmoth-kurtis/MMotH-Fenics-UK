@@ -6,13 +6,15 @@ from scipy.integrate import solve_ivp
 
 def evolve_kinetics(self, time_step, Ca_conc, cell_time):
     """Updates kinetics, switches to different sub-functions as required"""
-    if (self.kinetic_scheme == '3state_with_SRX'):
+    #print self.kinetic_scheme[0]
+    if (self.kinetic_scheme[0] == '3state_with_SRX'):
+        #print "calling update 3state"
         update_3state_with_SRX(self, time_step, Ca_conc,cell_time)
 
 
 def return_fluxes(self, y, Ca_conc):
     # Returns fluxes
-    if (self.kinetic_scheme == '3state_with_SRX'):
+    if (self.kinetic_scheme[0] == '3state_with_SRX'):
 
         # Unpack
         M_OFF = y[0]

@@ -3,9 +3,15 @@ import numpy as np
 import pandas as pd
 
 
-def update_simulation(self, time_step, delta_hsl, hsl, y0, pf, cbf, calcium, n_array_length, cell_time,set_data = 0):
+def update_simulation(self, time_step, delta_hsl, hsl, y0, pf, cbf, calcium, n_array_length, cell_time,overlap_in,hs_params_new_list,set_data = 0):
 
     # Need to do some kinetics stuff
+
+    # update gauss point params
+    #print "new list  " + str(hs_params_new_list)
+    #print "implement hs params"
+    #print hs_params_new_list
+    self.update_hs_props(hs_params_new_list)
     time_step = time_step/1000.0
     # Update calcium
     #self.membr.evolve_kinetics(time_step, activation)
@@ -16,47 +22,48 @@ def update_simulation(self, time_step, delta_hsl, hsl, y0, pf, cbf, calcium, n_a
     self.Ca_conc = calcium
 
     # Going to loop through integration points here, neglecting myosin isoforms for now
-    num_int_points = np.shape(hsl)
-    num_int_points = num_int_points[0]
+    #num_int_points = np.shape(hsl)
+    #num_int_points = num_int_points[0]
     y_pops = np.zeros(np.size(y0))
     y_interp = np.zeros(np.size(y0))
-    self.temp_overlaps = np.zeros(num_int_points)
+    self.temp_overlaps = 0.0
     #print y0[0:53]
-    for i in range(num_int_points):
-        self.hs_length = hsl[i]
-        self.myof.cb_force = cbf[i]
-        self.myof.pas_force = pf[i]
-        self.hs_force = self.myof.cb_force+self.myof.pas_force
-        self.myof.y[0:n_array_length] = y0[i*n_array_length:(i+1)*n_array_length]
+    #for i in range(num_int_points):
+    self.hs_length = hsl
+    self.myof.cb_force = cbf
+    self.myof.pas_force = pf
+    self.hs_force = self.myof.cb_force+self.myof.pas_force
+    self.myof.y = y0
 #        print "myof_y" + str(np.shape(self.myof.y))
         #if i==1:
             #print self.myof.y
         # Myofilaments
         # moving interpolation here, so populations match up with active force
         # generated at end of Newton Iteration
-        if (np.abs(delta_hsl[i]) > 0.0):
-            # Need to move some things
-            self.myof.move_cb_distributions(delta_hsl[i])
-        y_interp[i*n_array_length:(i+1)*n_array_length] = self.myof.y[0:n_array_length]
-        # passed in overlaps from previous timestep
-        #old_overlap = overlap_array[i]
-        self.myof.evolve_kinetics(time_step, self.Ca_conc, cell_time)
-        #if i==1:
-            #print self.myof.y
-        #if (np.abs(delta_hsl[i]) > 0.0):
-            # Need to move some things
-        #    self.myof.move_cb_distributions(delta_hsl[i])
-        #self.hs_length = self.hs_length + delta_hsl
+    if (np.abs(delta_hsl) > 0.0):
+        # Need to move some things
+        self.myof.move_cb_distributions(delta_hsl)
+    y_interp = self.myof.y
+    # passed in overlaps from previous timestep
+    #old_overlap = overlap_array[i]
+    self.myof.evolve_kinetics(time_step, self.Ca_conc, cell_time)
+    #print self.myof.y
+    #if i==1:
+        #print self.myof.y
+    #if (np.abs(delta_hsl[i]) > 0.0):
+        # Need to move some things
+    #    self.myof.move_cb_distributions(delta_hsl[i])
+    #self.hs_length = self.hs_length + delta_hsl
 
-        # enforce n_bound < n_on, needs to be generalized for greater than 3 state
-        """decrement_counter = 0
-        while self.myof.n_on < self.myof.n_bound:
-            self.myof.y[2+decrement_counter] = 0.0
-            self.myof.n_bound = np.sum(self.myof.y[2 + np.arange(0, self.myof.no_of_x_bins)])
-            decrement_counter += 1"""
-        # Assign int point's population vector to larger y vector
-        y_pops[i*n_array_length:(i+1)*n_array_length] = self.myof.y[0:n_array_length]
-        self.temp_overlaps[i] = self.myof.n_overlap
+    # enforce n_bound < n_on, needs to be generalized for greater than 3 state
+    """decrement_counter = 0
+    while self.myof.n_on < self.myof.n_bound:
+        self.myof.y[2+decrement_counter] = 0.0
+        self.myof.n_bound = np.sum(self.myof.y[2 + np.arange(0, self.myof.no_of_x_bins)])
+        decrement_counter += 1"""
+    # Assign int point's population vector to larger y vector
+    y_pops = self.myof.y
+    self.temp_overlaps = self.myof.n_overlap
 
     # Update forces
     # Don't need these, will be reset at beginning of this fcn

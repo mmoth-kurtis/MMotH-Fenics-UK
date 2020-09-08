@@ -91,3 +91,31 @@ class half_sarcomere():
         # Other stuff
         self.hs_data['cb_number_density'] = \
             pd.Series(np.zeros(self.data_buffer_size))
+
+
+    def update_hs_props(self,hs_params):
+        #print "updating hs properties"
+        # update properties passed in from fenics
+        self.myof.kinetic_scheme = hs_params["myofilament_parameters"]["kinetic_scheme"]
+        #print self.myof.kinetic_scheme
+
+        if self.myof.kinetic_scheme[0] == "3state_with_SRX":
+            self.myof.k_1 = hs_params["myofilament_parameters"]["k_1"][0]
+            self.myof.k_force = hs_params["myofilament_parameters"]["k_force"][0]
+            self.myof.k_2 = hs_params["myofilament_parameters"]["k_2"][0]
+            self.myof.k_3 = hs_params["myofilament_parameters"]["k_3"][0]
+            #print self.myof.k_3
+            self.myof.k_4_0 = hs_params["myofilament_parameters"]["k_4_0"][0]
+            self.myof.k_4_1 = hs_params["myofilament_parameters"]["k_4_1"][0]
+            self.myof.k_cb = hs_params["myofilament_parameters"]["k_cb"][0]
+            self.myof.x_ps = hs_params["myofilament_parameters"]["x_ps"][0]
+            self.myof.k_on = float(hs_params["myofilament_parameters"]["k_on"][0])
+            self.myof.k_off = hs_params["myofilament_parameters"]["k_off"][0]
+            self.myof.k_coop = hs_params["myofilament_parameters"]["k_coop"][0]
+            self.myof.bin_min = hs_params["myofilament_parameters"]["bin_min"][0]
+            self.myof.bin_max = hs_params["myofilament_parameters"]["bin_max"][0]
+            self.myof.bin_width = hs_params["myofilament_parameters"]["bin_width"][0]
+            self.myof.thick_filament_length = hs_params["myofilament_parameters"]["thick_filament_length"][0]
+            self.myof.thin_filament_length = hs_params["myofilament_parameters"]["thin_filament_length"][0]
+            self.myof.bare_zone_length = hs_params["myofilament_parameters"]["bare_zone_length"][0]
+            self.myof.k_falloff = hs_params["myofilament_parameters"]["k_falloff"][0]

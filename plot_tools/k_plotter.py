@@ -72,7 +72,7 @@ gauss_point = int(sys.argv[1])
 
 #gauss_point = 1000
 data_range = np.shape(tarray)[0]-2
-data_range = 400
+#data_range = 400
 #data_range = 50
 # Look at how info is dumped from FEniCS. For now, hard code number of detached and attached states, and bins
 # Want to be able to visualize distributions, will need this info to set up arrays.
