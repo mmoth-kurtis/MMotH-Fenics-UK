@@ -71,6 +71,7 @@ def fenics(sim_params,file_inputs,output_params,passive_params,hs_params,cell_io
 
     fdataCa = open(output_path + "calcium_.txt", "w", 0)
 
+    fx_rxn = np.zeros((time_steps))
 
     #prev_ca = np.load("calcium_10.npy")
     #prev_ca = prev_ca[:,0]
@@ -158,6 +159,8 @@ def fenics(sim_params,file_inputs,output_params,passive_params,hs_params,cell_io
     Quadelem._quad_scheme = 'default'
 
     W = FunctionSpace(mesh, MixedElement([Velem,Qelem]))
+    x_dofs = W.sub(0).sub(0).dofmap().dofs()
+
     Quad = FunctionSpace(mesh, Quadelem)
 
     Quad_vectorized_Fspace = FunctionSpace(mesh, MixedElement(n_array_length*[Quadelem]))
@@ -285,10 +288,10 @@ def fenics(sim_params,file_inputs,output_params,passive_params,hs_params,cell_io
 
     darray = []
     tarray = []
-    hslarray = []
+    hslarray = np.zeros((time_steps+1,no_of_int_points))
     calarray = []
-    strarray = []
-    pstrarray = []
+    strarray = np.zeros((time_steps+1,no_of_int_points))
+    pstrarray = np.zeros((time_steps+1,no_of_int_points))
     overlaparray = np.zeros((time_steps+1,no_of_int_points))
 
     y_vec_array = y_vec.vector().get_local()[:]
@@ -403,10 +406,22 @@ def fenics(sim_params,file_inputs,output_params,passive_params,hs_params,cell_io
         p_f_array = p_f.vector().get_local()[:]
 
         cb_f_array = project(cb_force, Quad).vector().get_local()[:]
-        strarray.append(cb_f_array[0])
-        pstrarray.append(p_f_array[0])
-        hslarray.append(hsl_array[0]+delta_hsl_array[0])
+        #strarray.append(cb_f_array[0])
+        strarray[l,:] = cb_f_array[:]
+        pstrarray[l,:] = p_f_array[:]
+        #hslarray.append(hsl_array[0]+delta_hsl_array[0])
+        hslarray[l,:] = hsl_array[:] + delta_hsl_array[:]
         overlaparray[l,:] = temp_overlap
+
+        # Calculate reaction force at right end
+        b = assemble(Ftotal,form_compiler_parameters={"representation":"uflacs"})
+        bcleft.apply(b)
+
+        f_int_total = b.copy()
+        for kk in x_dofs:
+            fx_rxn[l] += f_int_total[kk]
+
+        np.save(output_path + "fx",fx_rxn)
 
 
         #print(cb_f_array)
@@ -427,10 +442,11 @@ def fenics(sim_params,file_inputs,output_params,passive_params,hs_params,cell_io
             u_D.u_D -= 0.005
         else:
             u_D.u_D = u_D.u_D"""
-        if t < 20:
+        """if t < 20:
             u_D.u_D += 0.001
         else:
-            u_D.u_D = u_D.u_D
+            u_D.u_D = u_D.u_D"""
+        u_D.u_D = u_D.u_D
         t = t + step_size
 
         calarray.append(hs.Ca_conc*np.ones(no_of_int_points))

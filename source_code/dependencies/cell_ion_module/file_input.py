@@ -23,7 +23,10 @@ class calcium_file_input():
         #if time < 0.6:
         #    calcium_value = 3e-7
         #else:
-        counter = int(5*time)
-        print "counter is " + str(counter)
-        calcium_value = self.ca[counter-1]
+        if time < 10.0:
+            calcium_value = 1e-7
+        else:
+            counter = int(2*time)
+            print "counter is " + str(counter)
+            calcium_value = self.ca[counter-1]
         return calcium_value

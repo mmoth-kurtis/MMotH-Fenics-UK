@@ -15,10 +15,12 @@ from cell_ion_module import cell_ion_driver
 import vtk
 import vtk_py
 import mshr
+from numpy import random as r
 
 
 def fenics(sim_params,file_inputs,output_params,passive_params,hs_params,cell_ion_params,monodomain_params,windkessel_params):
     i,j = indices(2)
+
 
     output_path = output_params["output_path"][0]
     displacementfile = File(output_path + "u_disp.pvd")
@@ -72,6 +74,10 @@ def fenics(sim_params,file_inputs,output_params,passive_params,hs_params,cell_io
     constant_pCa = 6.5
 
     fdataCa = open(output_path + "calcium_.txt", "w", 0)
+    pk1file = File(output_path + "pk1_act_on_f0.pvd")
+
+
+    fx_rxn = np.zeros((time_steps))
 
 
     #prev_ca = np.load("calcium_10.npy")
@@ -98,9 +104,9 @@ def fenics(sim_params,file_inputs,output_params,passive_params,hs_params,cell_io
     class Right(SubDomain):
         def inside(self, x, on_boundary):
             tol = 1E-14
-            return on_boundary and abs(x[0]-1.0) < tol
+            return on_boundary and abs(x[0]-10.0) < tol
     #  where x[2] = 0
-    class Lower(SubDomain):
+    """class Lower(SubDomain):
         def inside(self, x, on_boundary):
             tol = 1E-14
             return on_boundary and abs(x[2]) < tol
@@ -108,12 +114,12 @@ def fenics(sim_params,file_inputs,output_params,passive_params,hs_params,cell_io
     class Front(SubDomain):
         def inside(self, x, on_boundary):
             tol = 1E-14
-            return on_boundary and abs(x[1]) < tol
+            return on_boundary and abs(x[1]) < tol"""
     #  where x[0], x[1] and x[2] = 0
-    class Fix(SubDomain):
+    """class Fix(SubDomain):
         def inside(self, x, on_boundary):
-            tol = 1E-14
-            return on_boundary and abs(x[0]) < tol and abs(x[1]) < tol and abs(x[2]) < tol
+            tol = 1E-1
+            return on_boundary and abs(x[0]) < tol and abs(x[1]+.006) < tol and abs(x[2]+.023) < tol"""
     #
     #
     #mesh = UnitCubeMesh(1,1,1)
@@ -129,7 +135,7 @@ def fenics(sim_params,file_inputs,output_params,passive_params,hs_params,cell_io
     segments = 20
 
     geometry = mshr.Cylinder(cyl_top,cyl_bottom,top_radius,bottom_radius,segments)
-    mesh = mshr.generate_mesh(geometry,20)
+    mesh = mshr.generate_mesh(geometry,10)
 
     File('cylinder_3.pvd') << mesh
 
@@ -157,17 +163,21 @@ def fenics(sim_params,file_inputs,output_params,passive_params,hs_params,cell_io
     facetboundaries.set_all(0)
     left = Left()
     right = Right()
-    fix = Fix()
-    lower = Lower()
-    front = Front()
+    #fix = Fix()
+    #lower = Lower()
+    #front = Front()
     #
     left.mark(facetboundaries, 1)
     right.mark(facetboundaries, 2)
-    fix.mark(facetboundaries, 3)
-    lower.mark(facetboundaries, 4)
-    front.mark(facetboundaries, 5)
+    #fix.mark(facetboundaries, 3)
+
+    File(output_path + "facetboundaries.pvd") << facetboundaries
+
+    #lower.mark(facetboundaries, 4)
+    #front.mark(facetboundaries, 5)
     #
     ds = dolfin.ds(subdomain_data = facetboundaries)
+
     #
     ###############################################################################
     #
@@ -187,6 +197,8 @@ def fenics(sim_params,file_inputs,output_params,passive_params,hs_params,cell_io
     Quadelem._quad_scheme = 'default'
 
     W = FunctionSpace(mesh, MixedElement([Velem,Qelem]))
+    x_dofs = W.sub(0).sub(0).dofmap().dofs()
+
     Quad = FunctionSpace(mesh, Quadelem)
 
     Quad_vectorized_Fspace = FunctionSpace(mesh, MixedElement(n_array_length*[Quadelem]))
@@ -196,12 +208,27 @@ def fenics(sim_params,file_inputs,output_params,passive_params,hs_params,cell_io
     fiberFS = FunctionSpace(mesh, VQuadelem)
     f0 = Function(fiberFS)
 
-    File(output_path + "fiber1.pvd") << project(f0, VectorFunctionSpace(mesh, "CG", 1))
+    File(output_path + "fiber1.pvd") << project(f0, VectorFunctionSpace(mesh, "DG", 0))
 
+    m_x = 1.0
+    m_y = 0.0
+    m_z = 0.0
+    width = 0.2
+    x_comps = r.normal(m_x,width,no_of_int_points)
+    y_comps = r.normal(m_y,width,no_of_int_points)
+    z_comps = r.normal(m_z,width,no_of_int_points)
     for kk in np.arange(np.shape(f0.vector())[0]/3):
         kk = int(kk)
-        f0.vector()[kk*3] = 1.0
-        f0.vector()[kk*3+1] = 0.5
+        """f0.vector()[kk*3] = 1.0
+        f0.vector()[kk*3+1] = 0.0
+        f0.vector()[kk*3+2] = 0.0"""
+        f0.vector()[kk*3] = x_comps[kk]
+        # assign y component
+        f0.vector()[kk*3+1] = y_comps[kk]
+        # z component would look like
+        f0.vector()[kk*3+2] = z_comps[kk]
+
+    f0 = f0/sqrt(inner(f0,f0))
 
     """ugrid=vtk_py.convertXMLMeshToUGrid(mesh)
 
@@ -271,23 +298,24 @@ def fenics(sim_params,file_inputs,output_params,passive_params,hs_params,cell_io
 
     print f0[0]
     print "shape of f0 " + str(np.shape(f0.vector().array()))
-    
+
     #print "free indices of f0 " + str(f0.free_indices())
 
-    
+
     #f0.vector()[:] = 1.0"""
-    
+
     File(output_path + "fiber.pvd") << project(f0, VectorFunctionSpace(mesh, "CG", 1))
     #test_tensor = as_tensor(f0*f0)
 
     # assigning BCs
     u_D = Expression(("u_D"), u_D = 0.0, degree = 2)
-    bcleft= DirichletBC(W.sub(0).sub(0), Constant((0.0)), facetboundaries, 1)         # u1 = 0 on left face
+    bcleft= DirichletBC(W.sub(0), Constant((0.0,0.0,0.0)), facetboundaries, 1)         # u1 = 0 on left face
     bcright= DirichletBC(W.sub(0).sub(0), u_D, facetboundaries, 2)
-    bcfix = DirichletBC(W.sub(0), Constant((0.0, 0.0, 0.0)), fix, method="pointwise") # at one vertex u = v = w = 0
-    bclower= DirichletBC(W.sub(0).sub(2), Constant((0.0)), facetboundaries, 4)        # u3 = 0 on lower face
-    bcfront= DirichletBC(W.sub(0).sub(1), Constant((0.0)), facetboundaries, 5)        # u2 = 0 on front face
-    bcs = [bcleft, bclower, bcfront, bcright,bcfix]
+    #bcfix = DirichletBC(W.sub(0), Constant((0.0, 0.0, 0.0)), fix, method="pointwise") # at one vertex u = v = w = 0
+    #bclower= DirichletBC(W.sub(0).sub(2), Constant((0.0)), facetboundaries, 4)        # u3 = 0 on lower face
+    #bcfront= DirichletBC(W.sub(0).sub(1), Constant((0.0)), facetboundaries, 5)        # u2 = 0 on front face
+    #bcs = [bcleft, bclower, bcfront, bcright,bcfix]
+    bcs = [bcleft, bcright]
 
     du,dp = TrialFunctions(W)
     w = Function(W)
@@ -366,7 +394,7 @@ def fenics(sim_params,file_inputs,output_params,passive_params,hs_params,cell_io
         cb_force = cb_force + f_holder
 
     #print "rank" + str(f0.rank())
-    Pactive = cb_force * as_tensor(s0[i]*s0[j], (i,j))
+    Pactive = cb_force * as_tensor(f0[i]*f0[j], (i,j))
     Press = Expression(("P"), P=0.0, degree=0)
     # Automatic differentiation  #####################################################################################################
     F1 = derivative(Wp, w, wtest)*dx
@@ -405,10 +433,10 @@ def fenics(sim_params,file_inputs,output_params,passive_params,hs_params,cell_io
 
     darray = []
     tarray = []
-    hslarray = []
+    hslarray = np.zeros((time_steps+1,no_of_int_points))
     calarray = []
-    strarray = []
-    pstrarray = []
+    strarray = np.zeros((time_steps+1,no_of_int_points))
+    pstrarray = np.zeros((time_steps+1,no_of_int_points))
     overlaparray = np.zeros((time_steps+1,no_of_int_points))
 
     y_vec_array = y_vec.vector().get_local()[:]
@@ -445,6 +473,9 @@ def fenics(sim_params,file_inputs,output_params,passive_params,hs_params,cell_io
 
     dumped_populations = np.zeros((time_steps, no_of_int_points, n_array_length))
     y_interp = np.zeros(no_of_int_points*n_array_length)
+
+    x_dofs = W.sub(0).sub(0).dofmap().dofs()
+
 
     t = 0.0
     #delta_hsls = np.zeros((time_steps,24))
@@ -510,6 +541,9 @@ def fenics(sim_params,file_inputs,output_params,passive_params,hs_params,cell_io
         np.save(output_path + "calcium",calarray)
 
         displacementfile << w.sub(0)
+        pk1temp = project(inner(f0,Pactive*f0),FunctionSpace(mesh,'DG',1))
+        pk1temp.rename("pk1temp","pk1temp")
+        pk1file << pk1temp
 
         hsl_old.vector()[:] = project(hsl, Quad).vector().get_local()[:] # for PDE
 
@@ -523,11 +557,27 @@ def fenics(sim_params,file_inputs,output_params,passive_params,hs_params,cell_io
         p_f_array = p_f.vector().get_local()[:]
 
         cb_f_array = project(cb_force, Quad).vector().get_local()[:]
-        strarray.append(cb_f_array[0])
-        pstrarray.append(p_f_array[0])
-        hslarray.append(hsl_array[0]+delta_hsl_array[0])
+        #strarray.append(cb_f_array[0])
+        strarray[l,:] = cb_f_array[:]
+        pstrarray[l,:] = p_f_array[:]
+        #hslarray.append(hsl_array[0]+delta_hsl_array[0])
+        hslarray[l,:] = hsl_array[:] + delta_hsl_array[:]
         overlaparray[l,:] = temp_overlap
 
+        # Calculate reaction force at right end
+        b = assemble(Ftotal,form_compiler_parameters={"representation":"uflacs"})
+        bcleft.apply(b)
+
+        f_int_total = b.copy()
+        for kk in x_dofs:
+            fx_rxn[l] += f_int_total[kk]
+        #bcleft.apply(f_int_total)
+        #FX = 0
+        #for kk in x_dofs:
+        #    FX += f_int_total[i]
+
+        #fx_rxn[l] = Fx
+        np.save(output_path + "fx",fx_rxn)
 
         #print(cb_f_array)
 
@@ -547,10 +597,12 @@ def fenics(sim_params,file_inputs,output_params,passive_params,hs_params,cell_io
             u_D.u_D -= 0.005
         else:
             u_D.u_D = u_D.u_D"""
-        if t < 20:
+        """if t < 5:
+            u_D.u_D = u_D.u_D
+        elif 5 <= t and t <25:
             u_D.u_D += 0.001
         else:
-            u_D.u_D = u_D.u_D
+            u_D.u_D = u_D.u_D"""
         t = t + step_size
 
         calarray.append(hs.Ca_conc*np.ones(no_of_int_points))

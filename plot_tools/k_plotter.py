@@ -55,11 +55,11 @@ calcium = np.load(sim_dir + '/calcium.npy')
 #calcium = calcium[:,0]
 HSL = np.load(sim_dir + '/hsl.npy')
 #HSL = np.load(sim_dir + '/hslarray.npy')
-pstress = np.load(sim_dir + '/pstress_array.npy')
-if single_cell_sim_flag == 0:
+"""pstress = np.load(sim_dir + '/pstress_array.npy')"""
+"""if single_cell_sim_flag == 0:
     gucc_fiber = np.load(sim_dir + '/gucc_fiber.npy')
     gucc_trans = np.load(sim_dir + '/gucc_trans.npy')
-    gucc_shear = np.load(sim_dir + '/gucc_shear.npy')
+    gucc_shear = np.load(sim_dir + '/gucc_shear.npy')"""
 overlap = np.load(sim_dir + '/overlap.npy')
 # Define number of time steps and array length here
 sim_info = fenics_pop_file.shape
@@ -72,6 +72,7 @@ gauss_point = int(sys.argv[1])
 
 #gauss_point = 1000
 data_range = np.shape(tarray)[0]-2
+data_range = 400
 #data_range = 50
 # Look at how info is dumped from FEniCS. For now, hard code number of detached and attached states, and bins
 # Want to be able to visualize distributions, will need this info to set up arrays.
@@ -141,7 +142,7 @@ ax3 = plt.subplot(426)
 if single_cell_sim_flag > 0:
     plt.plot(tarray[0:data_range],stress_array[0:data_range])
 else:
-    plt.plot(tarray[0:data_range], stress_array[0:data_range,gauss_point])
+    plt.plot(tarray[0:data_range], stress_array[0:data_range,:])
 #plt.plot(tarray, stress_array[0:data_range])
 #plt.scatter(myosim_summary_data[:,0], myosim_summary_data[:,1],color='r')
 #plt.scatter(myosim_summary_data[::10,0], myosim_summary_data[::10,1],color='r')
@@ -159,14 +160,14 @@ ax2 = plt.subplot(421)
 if single_cell_sim_flag > 0:
     plt.plot(tarray[0:data_range],HSL[0:data_range])
 else:
-    plt.plot(tarray[0:data_range], HSL[0:data_range,gauss_point])
+    plt.plot(tarray[0:data_range], HSL[0:data_range,:])
 #plt.plot(tarray, HSL[0:data_range])
 #plt.scatter(myosim_summary_data[:,0], myosim_summary_data[:,1],color='r')
 plt.xlabel('time [ms]')
 plt.ylabel("hsl (nm)")
 
 #---------------------------------------------------------------------------------
-plt.subplot(423)
+"""plt.subplot(423)
 if single_cell_sim_flag > 0:
     fiber_pstress, = plt.plot(tarray[0:data_range], pstress[0:data_range])
 else:
@@ -177,7 +178,7 @@ else:
     plt.legend((fiber_pstress, gfiber, gtrans, gshear), ('fiber', 'G_fiber', 'G_trans', 'G_shear'))
 
 #plt.plot(tarray, pstress[0:data_range])
-plt.ylabel('Passive Stress (Pa)')
+plt.ylabel('Passive Stress (Pa)')"""
 #------------------------------------------------------------------------------
 plt.subplot(425)
 plt.plot(tarray[0:data_range], overlap[0:data_range,gauss_point])
