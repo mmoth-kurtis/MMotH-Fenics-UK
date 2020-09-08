@@ -223,8 +223,8 @@ def fenics(sim_params,file_inputs,output_params,passive_params,hs_params,cell_io
     #f0.vector().array()[:] = [1.0,0.0,0.0]
 
     #f0 = Constant((1.0, 0.0, 0.0))
-    s0 = Constant((0.0, 1.0, 0.0))
-    n0 = Constant((0.0, 0.0, 1.0))
+    #s0 = Constant((0.0, 1.0, 0.0))
+    #n0 = Constant((0.0, 0.0, 1.0))
     #### KURTIS START HERE HAVE TO FIX BOUNDARY CONDITIONS
     facetboundaries = MeshFunction('size_t', mesh, mesh.topology().dim()-1)
     facetboundaries.set_all(0)
@@ -271,6 +271,9 @@ def fenics(sim_params,file_inputs,output_params,passive_params,hs_params,cell_io
     # Kurtis trying to initialize vectors
     fiberFS = FunctionSpace(mesh, VQuadelem)
     f0 = Function(fiberFS)
+    s0 = Function(fiberFS)
+    n0 = Function(fiberFS)
+    f0_diff = Function(fiberFS)
 
     File(output_path + "fiber1.pvd") << project(f0, VectorFunctionSpace(mesh, "DG", 0))
 
@@ -293,6 +296,14 @@ def fenics(sim_params,file_inputs,output_params,passive_params,hs_params,cell_io
         f0.vector()[kk*3+2] = z_comps[kk]"""
 
     f0 = f0/sqrt(inner(f0,f0))
+
+    f0_diff = f0 - Constant((1.,0.,0.))
+
+    s0  = project(Constant((0,1,0))+f0_diff,VectorFunctionSpace(mesh, "DG", 0))
+    File(output_path + "sheet.pvd") << s0
+
+    n0 = project(cross(f0,s0),VectorFunctionSpace(mesh, "DG", 0))
+    File(output_path + "sheet_normal.pvd") << n0
 
     """ugrid=vtk_py.convertXMLMeshToUGrid(mesh)
 
