@@ -108,4 +108,5 @@ class myofilaments():
             x_overlap = max_x_overlap - protrusion
             n_overlap = x_overlap/max_x_overlap
 
+        #print "hs length " +str(self.parent_hs.hs_length)
         return n_overlap

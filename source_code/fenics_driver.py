@@ -68,14 +68,8 @@ def sim_driver(input_file_name):
     # Figure out which script needs to be executed.
     if sim_params["sim_geometry"][0] == "ventricle":
         fenics_script = "fenics_LV"
-    elif sim_params["sim_geometry"][0] == "ventricle_lclee_2":
-        fenics_script = "fenics_LV_LCLEE_2"
-    elif sim_params["sim_geometry"][0] == "ventricle_circbc":
-        fenics_script = "fenics_LV_circ_bc"
-    elif sim_params["sim_geometry"][0] == "ventricle_lclee_hstress":
-        fenics_script = "fenics_LV_lclee_homog_stress"
-    elif sim_params["sim_geometry"][0] == "ventricle_lclee_oghstress":
-        fenics_script = "fenics_LV_lclee_og_hstress"
+    elif sim_params["sim_geometry"][0] == "alexus":
+        fenics_script = "fenics_singlecell_cylinder_alexus"
     elif sim_params["sim_geometry"][0] == "ventricle_physloop":
         fenics_script = "fenics_LV_physPVloop"
     elif sim_params["sim_geometry"][0] == "single_cell":

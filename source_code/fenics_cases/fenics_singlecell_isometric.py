@@ -138,6 +138,9 @@ def fenics(sim_params,file_inputs,output_params,passive_params,hs_params,cell_io
     fix.mark(facetboundaries, 3)
     lower.mark(facetboundaries, 4)
     front.mark(facetboundaries, 5)
+
+    File(output_path + "facetboundaries.pvd") << facetboundaries
+
     #
     ds = dolfin.ds(subdomain_data = facetboundaries)
     #

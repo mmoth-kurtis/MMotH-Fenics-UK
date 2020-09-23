@@ -12,7 +12,7 @@
   },
 
   "output_parameters": {
-    "output_path": ["./"],
+    "output_path": ["./output_cylinder/"],
     "visualize_flag": [0, "1 to generate plots, 0 to not"]
   },
 

@@ -91,11 +91,14 @@ def fenics(sim_params,file_inputs,output_params,passive_params,hs_params,cell_io
     segments = 20
 
     geometry = mshr.Cylinder(cyl_top,cyl_bottom,top_radius,bottom_radius,segments)
-    mesh = mshr.generate_mesh(geometry,10)
+    mesh = mshr.generate_mesh(geometry,30)
     no_of_int_points = 4 * np.shape(mesh.cells())[0]
 
     Quadelem = FiniteElement("Quadrature", tetrahedron, degree=2, quad_scheme="default")
     Quadelem._quad_scheme = 'default'
+    # Real element for rigid body motion boundary condition
+    Relem = FiniteElement("Real", mesh.ufl_cell(), 0, quad_scheme="default")
+    Relem._quad_scheme = 'default'
 
     Quad = FunctionSpace(mesh, Quadelem)
 
@@ -115,62 +118,35 @@ def fenics(sim_params,file_inputs,output_params,passive_params,hs_params,cell_io
 
     for jj in np.arange(np.shape(hs_params_list)[0]):
         hs_params_list[jj] = copy.deepcopy(hs_params)
-        #print hs_params_list[jj]["myofilament_parameters"]["k_3"][0]
-
-    """print hs_params_list[0]["myofilament_parameters"]["k_3"][0]
-    print hs_params_list[1]["myofilament_parameters"]["k_3"][0]
-    hs_params_list[1]["myofilament_parameters"]["k_3"][0] = 0.0
-    print hs_params_list[0]["myofilament_parameters"]["k_3"][0]
-    print hs_params_list[1]["myofilament_parameters"]["k_3"][0]
-    hs_params_list[1]["myofilament_parameters"]["k_3"][0] = 30.0
-    print hs_params_list[0]["myofilament_parameters"]["k_3"][0]
-    print hs_params_list[1]["myofilament_parameters"]["k_3"][0]"""
-
-
-
-    #print "hs params list first"
-    #print hs_params_list[0]
 
     # Create a simple expression to test if x_coord is > 9.0
     # making last 10% of cylinder spring elements
-    tester = Expression("x[0] - 9.0",degree=1)
+    tester = Expression("x[0]",degree=1)
+    digitation = Expression("pow(x[1],2) + pow(x[2],2) + 0.5",degree=1)
+    point_radius = Expression("sqrt(pow(x[1],2)+pow(x[2],2))",degree=1)
 
     # Project the expression onto the mesh
     temp_tester_values = project(tester,FunctionSpace(mesh,"DG",1),form_compiler_parameters={"representation":"uflacs"})
+    dig_values = project(digitation,FunctionSpace(mesh,"DG",1),form_compiler_parameters={"representation":"uflacs"})
+    point_rad_values = project(point_radius,FunctionSpace(mesh,"DG",1),form_compiler_parameters={"representation":"uflacs"})
+
     # Interpolate onto the FunctionSpace for quadrature points
     temp_tester = interpolate(temp_tester_values,Quad)
+    dig = interpolate(dig_values,Quad)
+    point_rad = interpolate(point_rad_values,Quad)
+
     # Create array of the expression values
     temp_tester_array = temp_tester.vector().get_local()
+    dig_array = dig.vector().get_local()
+    point_rad_array = point_rad.vector().get_local()
 
-    for jj in np.arange(no_of_int_points):
-
-
-        if temp_tester_array[jj] > 0.0:
-
-            # We are between x = 9 and x = 10
-            # Assign k3 to 0, no contraction
-            #print "assigning k3 "
-            #print "hs_params_list"
-            #print str(hs_params_list[jj].keys())
-            #print hs_params_list[jj]["k_3"]
-            hs_params_list[jj]["myofilament_parameters"]["k_3"][0] = 0.0
-
-            #print "temp tester" + str(temp_tester_array[jj])
-
-        #print hs_params_list[jj]["myofilament_parameters"]["k_3"][0]
-            #print "test value = " + str(temp_tester_array[jj])
-            #print jj
-            #print hs_params_list[jj]["myofilament_parameters"]["k_3"][0]
-
-    #print "myosim cylinder hs list"
-    #print hs_params_list[0]["myofilament_parameters"]["k_3"]
 
     LVCavityvol = Expression(("vol"), vol=0.0, degree=2)
 
 
     cell_ion = cell_ion_driver.cell_ion_driver(cell_ion_params)
     calcium = np.zeros(time_steps)
-    calcium[0] = cell_ion.model_class.calculate_concentrations(0,0)
+    calcium[0] = cell_ion.calculate_concentrations(0,0)
     parameters["form_compiler"]["quadrature_degree"]=2
     parameters["form_compiler"]["representation"] = "quadrature"
     #
@@ -198,10 +174,23 @@ def fenics(sim_params,file_inputs,output_params,passive_params,hs_params,cell_io
             tol = 1E-14
             return on_boundary and abs(x[1]) < tol"""
     #  where x[0], x[1] and x[2] = 0
-    """class Fix(SubDomain):
+    class Fix_y(SubDomain):
         def inside(self, x, on_boundary):
             tol = 1E-1
-            return on_boundary and abs(x[0]) < tol and abs(x[1]+.006) < tol and abs(x[2]+.023) < tol"""
+            return near(x[0],0.0,tol) and near(x[1],0.0,tol)
+    class Fix_y_right(SubDomain):
+        def inside(self, x, on_boundary):
+            tol = 1E-14
+            return near(x[0],10.0,tol) and near(x[1],0.0,tol)
+    class Fix_z_right(SubDomain):
+        def inside(self, x, on_boundary):
+            tol = 1E-14
+            return near(x[0],10.0,tol) and near(x[2],0.0,tol)
+    class Fix_z(SubDomain):
+        def inside(self, x, on_boundary):
+            tol = 1E-14
+            return (near(x[0],0.0,tol) and near(x[2],0.0,tol))
+
     #
     #
     #mesh = UnitCubeMesh(1,1,1)
@@ -225,18 +214,25 @@ def fenics(sim_params,file_inputs,output_params,passive_params,hs_params,cell_io
     #f0 = Constant((1.0, 0.0, 0.0))
     #s0 = Constant((0.0, 1.0, 0.0))
     #n0 = Constant((0.0, 0.0, 1.0))
-    #### KURTIS START HERE HAVE TO FIX BOUNDARY CONDITIONS
+    # Define spatial coordinate system used in rigid motion constraint
+    X = SpatialCoordinate (mesh)
     facetboundaries = MeshFunction('size_t', mesh, mesh.topology().dim()-1)
     facetboundaries.set_all(0)
     left = Left()
     right = Right()
-    #fix = Fix()
+    fix_y = Fix_y()
+    fix_y_right = Fix_y_right()
+    fix_z = Fix_z()
+    fix_z_right = Fix_z_right()
+    #horizontal = Horizontal()
     #lower = Lower()
     #front = Front()
     #
     left.mark(facetboundaries, 1)
     right.mark(facetboundaries, 2)
-    #fix.mark(facetboundaries, 3)
+    fix_y.mark(facetboundaries, 3)
+    #horizontal.mark(facetboundaries,4)
+    fix_z.mark(facetboundaries,5)
 
     File(output_path + "facetboundaries.pvd") << facetboundaries
 
@@ -260,9 +256,12 @@ def fenics(sim_params,file_inputs,output_params,passive_params,hs_params,cell_io
     Velem._quad_scheme = 'default'
     Qelem = FiniteElement("Lagrange", tetrahedron, 1, quad_scheme="default")
     Qelem._quad_scheme = 'default'
+    # Mixed element for rigid body motion. One each for x, y displacement. One each for
+    # x, y, z rotation
+    VRelem = MixedElement([Relem, Relem, Relem, Relem, Relem])
 
 
-    W = FunctionSpace(mesh, MixedElement([Velem,Qelem]))
+    W = FunctionSpace(mesh, MixedElement([Velem,Qelem,VRelem]))
     x_dofs = W.sub(0).sub(0).dofmap().dofs()
 
     Quad_vectorized_Fspace = FunctionSpace(mesh, MixedElement(n_array_length*[Quadelem]))
@@ -280,15 +279,33 @@ def fenics(sim_params,file_inputs,output_params,passive_params,hs_params,cell_io
     m_x = 1.0
     m_y = 0.0
     m_z = 0.0
-    width = 1.0
-    x_comps = r.normal(m_x,width,no_of_int_points)
-    y_comps = r.normal(m_y,width,no_of_int_points)
-    z_comps = r.normal(m_z,width,no_of_int_points)
-    for kk in np.arange(np.shape(f0.vector())[0]/3):
-        kk = int(kk)
-        f0.vector()[kk*3] = 1.0
-        f0.vector()[kk*3+1] = 0.0
-        f0.vector()[kk*3+2] = 0.0
+    width = 0.0
+    #x_comps = r.normal(m_x,width,no_of_int_points)
+    #y_comps = r.normal(m_y,width,no_of_int_points)
+    #z_comps = r.normal(m_z,width,no_of_int_points)
+    for jj in np.arange(no_of_int_points):
+
+        #if (temp_tester_array[jj] < dig_array[jj]) or (temp_tester_array[jj] > -dig_array[jj] + 10.0):
+        if (temp_tester_array[jj] > 9.0) or (temp_tester_array[jj] < 1.0):
+            # inside left end
+            f0.vector()[jj*3] = 1.0
+            f0.vector()[jj*3+1] = 0.0
+            f0.vector()[jj*3+2] = 0.0
+            hs_params_list[jj]["myofilament_parameters"]["k_3"][0] = 0.0
+
+
+        else:
+
+            # In middle region, assign fiber vector
+            # find radius of point
+            temp_radius = point_rad_array[jj]
+            if np.abs(temp_radius - top_radius) < 0.01:
+                temp_width = 0.0
+            else:
+                temp_width = width*(1.0-(temp_radius/top_radius))
+            f0.vector()[jj*3] = r.normal(m_x,temp_width,1)[0]
+            f0.vector()[jj*3+1] = r.normal(m_y,temp_width,1)[0]
+            f0.vector()[jj*3+2] = r.normal(m_z,temp_width,1)[0]
         """f0.vector()[kk*3] = x_comps[kk]
         # assign y component
         f0.vector()[kk*3+1] = y_comps[kk]
@@ -299,104 +316,39 @@ def fenics(sim_params,file_inputs,output_params,passive_params,hs_params,cell_io
 
     f0_diff = f0 - Constant((1.,0.,0.))
 
+    #s0 = f0 + f0_diff # sum object
+    #n0 = cross(f0,s0) # cross object
+
     s0  = project(Constant((0,1,0))+f0_diff,VectorFunctionSpace(mesh, "DG", 0))
-    File(output_path + "sheet.pvd") << s0
+    s0 = s0/sqrt(inner(s0,s0))
+    File(output_path + "sheet.pvd") << project(s0,VectorFunctionSpace(mesh, "DG", 0))
 
     n0 = project(cross(f0,s0),VectorFunctionSpace(mesh, "DG", 0))
-    File(output_path + "sheet_normal.pvd") << n0
-
-    """ugrid=vtk_py.convertXMLMeshToUGrid(mesh)
-
-    File(output_path + "fiber2/.pvd") << project(f0, VectorFunctionSpace(mesh, "CG", 1))
-
-
-    gdim = mesh.geometry().dim()
-    xdofmap = fiberFS.sub(0).dofmap().dofs()
-    ydofmap = fiberFS.sub(1).dofmap().dofs()
-    zdofmap = fiberFS.sub(2).dofmap().dofs()
-
-
-
-    xq = fiberFS.tabulate_dof_coordinates().reshape((-1,gdim))
-    xq0 = xq[xdofmap]
-    print "xq0 shape " + str(np.shape(xq0))
-
-    points = vtk.vtkPoints()
-    vertices = vtk.vtkCellArray()
-    #ugrid = vtk.vtkUnstructuredGrid()
-
-    nb_cells = ugrid.GetNumberOfCells()
-    print "num cells = " + str(nb_cells)
-    fvecs = vtk_py.createFloatArray("fvecs",3,24)
-
-    for i in np.arange(24):
-        fvecs.InsertTuple(i,[1.0,0.0,0.0])
-
-    cnt=0
-
-    for pt in xq0:
-        points.InsertNextPoint([pt[0], pt[1], pt[2]])
-        vertex = vtk.vtkVertex()
-        vertex.GetPointIds().SetId(0, cnt)
-        vertices.InsertNextCell(vertex)
-        cnt += 1
-
-    ugrid.SetPoints(points)
-    ugrid.SetCells(0, vertices)
-
-    vtk_py.CreateVertexFromPoint(ugrid)
-
-    #fvecs[:] = f0.vector()[:]
-    #ugrid.GetCellData().AddArray(f0.vector())
-
-
-    ugrid.GetCellData().AddArray(fvecs)
-    vtk_py.writeXMLUGrid(ugrid, output_path + "fiber_ugrid.vtu")
-
-    cnt = 0
-    for pt in xq0:
-        print cnt
-        fvec = fvecs.GetTuple(cnt)
-        f0.vector()[xdofmap[cnt]] = fvec[0]
-        f0.vector()[ydofmap[cnt]] = fvec[1]
-        f0.vector()[zdofmap[cnt]] = fvec[2]
-        cnt +=1
-
-    mesh = vtk_py.convertUGridToXMLMesh(ugrid)
-
-    cnt =0
-
-    for pt in xq0:
-        print "assigning vector"
-        f0.vector()[xdofmap[cnt]] = 1.0*cnt; f0.vector()[ydofmap[cnt]] = 0.0; f0.vector()[zdofmap[cnt]] = 0.0;
-        cnt +=1
-
-    print f0[0]
-    print "shape of f0 " + str(np.shape(f0.vector().array()))
-
-    #print "free indices of f0 " + str(f0.free_indices())
-
-
-    #f0.vector()[:] = 1.0"""
-
+    n0 = n0/sqrt(inner(n0,n0))
+    File(output_path + "sheet_normal.pvd") << project(n0,VectorFunctionSpace(mesh, "DG", 0))
     File(output_path + "fiber.pvd") << project(f0, VectorFunctionSpace(mesh, "CG", 1))
     #test_tensor = as_tensor(f0*f0)
 
     # assigning BCs
     u_D = Expression(("u_D"), u_D = 0.0, degree = 2)
-    bcleft= DirichletBC(W.sub(0), Constant((0.0,0.0,0.0)), facetboundaries, 1)         # u1 = 0 on left face
+    bcleft= DirichletBC(W.sub(0).sub(0), Constant((0.0)), facetboundaries, 1)         # u1 = 0 on left face
     bcright= DirichletBC(W.sub(0).sub(0), u_D, facetboundaries, 2)
-    #bcfix = DirichletBC(W.sub(0), Constant((0.0, 0.0, 0.0)), fix, method="pointwise") # at one vertex u = v = w = 0
+    bcfix_y = DirichletBC(W.sub(0).sub(1), Constant((0.0)), fix_y, method="pointwise")
+    bcfix_z = DirichletBC(W.sub(0).sub(2), Constant((0.0)), fix_z, method="pointwise") # at one vertex u = v = w = 0
+    bcfix_y_right = DirichletBC(W.sub(0).sub(1), Constant((0.0)),fix_y_right, method="pointwise")
+    bcfix_z_right = DirichletBC(W.sub(0).sub(2), Constant((0.0)),fix_z_right, method="pointwise")
+    #bchorizontal = DirichletBC(W.sub(0).sub(1), Constant((0.0)), horizontal, method="pointwise")
     #bclower= DirichletBC(W.sub(0).sub(2), Constant((0.0)), facetboundaries, 4)        # u3 = 0 on lower face
     #bcfront= DirichletBC(W.sub(0).sub(1), Constant((0.0)), facetboundaries, 5)        # u2 = 0 on front face
     #bcs = [bcleft, bclower, bcfront, bcright,bcfix]
-    bcs = [bcleft, bcright]
 
-    du,dp = TrialFunctions(W)
+    bcs = [bcleft, bcright,bcfix_y,bcfix_z,bcfix_y_right,bcfix_z_right]
+
+    du,dp,dc11 = TrialFunctions(W)
     w = Function(W)
     dw = TrialFunction(W)
-    (u,p) = split(w)
-    (v,q) = TestFunctions(W)
+    (u,p,c11) = split(w)
+    (v,q,v11) = TestFunctions(W)
     wtest = TestFunction(W)
 
     params= {"mesh": mesh,
@@ -475,12 +427,19 @@ def fenics(sim_params,file_inputs,output_params,passive_params,hs_params,cell_io
     F1 = derivative(Wp, w, wtest)*dx
     F2 = inner(Fmat*Pactive, grad(v))*dx
     F3 = inner(Press*N, v)*ds(2, domain=mesh)
-    Ftotal = F1 + F2 - F3
+    # constrain rigid body motion
+    """L4 = inner(as_vector([c11[0], c11[1], 0.0]), u)*dx + \
+    	 inner(as_vector([0.0, 0.0, c11[2]]), cross(X, u))*dx + \
+    	 inner(as_vector([c11[3], 0.0, 0.0]), cross(X, u))*dx + \
+    	 inner(as_vector([0.0, c11[4], 0.0]), cross(X, u))*dx
+    F4 = derivative(L4, w, wtest)"""
+    Ftotal = F1 + F2 - F3 #+ F4
 
     Jac1 = derivative(F1, w, dw)
     Jac2 = derivative(F2, w, dw)
     Jac3 = derivative(F3, w, dw)
-    Jac = Jac1 + Jac2 - Jac3
+    #Jac4 = derivative(F4, w, dw)
+    Jac = Jac1 + Jac2 - Jac3 #+ Jac4
     ##################################################################################################################################
 
     # Contraction phase
@@ -553,6 +512,7 @@ def fenics(sim_params,file_inputs,output_params,passive_params,hs_params,cell_io
 
     temp_overlap = np.zeros((no_of_int_points))
     y_vec_array_new = np.zeros(((no_of_int_points)*n_array_length))
+    j3_fluxes = np.zeros((no_of_int_points,time_steps))
     #print "shapes of stuff"
     #print np.shape(temp_overlap)
     #print np.shape(y_vec_array_new)
@@ -586,7 +546,8 @@ def fenics(sim_params,file_inputs,output_params,passive_params,hs_params,cell_io
 
         # Right now, not general. The calcium depends on cycle number, just saying 0
         cycle = 0
-        calcium[l] = cell_ion.model_class.calculate_concentrations(cycle,t)
+        #calcium[l] = cell_ion.model_class.calculate_concentrations(cycle,t)
+        calcium[l] = cell_ion.calculate_concentrations(step_size,l)
 
         #calcium[l] = cell_ion.model.calculate_concentrations(0,t)
 
@@ -606,10 +567,14 @@ def fenics(sim_params,file_inputs,output_params,passive_params,hs_params,cell_io
         #print "hs list dict " + str(hs_params_list
         #print "y_vec_new " + str(y_vec_array_new)
         for mm in np.arange(no_of_int_points):
-            #print hs_params_list[mm]["myofilament_parameters"]["k_3"]
+            #print hsl_array[mm]
             temp_overlap[mm], y_interp[mm*n_array_length:(mm+1)*n_array_length], y_vec_array_new[mm*n_array_length:(mm+1)*n_array_length] = implement.update_simulation(hs, step_size, delta_hsl_array[mm], hsl_array[mm], y_vec_array[mm*n_array_length:(mm+1)*n_array_length], p_f_array[mm], cb_f_array[mm], calcium[l], n_array_length, t,overlaparray[overlap_counter,mm],hs_params_list[mm])
+            temp_flux_dict, temp_rate_dict = implement.return_rates_fenics(hs)
+            #print temp_flux_dict["J3"]
+            j3_fluxes[mm,l] = sum(temp_flux_dict["J3"])
     #    print y_vec_array_new[0:53]
         y_vec_array = y_vec_array_new # for Myosim
+
 
         #print "shapes of stuff"
         #print np.shape(y_vec.vector())
@@ -632,7 +597,7 @@ def fenics(sim_params,file_inputs,output_params,passive_params,hs_params,cell_io
         np.save(output_path + "calcium",calarray)
 
         displacementfile << w.sub(0)
-        pk1temp = project(inner(f0,Pactive*f0),FunctionSpace(mesh,'DG',1))
+        pk1temp = project(inner(f0,Pactive*f0),FunctionSpace(mesh,'DG',0))
         pk1temp.rename("pk1temp","pk1temp")
         pk1file << pk1temp
 
@@ -658,6 +623,10 @@ def fenics(sim_params,file_inputs,output_params,passive_params,hs_params,cell_io
         # Calculate reaction force at right end
         b = assemble(Ftotal,form_compiler_parameters={"representation":"uflacs"})
         bcleft.apply(b)
+        bcfix_y.apply(b)
+        bcfix_z.apply(b)
+        bcfix_y_right.apply(b)
+        bcfix_z_right.apply(b)
 
         f_int_total = b.copy()
         for kk in x_dofs:
@@ -669,6 +638,11 @@ def fenics(sim_params,file_inputs,output_params,passive_params,hs_params,cell_io
 
         #fx_rxn[l] = Fx
         np.save(output_path + "fx",fx_rxn)
+
+        if t <= 5:
+            u_D.u_D += .14
+        else:
+            u_D.u_D = u_D.u_D
 
         #print(cb_f_array)
 
@@ -689,9 +663,7 @@ def fenics(sim_params,file_inputs,output_params,passive_params,hs_params,cell_io
         else:
             u_D.u_D = u_D.u_D"""
         """if t < 5:
-            u_D.u_D = u_D.u_D
-        elif 5 <= t and t <25:
-            u_D.u_D += 0.001
+            u_D.u_D += 0.03
         else:
             u_D.u_D = u_D.u_D"""
         t = t + step_size
@@ -761,6 +733,7 @@ def fenics(sim_params,file_inputs,output_params,passive_params,hs_params,cell_io
     np.save(output_path + "hsl", hslarray)
     np.save(output_path + "overlap", overlaparray)
     np.save(output_path + "pstress_array",pstrarray)
+    np.save(output_path + "j3",j3_fluxes)
     #np.save(output_path + "alpha_array",alphaarray)
     np.save(output_path + "calcium",calarray)
     fdataCa.close()

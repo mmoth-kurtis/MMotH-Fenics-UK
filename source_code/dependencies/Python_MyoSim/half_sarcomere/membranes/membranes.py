@@ -3,25 +3,25 @@ from scipy.integrate import solve_ivp
 
 from functools import partial
 
-from .Ten_Tusscher_2004 import computeRates_with_activation as \
+"""from .Ten_Tusscher_2004 import computeRates_with_activation as \
 tt_computeRates_with_activation
 from .Ten_Tusscher_2004 import initConsts_with_adjustments as \
-tt_initConsts_with_adjustments
+tt_initConsts_with_adjustments"""
 
 class membranes():
     """ Class for membranes """
-    
+
     def __init__(self, membrane_params, parent_half_sarcomere):
         self.parent_hs = parent_half_sarcomere;
 
-        self.kinetic_scheme = membrane_params.kinetic_scheme.cdata
+        self.kinetic_scheme = membrane_params["kinetic_scheme"]
 
         # Set up the rates and the y vector which are kinetics specific
         if (self.kinetic_scheme == "simple_2_compartment"):
-            self.Ca_content = float(membrane_params.Ca_content.cdata)
-            self.k_leak = float(membrane_params.k_leak.cdata)
-            self.k_act = float(membrane_params.k_act.cdata)
-            self.k_serca = float(membrane_params.k_serca.cdata)
+            self.Ca_content = float(membrane_params["Ca_content"][0])
+            self.k_leak = float(membrane_params["k_leak"][0])
+            self.k_act = float(membrane_params["k_act"][0])
+            self.k_serca = float(membrane_params["k_serca"][0])
 
             self.y = np.zeros(2)
             self.y[1] = self.Ca_content
@@ -56,18 +56,19 @@ class membranes():
         if (self.kinetic_scheme == "simple_2_compartment"):
             # Pull out the v vector
             y = self.y
-            
+
             def derivs(t, y):
                 dy = np.zeros(np.size(y))
                 dy[0] = (self.k_leak + activation * self.k_act) * y[1] - \
                         self.k_serca * y[0]
                 dy[1] = -dy[0]
                 return dy
-    
+
             # Evolve
             sol = solve_ivp(derivs, [0, time_step], y, method = 'RK23')
             self.y = sol.y[:, -1]
             self.myofilament_Ca_conc = self.y[0]
+            return self.myofilament_Ca_conc
 
         if (self.kinetic_scheme == "Ten_Tusscher_2004"):
             # Ten_Tusscher model assumes time step is in ms
