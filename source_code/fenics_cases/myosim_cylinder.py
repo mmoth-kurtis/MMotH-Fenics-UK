@@ -115,9 +115,11 @@ def fenics(sim_params,file_inputs,output_params,passive_params,hs_params,cell_io
 
     # Need to create a list of dictionaries for parameters for each gauss point
     hs_params_list = [{}]*no_of_int_points
+    passive_params_list = [{}]*no_of_int_points
 
     for jj in np.arange(np.shape(hs_params_list)[0]):
         hs_params_list[jj] = copy.deepcopy(hs_params)
+        passive_params_list[jj] = copy.deepcopy(passive_params)
 
     # Create a simple expression to test if x_coord is > 9.0
     # making last 10% of cylinder spring elements
@@ -274,6 +276,10 @@ def fenics(sim_params,file_inputs,output_params,passive_params,hs_params,cell_io
     n0 = Function(fiberFS)
     f0_diff = Function(fiberFS)
 
+    c_param = Function(Quad)
+    c2_param = Function(Quad)
+    c3_param = Function(Quad)
+
     File(output_path + "fiber1.pvd") << project(f0, VectorFunctionSpace(mesh, "DG", 0))
 
     m_x = 1.0
@@ -292,6 +298,10 @@ def fenics(sim_params,file_inputs,output_params,passive_params,hs_params,cell_io
             f0.vector()[jj*3+1] = 0.0
             f0.vector()[jj*3+2] = 0.0
             hs_params_list[jj]["myofilament_parameters"]["k_3"][0] = 0.0
+            #passive_params_list[jj]["c"][0] = 2000
+            c_param.vector()[jj] = 2000
+            c2_param.vector()[jj] = 250
+            c3_param.vector()[jj] = 10
 
 
         else:
@@ -306,6 +316,9 @@ def fenics(sim_params,file_inputs,output_params,passive_params,hs_params,cell_io
             f0.vector()[jj*3] = r.normal(m_x,temp_width,1)[0]
             f0.vector()[jj*3+1] = r.normal(m_y,temp_width,1)[0]
             f0.vector()[jj*3+2] = r.normal(m_z,temp_width,1)[0]
+            c_param.vector()[jj] = 4000
+            c2_param.vector()[jj] = 500
+            c3_param.vector()[jj] = 20
         """f0.vector()[kk*3] = x_comps[kk]
         # assign y component
         f0.vector()[kk*3+1] = y_comps[kk]
@@ -365,6 +378,9 @@ def fenics(sim_params,file_inputs,output_params,passive_params,hs_params,cell_io
     	 "incompressible": isincomp,
     	 "Kappa":Constant(1e5)}
     params.update(passive_params)
+    params["c"] = c_param
+    params["c2"] = c2_param
+    params["c3"] = c3_param
 
     uflforms = Forms(params)
 
@@ -513,9 +529,11 @@ def fenics(sim_params,file_inputs,output_params,passive_params,hs_params,cell_io
     temp_overlap = np.zeros((no_of_int_points))
     y_vec_array_new = np.zeros(((no_of_int_points)*n_array_length))
     j3_fluxes = np.zeros((no_of_int_points,time_steps))
+    j4_fluxes = np.zeros((no_of_int_points,time_steps))
     #print "shapes of stuff"
     #print np.shape(temp_overlap)
     #print np.shape(y_vec_array_new)
+    temp_astress = np.ones(no_of_int_points)
     t = 0.0
     #delta_hsls = np.zeros((time_steps,24))
     for l in range(time_steps):
@@ -572,6 +590,7 @@ def fenics(sim_params,file_inputs,output_params,passive_params,hs_params,cell_io
             temp_flux_dict, temp_rate_dict = implement.return_rates_fenics(hs)
             #print temp_flux_dict["J3"]
             j3_fluxes[mm,l] = sum(temp_flux_dict["J3"])
+            j4_fluxes[mm,l] = sum(temp_flux_dict["J4"])
     #    print y_vec_array_new[0:53]
         y_vec_array = y_vec_array_new # for Myosim
 
@@ -583,6 +602,20 @@ def fenics(sim_params,file_inputs,output_params,passive_params,hs_params,cell_io
 
     #    print y_vec_array[0:53]
         hsl_array_old = hsl_array
+
+        # trying to implement a work loop
+        if l>0:
+            temp_astress = strarray[l-1,:]
+            temp_astress = temp_astress[temp_astress > 0.0]
+            if np.shape(temp_astress)[0] == 0:
+                temp_astress=0.0
+        if np.average(temp_astress>=50000):
+            Press.P=50000
+            bcs = [bcleft,bcfix_y,bcfix_z,bcfix_y_right,bcfix_z_right]
+        else:
+            Press.P=0.0
+            bcs = [bcleft, bcright,bcfix_y,bcfix_z,bcfix_y_right,bcfix_z_right]
+
 
 
         solve(Ftotal == 0, w, bcs, J = Jac, form_compiler_parameters={"representation":"uflacs"},solver_parameters={"newton_solver":{"relative_tolerance":1e-8},"newton_solver":{"maximum_iterations":50},"newton_solver":{"absolute_tolerance":1e-8}})
@@ -734,6 +767,7 @@ def fenics(sim_params,file_inputs,output_params,passive_params,hs_params,cell_io
     np.save(output_path + "overlap", overlaparray)
     np.save(output_path + "pstress_array",pstrarray)
     np.save(output_path + "j3",j3_fluxes)
+    np.save(output_path + "j4",j4_fluxes)
     #np.save(output_path + "alpha_array",alphaarray)
     np.save(output_path + "calcium",calarray)
     fdataCa.close()
