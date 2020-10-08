@@ -102,6 +102,8 @@ def fenics(sim_params,file_inputs,output_params,passive_params,hs_params,cell_io
 
     Quad = FunctionSpace(mesh, Quadelem)
 
+    shorten_flag = 0 # switches to one if shortening begins
+
 
 
     File('cylinder_3.pvd') << mesh
@@ -203,19 +205,10 @@ def fenics(sim_params,file_inputs,output_params,passive_params,hs_params,cell_io
     VQuadelem._quad_scheme = 'default'
 
 
-    #print no_of_int_points
 
-    #plot(mesh)
-    #plt.show()
-      # Function space for local coordinate system (fiber, sheet, sheet-normal)
+    # now test_marker_fcn has value of 1 on right boundary always
 
 
-
-    #f0.vector().array()[:] = [1.0,0.0,0.0]
-
-    #f0 = Constant((1.0, 0.0, 0.0))
-    #s0 = Constant((0.0, 1.0, 0.0))
-    #n0 = Constant((0.0, 0.0, 1.0))
     # Define spatial coordinate system used in rigid motion constraint
     X = SpatialCoordinate (mesh)
     facetboundaries = MeshFunction('size_t', mesh, mesh.topology().dim()-1)
@@ -235,6 +228,11 @@ def fenics(sim_params,file_inputs,output_params,passive_params,hs_params,cell_io
     fix_y.mark(facetboundaries, 3)
     #horizontal.mark(facetboundaries,4)
     fix_z.mark(facetboundaries,5)
+
+    marker_space = FunctionSpace(mesh,'CG',1)
+    bc_right_test = DirichletBC(marker_space,Constant(1),facetboundaries,2)
+    test_marker_fcn = Function(marker_space)
+    bc_right_test.apply(test_marker_fcn.vector())
 
     File(output_path + "facetboundaries.pvd") << facetboundaries
 
@@ -609,12 +607,28 @@ def fenics(sim_params,file_inputs,output_params,passive_params,hs_params,cell_io
             temp_astress = temp_astress[temp_astress > 0.0]
             if np.shape(temp_astress)[0] == 0:
                 temp_astress=0.0
+        """if l > 2:
+            u_check = project(u,VectorFunctionSpace(mesh,"CG",2))
+            disp_value = u_check.vector()[test_marker_fcn.vector()==1]
+            print "displacement after shortening on right is = " + str(disp_value[0])
+            u_D.u_D=disp_value[0]"""
         if np.average(temp_astress>=50000):
             Press.P=50000
             bcs = [bcleft,bcfix_y,bcfix_z,bcfix_y_right,bcfix_z_right]
+            shorten_flag = 1
         else:
-            Press.P=0.0
-            bcs = [bcleft, bcright,bcfix_y,bcfix_z,bcfix_y_right,bcfix_z_right]
+            if shorten_flag < 0:
+                u_D.u_D = u_D.u_D
+                Press.P=0.0
+
+            if shorten_flag > 0:
+                u_check = project(u,VectorFunctionSpace(mesh,"CG",2))
+                disp_value = u_check.vector()[test_marker_fcn.vector()==1]
+                print "displacement after shortening on right is = " + str(disp_value[0])
+                u_D.u_D=disp_value[0]
+                shorten_flag = -1
+
+            bcs = [bcleft,bcright,bcfix_y,bcfix_z,bcfix_y_right,bcfix_z_right]
 
 
 
