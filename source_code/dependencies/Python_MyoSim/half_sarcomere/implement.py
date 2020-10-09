@@ -3,7 +3,7 @@ import numpy as np
 import pandas as pd
 
 
-def update_simulation(self, time_step, delta_hsl, hsl, y0, pf, cbf, calcium, n_array_length, cell_time,overlap_in,hs_params_new_list,set_data = 0):
+def update_simulation(self, time_step, delta_hsl, hsl, y0, pf, cbf, calcium, n_array_length, cell_time,hs_params_new_list,set_data = 0):
 
     # Need to do some kinetics stuff
 

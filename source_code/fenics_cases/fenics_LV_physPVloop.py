@@ -266,7 +266,7 @@ def fenics(sim_params,file_inputs,output_params,passive_params,hs_params,cell_io
     f.close()
     print f0[0]
     print np.shape(f0.vector().array())
-    
+
     # define rest of needed functions
     # mixed function for solver
     w = Function(W)
@@ -324,7 +324,6 @@ def fenics(sim_params,file_inputs,output_params,passive_params,hs_params,cell_io
     filament_overlap_df = pd.DataFrame(np.zeros((no_of_time_steps+1,no_of_int_points)),dtype='f8')
     delta_hsl_df = pd.DataFrame(np.zeros((no_of_time_steps+1,no_of_int_points)),dtype='f8')"""
 
-    # initialize one big pandas array to store all output data
     calcium = np.zeros(no_of_time_steps)
     calcium_ds = pd.DataFrame(np.zeros(no_of_int_points),index=None)
     calcium_ds = calcium_ds.transpose()

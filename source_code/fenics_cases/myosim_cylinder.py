@@ -17,22 +17,21 @@ import vtk_py
 import mshr
 from numpy import random as r
 import copy
+import pandas as pd
 
 
 def fenics(sim_params,file_inputs,output_params,passive_params,hs_params,cell_ion_params,monodomain_params,windkessel_params):
+
+    # marking these as indices because this is a function called from fenics_driver
     i,j = indices(2)
 
-
+    #------------------## Load in all information and set up simulation --------
     output_path = output_params["output_path"][0]
     displacementfile = File(output_path + "u_disp.pvd")
+    save_output = sim_params["save_output"][0]
 
     filament_compliance_factor = hs_params["myofilament_parameters"]["filament_compliance_factor"][0]
-#    filament_compliance_factor = 0.5
-
     no_of_states = hs_params["myofilament_parameters"]["num_states"][0]
-    #no_of_states = 3
-    #no_of_attached_states = 1
-    #no_of_detached_states = 2
     no_of_attached_states = hs_params["myofilament_parameters"]["num_attached_states"][0]
     no_of_detached_states = no_of_states-no_of_attached_states
     no_of_transitions = hs_params["myofilament_parameters"]["num_transitions"][0]
@@ -46,28 +45,20 @@ def fenics(sim_params,file_inputs,output_params,passive_params,hs_params,cell_io
     x_bin_min = hs_params["myofilament_parameters"]["bin_min"][0]
     x_bin_max = hs_params["myofilament_parameters"]["bin_max"][0]
     x_bin_increment = hs_params["myofilament_parameters"]["bin_width"][0]
-    #no_of_transitions = 4
-    #state_attached = [0, 0, 1]
-    #cb_extensions = [ 0, 0, 4.75642]
-    #k_cb_multiplier = [ 1.0, 1.0, 1.0]
-    #k_cb_pos = 0.001
-    #k_cb_neg = 0.001
-    #cb_number_density = 7.67e16
-    #alpha_value = 1.0
 
-    #x_bin_min = -12
-    #x_bin_max = +12
-    #x_bin_increment = 0.5
+## ---------  Set up information for active force calculation ------------------
+
+    # Create x interval for cross-bridges
     xx = np.arange(x_bin_min, x_bin_max + x_bin_increment, x_bin_increment)
+
+    # Define number of intervals cross-bridges are defined over
     no_of_x_bins = np.shape(xx)[0]
+
+    # Define the length of the populations vector
     n_array_length = no_of_attached_states * no_of_x_bins + no_of_detached_states + 2
     n_vector_indices = [[0,0], [1,1], [2,2+no_of_x_bins-1]]
 
-    #hsl0 = 1000
     hsl0 = hs_params["initial_hs_length"][0]
-    #time_steps = 401
-    #time_steps = 2
-    #step_size = 0.5
     step_size = sim_params["sim_timestep"][0]
     sim_duration = sim_params["sim_duration"][0]
     time_steps = int(sim_duration/step_size +1)
@@ -77,47 +68,57 @@ def fenics(sim_params,file_inputs,output_params,passive_params,hs_params,cell_io
     fdataCa = open(output_path + "calcium_.txt", "w", 0)
     pk1file = File(output_path + "pk1_act_on_f0.pvd")
 
-
+    # holder for reaction force at right end
     fx_rxn = np.zeros((time_steps))
 
+    shorten_flag = 0 # switches to one if shortening begins
+
+    # Define the cylinder
     x = 10.0
     y = 0.0
     z = 0.0
-
     cyl_top = Point(x,y,z)
     cyl_bottom = Point(0,0,0)
     top_radius = 1.0
     bottom_radius = 1.0
     segments = 20
-
     geometry = mshr.Cylinder(cyl_top,cyl_bottom,top_radius,bottom_radius,segments)
+
+    # Create the mesh
     mesh = mshr.generate_mesh(geometry,30)
+
+    # Save the mesh
+    File('cylinder_3.pvd') << mesh
+
     no_of_int_points = 4 * np.shape(mesh.cells())[0]
 
+    # General quadrature element whose points we will evaluate myosim at
     Quadelem = FiniteElement("Quadrature", tetrahedron, degree=2, quad_scheme="default")
     Quadelem._quad_scheme = 'default'
+
+    # Vector element at gauss points (for fibers)
+    VQuadelem = VectorElement("Quadrature", mesh.ufl_cell(), degree=2, quad_scheme="default")
+    VQuadelem._quad_scheme = 'default'
+
     # Real element for rigid body motion boundary condition
     Relem = FiniteElement("Real", mesh.ufl_cell(), 0, quad_scheme="default")
     Relem._quad_scheme = 'default'
 
+    # Quadrature space for information needed at gauss points, such as
+    # hsl, cb_force, passive forces, etc.
     Quad = FunctionSpace(mesh, Quadelem)
 
-    shorten_flag = 0 # switches to one if shortening begins
-
-
-
-    File('cylinder_3.pvd') << mesh
-
-    #prev_ca = np.load("calcium_10.npy")
-    #prev_ca = prev_ca[:,0]
-
-    #xml_struct = ut.parse('pm_test10.xml')
-    #hs_params = xml_struct.single_circulation_simulation.half_sarcomere
+    # Initialize the half-sarcomere class. Its methods will be used to solve for cell populations
     hs = half_sarcomere.half_sarcomere(hs_params,1)
 
     # Need to create a list of dictionaries for parameters for each gauss point
     hs_params_list = [{}]*no_of_int_points
     passive_params_list = [{}]*no_of_int_points
+
+    # Initialize ion class (get calcium transient from here)
+    cell_ion = cell_ion_driver.cell_ion_driver(cell_ion_params)
+    calcium = np.zeros(time_steps)
+    calcium[0] = cell_ion.calculate_concentrations(0,0)
 
     for jj in np.arange(np.shape(hs_params_list)[0]):
         hs_params_list[jj] = copy.deepcopy(hs_params)
@@ -144,18 +145,9 @@ def fenics(sim_params,file_inputs,output_params,passive_params,hs_params,cell_io
     dig_array = dig.vector().get_local()
     point_rad_array = point_rad.vector().get_local()
 
-
-    LVCavityvol = Expression(("vol"), vol=0.0, degree=2)
-
-
-    cell_ion = cell_ion_driver.cell_ion_driver(cell_ion_params)
-    calcium = np.zeros(time_steps)
-    calcium[0] = cell_ion.calculate_concentrations(0,0)
     parameters["form_compiler"]["quadrature_degree"]=2
     parameters["form_compiler"]["representation"] = "quadrature"
-    #
-    #os.system("rm *.pvd")
-    #os.system("rm *.vtu")
+
     # defining parts of the model where the boundary condition should be applied later
     #  where x[0] = 0
     class Left(SubDomain):
@@ -167,17 +159,6 @@ def fenics(sim_params,file_inputs,output_params,passive_params,hs_params,cell_io
         def inside(self, x, on_boundary):
             tol = 1E-14
             return on_boundary and abs(x[0]-10.0) < tol
-    #  where x[2] = 0
-    """class Lower(SubDomain):
-        def inside(self, x, on_boundary):
-            tol = 1E-14
-            return on_boundary and abs(x[2]) < tol
-    #  where x[1] = 0
-    class Front(SubDomain):
-        def inside(self, x, on_boundary):
-            tol = 1E-14
-            return on_boundary and abs(x[1]) < tol"""
-    #  where x[0], x[1] and x[2] = 0
     class Fix_y(SubDomain):
         def inside(self, x, on_boundary):
             tol = 1E-1
@@ -195,14 +176,6 @@ def fenics(sim_params,file_inputs,output_params,passive_params,hs_params,cell_io
             tol = 1E-14
             return (near(x[0],0.0,tol) and near(x[2],0.0,tol))
 
-    #
-    #
-    #mesh = UnitCubeMesh(1,1,1)
-    #mesh.cells()
-
-        # Vector element at gauss points (for fibers)
-    VQuadelem = VectorElement("Quadrature", mesh.ufl_cell(), degree=2, quad_scheme="default")
-    VQuadelem._quad_scheme = 'default'
 
 
 
@@ -243,11 +216,9 @@ def fenics(sim_params,file_inputs,output_params,passive_params,hs_params,cell_io
 
     #
     ###############################################################################
-    #
-    #
     isincomp = True#False
     N = FacetNormal (mesh)
-    #Cparam = Constant(1.0e2)                                                        #??
+    #Cparam = Constant(1.0e2)
 
 
     TF = TensorFunctionSpace(mesh, 'DG', 1)
@@ -456,36 +427,50 @@ def fenics(sim_params,file_inputs,output_params,passive_params,hs_params,cell_io
     Jac = Jac1 + Jac2 - Jac3 #+ Jac4
     ##################################################################################################################################
 
-    # Contraction phase
-    '''header_file = open("./C++/hs.h","r")
-    code = header_file.read()
-    header_file.close()
-
-    ext_module = compile_extension_module(code=code, source_directory="C++", sources=["hs.cpp", "mf.cpp", "Ca.cpp", "base_parameters.cpp"],
-         additional_system_headers=["petscvec.h"],
-         include_dirs=[".", os.path.abspath("C++"),"/usr/include", "./C++"],
-         library_dirs = ['/usr/lib/x86_64-linux-gnu'],
-         libraries = ['libgsl.a'])
-
-    Myosim = ext_module.hs()
-
-    _FE_params = {"step_size": step_size};
-    Myosim.FE_params.update(_FE_params)
-
-    _Ca_params = {"Ca_flag": Ca_flag};
-    Myosim.Ca_params.update(_Ca_params)
-
-    _Ca_params = {"constant_pCa": constant_pCa};
-    Myosim.Ca_params.update(_Ca_params)'''
-
 
     darray = []
-    tarray = []
-    hslarray = np.zeros((time_steps+1,no_of_int_points))
+    """hslarray = np.zeros((time_steps+1,no_of_int_points))
     calarray = []
     strarray = np.zeros((time_steps+1,no_of_int_points))
     pstrarray = np.zeros((time_steps+1,no_of_int_points))
-    overlaparray = np.zeros((time_steps+1,no_of_int_points))
+    overlaparray = np.zeros((time_steps+1,no_of_int_points))"""
+
+    calcium_ds = pd.DataFrame(np.zeros(no_of_int_points),index=None)
+    calcium_ds = calcium_ds.transpose()
+    calcium = np.zeros(time_steps)
+
+    active_stress_ds = pd.DataFrame(np.zeros(no_of_int_points),index=None)
+    active_stress_ds = active_stress_ds.transpose()
+
+    dumped_populations_ds = pd.DataFrame(np.zeros((no_of_int_points,n_array_length)))
+
+    tarray_ds = pd.DataFrame(np.zeros(time_steps+1),index=None)
+    tarray_ds = tarray_ds.transpose()
+    tarray = np.zeros(time_steps)
+
+    p_f_array_ds = pd.DataFrame(np.zeros(no_of_int_points),index=None)
+    p_f_array_ds = p_f_array_ds.transpose()
+
+    pgf_array_ds = pd.DataFrame(np.zeros(no_of_int_points),index=None)
+    pgf_array_ds = pgf_array_ds.transpose()
+
+    pgt_array_ds = pd.DataFrame(np.zeros(no_of_int_points),index=None)
+    pgt_array_ds = pgt_array_ds.transpose()
+
+    pgs_array_ds =pd.DataFrame(np.zeros(no_of_int_points),index=None)
+    pgs_array_ds = pgs_array_ds.transpose()
+
+    temp_overlap_ds = pd.DataFrame(np.zeros(no_of_int_points),index=None)
+    temp_overlap_ds = temp_overlap_ds.transpose()
+
+    alpha_array_ds = pd.DataFrame(np.zeros(no_of_int_points),index=None)
+    alpha_array_ds = alpha_array_ds.transpose()
+
+    hsl_array_ds =pd.DataFrame(np.zeros(no_of_int_points),index=None)
+    hsl_array_ds = hsl_array_ds.transpose()
+
+    delta_hsl_array_ds = pd.DataFrame(np.zeros(no_of_int_points),index=None)
+    delta_hsl_array_ds = delta_hsl_array_ds.transpose()
 
     y_vec_array = y_vec.vector().get_local()[:]
 
@@ -495,12 +480,15 @@ def fenics(sim_params,file_inputs,output_params,passive_params,hs_params,cell_io
     delta_hsl_array = np.zeros(no_of_int_points)
 
     for counter in range(0,n_array_length * no_of_int_points,n_array_length):
-        #y_vec_array[counter] = 1
-        # Starting all in on state for Debugging
         y_vec_array[counter] = 1
         y_vec_array[counter-2] = 1
 
     Pg, Pff, alpha = uflforms.stress()
+
+    # Magnitude of bulk passive stress in fiber direction
+    Pg_fiber = inner(f0,Pg*f0)
+    Pg_transverse = inner(n0,Pg*n0)
+    Pg_shear = inner(n0,Pg*f0)
 
     temp_DG = project(Pff, FunctionSpace(mesh, "DG", 1), form_compiler_parameters={"representation":"uflacs"})
     p_f = interpolate(temp_DG, Quad)
@@ -510,16 +498,9 @@ def fenics(sim_params,file_inputs,output_params,passive_params,hs_params,cell_io
     alphas = interpolate(temp_DG_1, Quad)
     alpha_array = alphas.vector().get_local()[:]
 
-    '''P,S,T = uflforms.stress()
-    Pff =  inner(f0,P*f0)
-    p_f = project(Pff, Quad)
-    p_f_array = p_f.vector().get_local()[:]'''
-
-    #p_f = np.load("/home/fenics/shared/python_dev/test_10/passive_forces.npy")
-
     cb_f_array = project(cb_force, Quad).vector().get_local()[:]
 
-    dumped_populations = np.zeros((time_steps, no_of_int_points, n_array_length))
+    dumped_populations = np.zeros((no_of_int_points, n_array_length))
     y_interp = np.zeros((no_of_int_points+1)*n_array_length)
 
     x_dofs = W.sub(0).sub(0).dofmap().dofs()
@@ -538,27 +519,11 @@ def fenics(sim_params,file_inputs,output_params,passive_params,hs_params,cell_io
 
 
 
-        tarray.append(t)
-        for  m in range(no_of_int_points):
-
-            for k in range(n_array_length):
-
-                dumped_populations[l, m, k] = y_interp[m * n_array_length + k]
-
-        #hslarray.append(hsl_array[0])
-        #strarray.append(cb_f_array[0])
-        #pstrarray.append(p_f_array[0])
-
-    #    _Ca_params = {"time_point": l};
-    #    Myosim.Ca_params.update(_Ca_params)
+        tarray[l]=(t)
 
 
-        #print p_f[l]
 
-        #for k in range(no_of_int_points):
-        #    pop_holder = implement.update_simulation(hs, step_size, delta_hsl_array[k], hsl_array[k], y_vec_array[k*n_array_length:(k+1)*n_array_length],p_f_array[k], cb_f_array[k], prev_ca[l])
-    #    y_vec_array_new = Myosim.apply_time_step(y_vec_array, delta_hsl_array, hsl_array, p_f_array, cb_f_array)
-        #y_vec_array_new[k*n_array_length:(k+1)*n_array_length] = pop_holder
+
 
         # Right now, not general. The calcium depends on cycle number, just saying 0
         cycle = 0
@@ -568,8 +533,7 @@ def fenics(sim_params,file_inputs,output_params,passive_params,hs_params,cell_io
         #calcium[l] = cell_ion.model.calculate_concentrations(0,t)
 
         # Looping through integration points within Python Myosim, not here
-        # Debugging, checking if y_input matches y_output between steps
-        #print y_vec_array[0:53]
+
         # Quick hack
         if l == 0:
             overlap_counter = 1
@@ -584,13 +548,19 @@ def fenics(sim_params,file_inputs,output_params,passive_params,hs_params,cell_io
         #print "y_vec_new " + str(y_vec_array_new)
         for mm in np.arange(no_of_int_points):
             #print hsl_array[mm]
-            temp_overlap[mm], y_interp[mm*n_array_length:(mm+1)*n_array_length], y_vec_array_new[mm*n_array_length:(mm+1)*n_array_length] = implement.update_simulation(hs, step_size, delta_hsl_array[mm], hsl_array[mm], y_vec_array[mm*n_array_length:(mm+1)*n_array_length], p_f_array[mm], cb_f_array[mm], calcium[l], n_array_length, t,overlaparray[overlap_counter,mm],hs_params_list[mm])
+            temp_overlap[mm], y_interp[mm*n_array_length:(mm+1)*n_array_length], y_vec_array_new[mm*n_array_length:(mm+1)*n_array_length] = implement.update_simulation(hs, step_size, delta_hsl_array[mm], hsl_array[mm], y_vec_array[mm*n_array_length:(mm+1)*n_array_length], p_f_array[mm], cb_f_array[mm], calcium[l], n_array_length, t,hs_params_list[mm])
             temp_flux_dict, temp_rate_dict = implement.return_rates_fenics(hs)
             #print temp_flux_dict["J3"]
             j3_fluxes[mm,l] = sum(temp_flux_dict["J3"])
             j4_fluxes[mm,l] = sum(temp_flux_dict["J4"])
     #    print y_vec_array_new[0:53]
         y_vec_array = y_vec_array_new # for Myosim
+
+        for  m in range(no_of_int_points):
+
+            for k in range(n_array_length):
+
+                dumped_populations[m, k] = y_interp[m * n_array_length + k]
 
 
         #print "shapes of stuff"
@@ -603,7 +573,7 @@ def fenics(sim_params,file_inputs,output_params,passive_params,hs_params,cell_io
 
         # trying to implement a work loop
         if l>0:
-            temp_astress = strarray[l-1,:]
+            temp_astress = cb_f_array[:]
             temp_astress = temp_astress[temp_astress > 0.0]
             if np.shape(temp_astress)[0] == 0:
                 temp_astress=0.0
@@ -634,14 +604,14 @@ def fenics(sim_params,file_inputs,output_params,passive_params,hs_params,cell_io
 
         solve(Ftotal == 0, w, bcs, J = Jac, form_compiler_parameters={"representation":"uflacs"},solver_parameters={"newton_solver":{"relative_tolerance":1e-8},"newton_solver":{"maximum_iterations":50},"newton_solver":{"absolute_tolerance":1e-8}})
 
-        np.save(output_path +"dumped_populations", dumped_populations)
+        """np.save(output_path +"dumped_populations", dumped_populations)
         np.save(output_path + "tarray", tarray)
         np.save(output_path + "stress_array", strarray)
         np.save(output_path + "hsl", hslarray)
         np.save(output_path + "overlap", overlaparray)
         np.save(output_path + "pstress_array",pstrarray)
         #np.save(output_path + "alpha_array",alphaarray)
-        np.save(output_path + "calcium",calarray)
+        np.save(output_path + "calcium",calarray)"""
 
         displacementfile << w.sub(0)
         pk1temp = project(inner(f0,Pactive*f0),FunctionSpace(mesh,'DG',0))
@@ -659,13 +629,27 @@ def fenics(sim_params,file_inputs,output_params,passive_params,hs_params,cell_io
         p_f = interpolate(temp_DG, Quad)
         p_f_array = p_f.vector().get_local()[:]
 
+        for ii in range(np.shape(hsl_array)[0]):
+            if p_f_array[ii] < 0.0:
+                p_f_array[ii] = 0.0
+
+        temp_DG_2 = project(Pg_fiber, FunctionSpace(mesh, "DG", 1), form_compiler_parameters={"representation":"uflacs"})
+        pgf = interpolate(temp_DG_2, Quad)
+        pgf_array = pgf.vector().get_local()[:]
+        temp_DG_3 = project(Pg_transverse, FunctionSpace(mesh, "DG", 1), form_compiler_parameters={"representation":"uflacs"})
+        pgt = interpolate(temp_DG_3, Quad)
+        pgt_array = pgt.vector().get_local()[:]
+        temp_DG_4 = project(Pg_shear, FunctionSpace(mesh, "DG", 1), form_compiler_parameters={"representation":"uflacs"})
+        pgs = interpolate(temp_DG_4, Quad)
+        pgs_array = pgs.vector().get_local()[:]
+
         cb_f_array = project(cb_force, Quad).vector().get_local()[:]
         #strarray.append(cb_f_array[0])
-        strarray[l,:] = cb_f_array[:]
-        pstrarray[l,:] = p_f_array[:]
+        #strarray[l,:] = cb_f_array[:]
+        #pstrarray[l,:] = p_f_array[:]
         #hslarray.append(hsl_array[0]+delta_hsl_array[0])
-        hslarray[l,:] = hsl_array[:] + delta_hsl_array[:]
-        overlaparray[l,:] = temp_overlap
+        #hslarray[l,:] = hsl_array[:] + delta_hsl_array[:]
+        #overlaparray[l,:] = temp_overlap
 
         # Calculate reaction force at right end
         b = assemble(Ftotal,form_compiler_parameters={"representation":"uflacs"})
@@ -715,11 +699,51 @@ def fenics(sim_params,file_inputs,output_params,passive_params,hs_params,cell_io
             u_D.u_D = u_D.u_D"""
         t = t + step_size
 
-        calarray.append(hs.Ca_conc*np.ones(no_of_int_points))
+        #calarray.append(hs.Ca_conc*np.ones(no_of_int_points))
+        #calcium[] = hs.Ca_conc*
+        if save_output:
+
+            active_stress_ds.iloc[0,:] = cb_f_array[:]
+            active_stress_ds.to_csv(output_path + 'active_stress.csv',mode='a',header=False)
+
+            #active_stress_ds = active_stress_ds.transpose()
+            hsl_array_ds.iloc[0,:] = hsl_array[:]
+            hsl_array_ds.to_csv(output_path + 'half_sarcomere_lengths.csv',mode='a',header=False)
+
+            calcium_ds.iloc[0,:] = calcium[l]
+            calcium_ds.to_csv(output_path + 'calcium.csv',mode='a',header=False)
+
+            for i in range(no_of_int_points):
+                dumped_populations_ds.iloc[i,:] = dumped_populations[i,:]
+            dumped_populations_ds.to_csv(output_path + 'populations.csv',mode='a',header=False)
+
+            tarray_ds[l] = tarray[l]
+            tarray_ds.to_csv(output_path + 'time.csv',mode='a',header=False)
+
+            p_f_array_ds.iloc[0,:] = p_f_array[:]
+            p_f_array_ds.to_csv(output_path + 'myofiber_passive.csv',mode='a',header=False)
+
+            pgf_array_ds.iloc[0,:] = pgf_array[:]
+            pgf_array_ds.to_csv(output_path + 'gucc_fiber_pstress.csv',mode='a',header=False)
+
+            pgt_array_ds.iloc[0,:] = pgt_array[:]
+            pgt_array_ds.to_csv(output_path + 'gucc_trans_pstress.csv',mode='a',header=False)
+
+            pgs_array_ds.iloc[0,:] = pgs_array[:]
+            pgs_array_ds.to_csv(output_path + 'gucc_shear_pstress.csv',mode='a',header=False)
+
+            temp_overlap_ds.iloc[0,:] = temp_overlap[:]
+            temp_overlap_ds.to_csv(output_path + 'overlap.csv',mode='a',header=False)
+
+            alpha_array_ds.iloc[0,:] = alpha_array[:]
+            alpha_array_ds.to_csv(output_path + 'alpha.csv',mode='a',header=False)
+
+            delta_hsl_array_ds.iloc[0,:] = delta_hsl_array[:]
+            delta_hsl_array_ds.to_csv(output_path + 'delta_hsl.csv',mode='a',header=False)
 
         # Update Fiber orientation
         #f0 = f0+step_size*(Cmat*f0-f0)/sqrt(inner(Cmat*f0-f0,Cmat*f0-f0))
-        target_vec = Cmat*f0
+        #target_vec = Cmat*f0
         #print target_vec.type()
         #target_diff = target_vec - f0
         #target_diff = target_diff/sqrt(inner(target_diff,target_diff))
@@ -770,11 +794,11 @@ def fenics(sim_params,file_inputs,output_params,passive_params,hs_params,cell_io
     "alphaarray": darray,
     "calarray": calarray,
     "hsl": hslarray,
-    "overlap": overlaparray
+    #"overlap": overlaparray
 
     }
 
-    np.save(output_path +"dumped_populations", dumped_populations)
+    """np.save(output_path +"dumped_populations", dumped_populations)
     np.save(output_path + "tarray", tarray)
     np.save(output_path + "stress_array", strarray)
     np.save(output_path + "hsl", hslarray)
@@ -783,7 +807,7 @@ def fenics(sim_params,file_inputs,output_params,passive_params,hs_params,cell_io
     np.save(output_path + "j3",j3_fluxes)
     np.save(output_path + "j4",j4_fluxes)
     #np.save(output_path + "alpha_array",alphaarray)
-    np.save(output_path + "calcium",calarray)
+    np.save(output_path + "calcium",calarray)"""
     fdataCa.close()
 
     return(outputs)
