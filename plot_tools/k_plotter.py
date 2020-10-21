@@ -14,34 +14,28 @@ from matplotlib.animation import FuncAnimation
 import time
 plt.style.use('seaborn-pastel')
 
-#(Commented out by Kurtis 10/9/2019, not sure what this does or if needed)
-"""
-no_of_time_steps = 701
-n_array_length = 52
-
-no_of_time_steps = 7408
-n_array_length = 45
-Commented out by Kurtis 10/9/2019, hope to get this info from loaded arrays"""
-
 
 sim_dir = os.getcwd()
 
 # For now, hard coding bin discretization information
-xmin = -12
-xmax = 12
-bin_width = 0.5
+xmin = -10
+xmax = 10
+bin_width = 1.0
 cb_domain = np.arange(xmin,xmax+bin_width,bin_width)
 num_bins = np.shape(cb_domain)
 
-
-# Assuming the dumped npy files from FEniCS always take these names
-# Note, these arrays include info for every Gauss point
-fenics_pop_file = np.load(sim_dir + '/dumped_populations.npy')
-tarray0 = np.load(sim_dir + '/tarray.npy')
-step_size = tarray0[2]-tarray0[1]
-new_value = tarray0[len(tarray0)-1] + step_size
-tarray = np.append(tarray0,new_value)
-stress_array = np.load(sim_dir + '/stress_array.npy')
+# overlap is saved last, so will use shape to determine data range
+overlap = np.loadtxt(sim_dir + '/overlap.csv', delimiter=',')
+#tarray = np.loadtxt(sim_dir+'/time.csv', delimiter=',')
+tarray = np.linspace(0,100,200)
+calcium = np.loadtxt(sim_dir + '/calcium.csv', delimiter=',')
+HSL = np.loadtxt(sim_dir + '/half_sarcomere_lengths.csv', delimiter=',')
+stress_array = np.loadtxt(sim_dir + '/active_stress.csv', delimiter=',')
+fenics_pop_data = np.loadtxt(sim_dir + '/populations.csv', delimiter=',')
+pstress = np.loadtxt(sim_dir + '/myofiber_passive.csv', delimiter=',')
+gucc_fiber = np.loadtxt(sim_dir + '/gucc_fiber_pstress.csv', delimiter=',')
+gucc_trans = np.loadtxt(sim_dir + '/gucc_trans_pstress.csv', delimiter=',')
+gucc_shear = np.loadtxt(sim_dir + '/gucc_shear_pstress.csv', delimiter=',')
 
 if stress_array.ndim > 1:
     # single cell sims only save for one gauss point, dimension is one less than
@@ -49,29 +43,18 @@ if stress_array.ndim > 1:
     single_cell_sim_flag = 0
 else:
     single_cell_sim_flag = 1
-#stress_array = np.load(sim_dir + '/strarray.npy')
 
-calcium = np.load(sim_dir + '/calcium.npy')
-#calcium = calcium[:,0]
-HSL = np.load(sim_dir + '/hsl.npy')
-#HSL = np.load(sim_dir + '/hslarray.npy')
-"""pstress = np.load(sim_dir + '/pstress_array.npy')"""
-"""if single_cell_sim_flag == 0:
-    gucc_fiber = np.load(sim_dir + '/gucc_fiber.npy')
-    gucc_trans = np.load(sim_dir + '/gucc_trans.npy')
-    gucc_shear = np.load(sim_dir + '/gucc_shear.npy')"""
-overlap = np.load(sim_dir + '/overlap.npy')
 # Define number of time steps and array length here
-sim_info = fenics_pop_file.shape
-num_timesteps = sim_info[0]
-num_int_points = sim_info[1]
-array_length = sim_info[2]
+sim_info = fenics_pop_data.shape
+num_timesteps = np.shape(tarray)[0]
+num_int_points = sim_info[0]/num_timesteps
+array_length = sim_info[1]
 #print sys.argv[0]
 #print sys.argv[1]
 gauss_point = int(sys.argv[1])
 
 #gauss_point = 1000
-data_range = np.shape(tarray)[0]-2
+data_range = np.shape(overlap)[0]-1
 #data_range = 400
 #data_range = 50
 # Look at how info is dumped from FEniCS. For now, hard code number of detached and attached states, and bins
@@ -82,92 +65,45 @@ data_range = np.shape(tarray)[0]-2
 #bin_min
 #bin_max
 
-fenics_pop_data = np.zeros((num_timesteps,array_length))
+#fenics_pop_data = np.zeros((num_timesteps,array_length))
+M_OFF = np.zeros(num_timesteps)
+M_ON =  np.zeros(num_timesteps)
+M_BOUND =  np.zeros(num_timesteps)
+N_ON =  np.zeros(num_timesteps)
 for i in range(data_range):
 
     # Reading in information from just one Gauss point [i = timestep, 0 = gauss point, : is all pop info]
-    fenics_pop_data[i,0] = fenics_pop_file[i,gauss_point,0] # state 1 pops
-    fenics_pop_data[i,1] = fenics_pop_file[i,gauss_point,1] # state 2 pops
-    fenics_pop_data[i,2] = np.sum(fenics_pop_file[i,gauss_point,2:array_length-3]) # state 3
-    fenics_pop_data[i,3] = fenics_pop_file[i,0,array_length-1]
-    fenics_pop_data[i,4:] = fenics_pop_file[i,0,4:array_length]
-
-"""fenics_rates_file = sim_dir + '/rates.npy'
-
-if lang_flag=='python':
-    rates = np.load(fenics_rates_file, allow_pickle=True)
-    r1 = rates.item().get('R1')
-    r2 = rates.item().get('R2')
-    r3 = rates.item().get('R3')
-    r4 = rates.item().get('R4')
-fenics_rates = np.zeros((array_length-3,5))
-#fenics_rates[:,0:5] = np.loadtxt(fenics_rates_file, skiprows = 1, usecols = (0,1,2,3,4))
-if lang_flag=='c++':
-    fenics_rates[:,0:5] = np.load(fenics_rates_file)
-#get_ipython().run_line_magic('matplotlib', 'qt')
-#get_ipython().run_line_magic('matplotlib', 'inline')"""
+    M_OFF[i] = fenics_pop_data[i*num_int_points+gauss_point,0]
+    M_ON[i] = fenics_pop_data[i*num_int_points+gauss_point,1]
+    M_BOUND[i] = np.sum(fenics_pop_data[i*num_int_points+gauss_point,2:array_length-3])
+    N_ON[i] = fenics_pop_data[i*num_int_points+gauss_point,array_length-1]
 
 fig = plt.figure()
-#------------------------------------------------------------------------------
-plt.subplot(422)
-#Added -1 so it plots fenics_pop_data[:-1,#] instead of entire array. Time array is one short for some reason
-state_1_pops_fenics, = plt.plot(tarray[0:data_range], fenics_pop_data[0:data_range,0],label='SRX')
-state_2_pops_fenics, = plt.plot(tarray[0:data_range], fenics_pop_data[0:data_range,1],label='Detached')
-state_3_pops_fenics, = plt.plot(tarray[0:data_range], fenics_pop_data[0:data_range,2],label='M Bound')
-
-"""plt.scatter(tarray[::10], myosim_pop_data[::10,0], color = 'k')
-plt.scatter(tarray[::10], myosim_pop_data[::10,1], color = 'b')
-plt.scatter(tarray[::10], myosim_pop_data[::10,2], color = 'r')"""
-
-plt.legend((state_1_pops_fenics, state_2_pops_fenics, state_3_pops_fenics), ('OFF', 'ON', 'FG'))
-plt.title("Myosin Populations")
-plt.xlabel('time (ms)')
-plt.ylabel("Proportions")
-
-
-#------------------------------------------------------------------------------
-plt.subplot(424)
-#state_3_pops_fenics, = plt.plot(tarray, np.sum(fenics_pop_data[0:data_range,2:array_length-2]), 'r')
-state_3_pops_fenics, = plt.plot(tarray[0:data_range], fenics_pop_data[0:data_range,2])
-binding_sites, = plt.plot(tarray[0:data_range], fenics_pop_file[0:data_range,gauss_point,array_length-1])
-
-#plt.scatter(tarray, myosim_pop_data[:,2], color = 'r')
-#plt.scatter(tarray[::10], myosim_pop_data[::10,2], color = 'r')
-
-plt.legend((binding_sites,state_3_pops_fenics), ('Binding sites','Xbridges'))
-plt.xlabel('time (ms)')
-plt.ylabel("Proportions")
-#------------------------------------------------------------------------------
-ax3 = plt.subplot(426)
-if single_cell_sim_flag > 0:
-    plt.plot(tarray[0:data_range],stress_array[0:data_range])
-else:
-    plt.plot(tarray[0:data_range], stress_array[0:data_range,:])
-#plt.plot(tarray, stress_array[0:data_range])
-#plt.scatter(myosim_summary_data[:,0], myosim_summary_data[:,1],color='r')
-#plt.scatter(myosim_summary_data[::10,0], myosim_summary_data[::10,1],color='r')
-plt.xlabel('time (ms)')
-plt.ylabel("Stress (Pa)")
-
-#------------------------------------------------------------------------------
-plt.subplot(428)
-plt.plot(tarray[0:data_range], calcium[0:data_range,0])
-#plt.scatter(myosim_summary_data[:,0], myosim_summary_data[:,1],color='r')
-plt.xlabel('time (ms)')
-plt.ylabel("Calcium [M]")
 #------------------------------------------------------------------------------
 ax2 = plt.subplot(421)
 if single_cell_sim_flag > 0:
     plt.plot(tarray[0:data_range],HSL[0:data_range])
 else:
     plt.plot(tarray[0:data_range], HSL[0:data_range,:])
-#plt.plot(tarray, HSL[0:data_range])
-#plt.scatter(myosim_summary_data[:,0], myosim_summary_data[:,1],color='r')
+
 plt.xlabel('time [ms]')
 plt.ylabel("hsl (nm)")
+#------------------------------------------------------------------------------
+
+plt.subplot(422)
+print np.shape(tarray)
+print np.shape(M_OFF)
+state_1_pops_fenics, = plt.plot(tarray[0:data_range], M_OFF[0:data_range],label='SRX')
+state_2_pops_fenics, = plt.plot(tarray[0:data_range], M_ON[0:data_range],label='Detached')
+state_3_pops_fenics, = plt.plot(tarray[0:data_range], M_BOUND[0:data_range],label='M Bound')
+
+plt.legend((M_OFF,M_ON,M_BOUND), ('OFF', 'ON', 'FG'))
+plt.title("Myosin Populations")
+plt.xlabel('time (ms)')
+plt.ylabel("Proportions")
 
 #---------------------------------------------------------------------------------
-"""plt.subplot(423)
+plt.subplot(423)
 if single_cell_sim_flag > 0:
     fiber_pstress, = plt.plot(tarray[0:data_range], pstress[0:data_range])
 else:
@@ -178,43 +114,38 @@ else:
     plt.legend((fiber_pstress, gfiber, gtrans, gshear), ('fiber', 'G_fiber', 'G_trans', 'G_shear'))
 
 #plt.plot(tarray, pstress[0:data_range])
-plt.ylabel('Passive Stress (Pa)')"""
+plt.ylabel('Passive Stress (Pa)')
+#------------------------------------------------------------------------------
+plt.subplot(424)
+#state_3_pops_fenics, = plt.plot(tarray, np.sum(fenics_pop_data[0:data_range,2:array_length-2]), 'r')
+state_3_pops_fenics, = plt.plot(tarray[0:data_range], M_BOUND[0:data_range])
+binding_sites, = plt.plot(tarray[0:data_range], N_ON[0:data_range])
+
+
+plt.legend((binding_sites,state_3_pops_fenics), ('Binding sites','Xbridges'))
+plt.xlabel('time (ms)')
+plt.ylabel("Proportions")
 #------------------------------------------------------------------------------
 plt.subplot(425)
 plt.plot(tarray[0:data_range], overlap[0:data_range,gauss_point])
 plt.ylabel('Overlap')
-#plt.subplot(423)
-#plt.scatter(myosim_rates[:,0], myosim_rates[:,1],color='k')
-"""if lang_flag=='python':
-    rate3 = np.zeros(num_bins)
-    rate4 = np.zeros(num_bins)
-    # Right now, getting these fluxes at last time point
-    # J1, J2 are single values, not worth plotting
-    # Going to try to divide by populations to get rates instead of fluxes
-    #for l in range(num_bins[0]):
-#        rate3[l] = j3[l]/(fenics_pop_data[l,1]*(fenics_pop_file[l,gauss_point,array_length-1]-fenics_pop_file[-1,gauss_point,2+l])*bin_width)
-#        rate4[l] = j4[l]/fenics_pop_data[l,2]
-    plt.subplot(423)
-    flux1, = plt.plot(0,r1,'o')
-    flux2, = plt.plot(0,r2,'o')
-    plt.subplot(425)
-    flux3, = plt.plot(cb_domain,r3)
-    flux4, = plt.plot(cb_domain,r4)
+#------------------------------------------------------------------------------
+ax3 = plt.subplot(426)
+if single_cell_sim_flag > 0:
+    plt.plot(tarray[0:data_range],stress_array[0:data_range])
 else:
-    plt.subplot(423)
-    rate1, = plt.plot(fenics_rates[:,0], fenics_rates[:,1])
-    #plt.scatter(myosim_rates[:,0], myosim_rates[:,2],color='r')
-    rate2, = plt.plot(fenics_rates[:,0], fenics_rates[:,2])
-    plt.legend((rate1, rate2), ('Rate 1', 'Rate 2'))
+    plt.plot(tarray[0:data_range], stress_array[0:data_range,gauss_point])
 
-    #------------------------------------------------------------------------------
-    plt.subplot(425)
-    #plt.scatter(myosim_rates[:,0], myosim_rates[:,3],color='g')
-    rate3, = plt.plot(fenics_rates[:,0], fenics_rates[:,3])
-    #plt.scatter(myosim_rates[:,0], myosim_rates[:,4],color='b')
-    rate4, = plt.plot(fenics_rates[:,0], fenics_rates[:,4])
-    plt.legend((rate3, rate4), ('Attach', 'Detach'))
-"""
+plt.xlabel('time (ms)')
+plt.ylabel("Stress (Pa)")
+
+#------------------------------------------------------------------------------
+plt.subplot(428)
+plt.plot(tarray[0:data_range], calcium[0:data_range,0])
+#plt.scatter(myosim_summary_data[:,0], myosim_summary_data[:,1],color='r')
+plt.xlabel('time (ms)')
+plt.ylabel("Calcium [M]")
+
 #------------------------------------------------------------------------------
 # Animate cross-bridges during simulation
 max_nbound = np.max(fenics_pop_data[:,2])
@@ -236,7 +167,8 @@ t, m, m2 = [], [], []
 y = np.zeros(np.shape(cb_domain))
 def animate(i):
     # array_length -1 for cpp, -2 for python
-    y = fenics_pop_file[i,gauss_point,2:array_length-2]
+    #y = fenics_pop_file[i,gauss_point,2:array_length-2]
+    y = fenics_pop_data[i*num_int_points+gauss_point,2:array_length-2]
     if single_cell_sim_flag > 0:
         m.append(HSL[i])
         m2.append(stress_array[i])

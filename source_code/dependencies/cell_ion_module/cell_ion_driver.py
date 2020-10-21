@@ -34,8 +34,8 @@ class cell_ion_driver():
             self.k_leak = float(self.model_params["k_leak"][0])
             self.k_act = float(self.model_params["k_act"][0])
             self.k_serca = float(self.model_params["k_serca"][0])
-            self.activation = np.zeros(601)
-            self.activation[20:26]=1.0
+            self.activation = np.zeros(201)
+            self.activation[30:46]=1.0
             #for jj in np.arange(30):
             #    self.activation[400+(12*jj+6):400+(12*jj+11)] = 1.0
 

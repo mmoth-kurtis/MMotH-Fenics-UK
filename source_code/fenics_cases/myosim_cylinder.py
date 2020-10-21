@@ -45,6 +45,7 @@ def fenics(sim_params,file_inputs,output_params,passive_params,hs_params,cell_io
     x_bin_min = hs_params["myofilament_parameters"]["bin_min"][0]
     x_bin_max = hs_params["myofilament_parameters"]["bin_max"][0]
     x_bin_increment = hs_params["myofilament_parameters"]["bin_width"][0]
+    work_loop = sim_params["work_loop"][0]
 
 ## ---------  Set up information for active force calculation ------------------
 
@@ -254,7 +255,7 @@ def fenics(sim_params,file_inputs,output_params,passive_params,hs_params,cell_io
     m_x = 1.0
     m_y = 0.0
     m_z = 0.0
-    width = 0.0
+    width = sim_params["width"][0]
     #x_comps = r.normal(m_x,width,no_of_int_points)
     #y_comps = r.normal(m_y,width,no_of_int_points)
     #z_comps = r.normal(m_z,width,no_of_int_points)
@@ -572,33 +573,36 @@ def fenics(sim_params,file_inputs,output_params,passive_params,hs_params,cell_io
         hsl_array_old = hsl_array
 
         # trying to implement a work loop
-        if l>0:
-            temp_astress = cb_f_array[:]
-            temp_astress = temp_astress[temp_astress > 0.0]
-            if np.shape(temp_astress)[0] == 0:
-                temp_astress=0.0
-        """if l > 2:
-            u_check = project(u,VectorFunctionSpace(mesh,"CG",2))
-            disp_value = u_check.vector()[test_marker_fcn.vector()==1]
-            print "displacement after shortening on right is = " + str(disp_value[0])
-            u_D.u_D=disp_value[0]"""
-        if np.average(temp_astress>=50000):
-            Press.P=50000
-            bcs = [bcleft,bcfix_y,bcfix_z,bcfix_y_right,bcfix_z_right]
-            shorten_flag = 1
-        else:
-            if shorten_flag < 0:
-                u_D.u_D = u_D.u_D
-                Press.P=0.0
 
-            if shorten_flag > 0:
+        if work_loop:
+
+            if l>0:
+                temp_astress = cb_f_array[:]
+                temp_astress = temp_astress[temp_astress > 0.0]
+                if np.shape(temp_astress)[0] == 0:
+                    temp_astress=0.0
+            """if l > 2:
                 u_check = project(u,VectorFunctionSpace(mesh,"CG",2))
                 disp_value = u_check.vector()[test_marker_fcn.vector()==1]
                 print "displacement after shortening on right is = " + str(disp_value[0])
-                u_D.u_D=disp_value[0]
-                shorten_flag = -1
+                u_D.u_D=disp_value[0]"""
+            if np.average(temp_astress>=50000):
+                Press.P=50000
+                bcs = [bcleft,bcfix_y,bcfix_z,bcfix_y_right,bcfix_z_right]
+                shorten_flag = 1
+            else:
+                if shorten_flag < 0:
+                    u_D.u_D = u_D.u_D
+                    Press.P=0.0
 
-            bcs = [bcleft,bcright,bcfix_y,bcfix_z,bcfix_y_right,bcfix_z_right]
+                if shorten_flag > 0:
+                    u_check = project(u,VectorFunctionSpace(mesh,"CG",2))
+                    disp_value = u_check.vector()[test_marker_fcn.vector()==1]
+                    print "displacement after shortening on right is = " + str(disp_value[0])
+                    u_D.u_D=disp_value[0]
+                    shorten_flag = -1
+
+                bcs = [bcleft,bcright,bcfix_y,bcfix_z,bcfix_y_right,bcfix_z_right]
 
 
 
