@@ -297,6 +297,10 @@ def fenics(sim_params,file_inputs,output_params,passive_params,hs_params,cell_io
 
     f0 = f0/sqrt(inner(f0,f0))
 
+    #f0_norm = project(sqrt(inner(f0,f0)),FunctionSpace(mesh,"CG",1))
+    #print "norm is " + str(f0_norm.vector().array())
+    #stop
+
     f0_diff = f0 - Constant((1.,0.,0.))
 
     #s0 = f0 + f0_diff # sum object
