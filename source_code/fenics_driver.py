@@ -96,7 +96,7 @@ def sim_driver(input_file_name):
             #json.dump(opt_history, fp2, indent=2, separators=(',', ': '))
 
     else:
-        output_data = script_name.fenics(sim_params,file_inputs,output_params,passive_params,hs_params,cell_ion_params,monodomain_params,windkessel_params)
+        output_data = script_name.fenics(sim_params,file_inputs,output_params,passive_params,hs_params,cell_ion_params,monodomain_params,windkessel_params,0)
 
     # Save the appropriate output information
     """output_data['calcium'][0].to_csv(output_path + 'gauss_calcium.csv')
@@ -110,7 +110,7 @@ def sim_driver(input_file_name):
     output_data['delta_hsl'][0].to_csv(output_path + 'gauss_deltahsl.csv')"""
 
     # Right now, single cell outputs dictionary
-    
+
 
 # Execute script if input file is given
 if np.shape(sys.argv) > 0:

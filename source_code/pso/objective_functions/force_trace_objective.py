@@ -20,13 +20,20 @@ class singlecell_force_trace():
     def __init__(self):
 
         # Load in target force trace here
-        f_trace = np.load('stress_array.npy')
+        """f_trace = np.load('stress_array.npy')
         f_time = np.load('tarray.npy')
         self.f_time = f_time
-        self.ftrace = f_trace
+        self.ftrace = f_trace"""
 
-        #Create interpolation function to qinterpolate experimental data to simulation time points
-        self.f = interp.interp1d(self.f_time,self.ftrace)
+        # hard coding
+        self.f_time = np.linspace(0,1000,2000)
+        self.f_trace = np.zeros(2000)
+        self.f_trace[45] = 23500
+        self.f_trace[195] = 47000
+        self.f_trace[773] = 23500
+
+        #Create interpolation function to interpolate experimental data to simulation time points
+        self.f = interp.interp1d(self.f_time,self.f_trace)
 
 
     def evaluate(self,output_dir,iter,p_num):
@@ -50,7 +57,12 @@ class singlecell_force_trace():
         interpolated_ftrace = self.f(particle_time)
 
         # Look at differences in experimental pressure and simulation predicted pressure
-        particle_error_array = np.power(interpolated_ftrace-particle_active_stress,2*np.ones(len(particle_time)))
+        #particle_error_array = np.power(interpolated_ftrace-particle_active_stress[:,0],2*np.ones(len(particle_time)))
+        #particle_error = np.sum(particle_error_array)
+        particle_error_array = np.zeros(3)
+        particle_error_array[0] = np.power(interpolated_ftrace[45]-particle_active_stress[45,0],2)
+        particle_error_array[1] = np.power(interpolated_ftrace[195]-particle_active_stress[195,0],2)
+        particle_error_array[2] = np.power(interpolated_ftrace[773]-particle_active_stress[773,0],2)
         particle_error = np.sum(particle_error_array)
 
         print "particle " + str(p_num) + " error is " + str(particle_error)

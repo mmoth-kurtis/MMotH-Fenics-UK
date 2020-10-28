@@ -264,8 +264,8 @@ def fenics(sim_params,file_inputs,output_params,passive_params,hs_params,cell_io
 
     # finished with the mesh file, close it
     f.close()
-    print f0[0]
-    print np.shape(f0.vector().array())
+    #print f0[0]
+    #print np.shape(f0.vector().array())
 
     # define rest of needed functions
     # mixed function for solver

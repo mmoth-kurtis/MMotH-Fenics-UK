@@ -52,6 +52,7 @@ def particle_swarm_optimization(pso_params,sim_params,file_inputs,output_params,
 
 
     num_particles = pos_gen.refinement**pos_gen.num_vars
+    print "number of particles = " + str(num_particles)
     # Initialize swarm
     swarm = []
     #initialized_vars_dict= []
@@ -118,7 +119,7 @@ def particle_swarm_optimization(pso_params,sim_params,file_inputs,output_params,
             #particle_errors[iter,j] = swarm[j].current_error
 
             # Run particle simulation
-            particle_output = swarm[j].run_simulation(fenics_script,iter,j,base_output_dir)
+            particle_output = swarm[j].run_simulation(fenics_script,iter,j,base_output_dir,1)
             particle_errors[iter,j] = objective_function.objFunc_class.evaluate(swarm[j].output_params["output_path"][0],iter,j)
             swarm[j].update_particle_errors(particle_errors[iter,j])
 

@@ -186,6 +186,8 @@ def fenics(sim_params,file_inputs,output_params,passive_params,hs_params,cell_io
     # Define spatial coordinate system used in rigid motion constraint
     X = SpatialCoordinate (mesh)
     facetboundaries = MeshFunction('size_t', mesh, mesh.topology().dim()-1)
+    edgeboundaries = MeshFunction('size_t', mesh, mesh.topology().dim()-2)
+
     facetboundaries.set_all(0)
     left = Left()
     right = Right()

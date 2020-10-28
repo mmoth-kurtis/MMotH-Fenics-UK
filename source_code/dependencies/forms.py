@@ -173,6 +173,7 @@ class Forms(object):
 
     		#QQ = bff*pow(Eff,2.0) + bfx*(pow(Ess,2.0)+ pow(Enn,2.0)+ 2.0*pow(Ens,2.0)) + bxx*(2.0*pow(Efs,2.0) + 2.0*pow(Efn,2.0))
 
+        print "C3 = " + str(C3)
         QQ_m = conditional(alpha > 1.0, C3*(alpha - 1.0)**2.0, 0.0)
         #QQ_m = C3*(alpha - 1.0)**2.0
 

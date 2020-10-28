@@ -25,7 +25,7 @@ class cell_ion_driver():
             self.ca = np.load(self.model_params["path_to_calcium"][0])
             self.counter = 0
 
-        if self.model_name == "three_state_ca":
+        if self.model_name == "three_state_calcium":
             self.t_act = 0.03
             self.cardiac_period = 0.17
 
@@ -34,7 +34,7 @@ class cell_ion_driver():
             self.k_leak = float(self.model_params["k_leak"][0])
             self.k_act = float(self.model_params["k_act"][0])
             self.k_serca = float(self.model_params["k_serca"][0])
-            self.activation = np.zeros(1000)
+            self.activation = np.zeros(2001)
             self.activation[30:46]=1.0
             #for jj in np.arange(30):
             #    self.activation[400+(12*jj+6):400+(12*jj+11)] = 1.0
@@ -59,10 +59,10 @@ class cell_ion_driver():
             print "cell time = " + str(time)
             #return calcium_value
 
-        if self.model_name == "three_state_ca":
+        if self.model_name == "three_state_calcium":
             cycle = 0.0
             # Time is passed in as ms, not seconds
-            t = float(time)/1000
+            t = float(time_step)/1000
             # Don't plan on using this transient much, hard coding some stuff
             #t_act = 0.0
             cardiac_period = .17

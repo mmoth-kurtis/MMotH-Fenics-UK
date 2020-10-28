@@ -125,7 +125,7 @@ class fenicsParticle:
             self.best_particle_position = self.working_dict
             self.best_ind_error = self.current_error"""
 
-    def run_simulation(self, fenics_script, iter, p_num,base_output_dir):
+    def run_simulation(self, fenics_script, iter, p_num,base_output_dir,pso):
         #self.update_all_fenics_params_list(self.sim_params)
 
         self.output_params["output_path"][0] = base_output_dir + "iter_" + str(iter) + "_particle_" + str(p_num) +"/"
@@ -134,11 +134,13 @@ class fenicsParticle:
 
         self.output_dict = fenics_script.fenics(self.sim_params,self.file_inputs,self.output_params, \
             self.passive_params, self.hs_params, self.cell_ion_params, self.monodomain_params, \
-            self.windkessel_params)
+            self.windkessel_params,pso)
 
-        with open(self.output_params["output_path"][0] + 'particle_inputs.json', 'w') as fp2:
-            json.dump([self.all_fenics_params], fp2,indent=2, separators=(',', ': '))
-
+        try:
+            with open(self.output_params["output_path"][0] + 'particle_inputs.json', 'w') as fp2:
+                json.dump([self.hs_params], fp2,indent=2, separators=(',', ': '))
+        except:
+            print "cannot print input params to file"
         return self.output_dict
 
     def update_particle_errors(self,current_error):

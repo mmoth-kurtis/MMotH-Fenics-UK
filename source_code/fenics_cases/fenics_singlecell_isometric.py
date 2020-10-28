@@ -12,9 +12,10 @@ import math
 import Python_MyoSim.half_sarcomere.half_sarcomere as half_sarcomere
 import Python_MyoSim.half_sarcomere.implement as implement
 from cell_ion_module import cell_ion_driver
+import copy
 
 
-def fenics(sim_params,file_inputs,output_params,passive_params,hs_params,cell_ion_params,monodomain_params,windkessel_params):
+def fenics(sim_params,file_inputs,output_params,passive_params,hs_params,cell_ion_params,monodomain_params,windkessel_params,pso):
     global i
     global j
 
@@ -79,9 +80,10 @@ def fenics(sim_params,file_inputs,output_params,passive_params,hs_params,cell_io
     #xml_struct = ut.parse('pm_test10.xml')
     #hs_params = xml_struct.single_circulation_simulation.half_sarcomere
     hs = half_sarcomere.half_sarcomere(hs_params,1)
+
     cell_ion = cell_ion_driver.cell_ion_driver(cell_ion_params)
     calcium = np.zeros(time_steps)
-    calcium[0] = cell_ion.model_class.calculate_concentrations(0,0)
+    calcium[0] = cell_ion.calculate_concentrations(0,0)
     parameters["form_compiler"]["quadrature_degree"]=2
     parameters["form_compiler"]["representation"] = "quadrature"
     #
@@ -118,13 +120,21 @@ def fenics(sim_params,file_inputs,output_params,passive_params,hs_params,cell_io
     mesh = UnitCubeMesh(1,1,1)
     #mesh.cells()
     no_of_int_points = 4 * np.shape(mesh.cells())[0]
+    temp_overlap = np.zeros((no_of_int_points))
+    y_vec_array_new = np.zeros(((no_of_int_points)*n_array_length))
+    j3_fluxes = np.zeros((no_of_int_points,time_steps))
+    j4_fluxes = np.zeros((no_of_int_points,time_steps))
 
+    hs_params_list = [{}]*no_of_int_points
+    for jj in np.arange(np.shape(hs_params_list)[0]):
+        hs_params_list[jj] = copy.deepcopy(hs_params)
     #plot(mesh)
     #plt.show()
 
     f0 = Constant((1.0, 0.0, 0.0))
     s0 = Constant((0.0, 1.0, 0.0))
     n0 = Constant((0.0, 0.0, 1.0))
+
     facetboundaries = MeshFunction('size_t', mesh, mesh.topology().dim()-1)
     facetboundaries.set_all(0)
     left = Left()
@@ -165,6 +175,21 @@ def fenics(sim_params,file_inputs,output_params,passive_params,hs_params,cell_io
     x_dofs = W.sub(0).sub(0).dofmap().dofs()
 
     Quad = FunctionSpace(mesh, Quadelem)
+    # making these functions so they no longer have to be uniform
+    c_param = Function(Quad)
+    c2_param = Function(Quad)
+    c3_param = Function(Quad)
+
+    c_param.vector()[:] = passive_params["c"][0]
+    c2_param.vector()[:] = passive_params["c2"][0]
+    c3_param.vector()[:] = passive_params["c3"][0]
+
+
+    # Putting them back in the "passive_params" dictionary so that when
+    # the dictionary is updated below, it reflects these changes
+    passive_params["c"] = c_param
+    passive_params["c2"] = c2_param
+    passive_params["c3"] = c3_param
 
     Quad_vectorized_Fspace = FunctionSpace(mesh, MixedElement(n_array_length*[Quadelem]))
 
@@ -339,11 +364,7 @@ def fenics(sim_params,file_inputs,output_params,passive_params,hs_params,cell_io
 
 
         tarray.append(t)
-        for  m in range(no_of_int_points):
 
-            for k in range(n_array_length):
-
-                dumped_populations[l, m, k] = y_interp[m * n_array_length + k]
 
         #hslarray.append(hsl_array[0])
         #strarray.append(cb_f_array[0])
@@ -362,7 +383,7 @@ def fenics(sim_params,file_inputs,output_params,passive_params,hs_params,cell_io
 
         # Right now, not general. The calcium depends on cycle number, just saying 0
         cycle = 0
-        calcium[l] = cell_ion.model_class.calculate_concentrations(cycle,t)
+        calcium[l] = cell_ion.calculate_concentrations(step_size,l)
 
         #calcium[l] = cell_ion.model.calculate_concentrations(0,t)
 
@@ -375,9 +396,20 @@ def fenics(sim_params,file_inputs,output_params,passive_params,hs_params,cell_io
         else:
             overlap_counter = l
 
-        temp_overlap, y_interp, y_vec_array_new = implement.update_simulation(hs, step_size, delta_hsl_array, hsl_array, y_vec_array, p_f_array, cb_f_array, calcium[l], n_array_length, t,overlaparray[overlap_counter,:])
-    #    print y_vec_array_new[0:53]
+        for mm in np.arange(no_of_int_points):
+            #print hsl_array[mm]
+            temp_overlap[mm], y_interp[mm*n_array_length:(mm+1)*n_array_length], y_vec_array_new[mm*n_array_length:(mm+1)*n_array_length] = implement.update_simulation(hs, step_size, delta_hsl_array[mm], hsl_array[mm], y_vec_array[mm*n_array_length:(mm+1)*n_array_length], p_f_array[mm], cb_f_array[mm], calcium[l], n_array_length, t,hs_params_list[mm])
+            temp_flux_dict, temp_rate_dict = implement.return_rates_fenics(hs)
+            #print temp_flux_dict["J3"]
+            j3_fluxes[mm,l] = sum(temp_flux_dict["J3"])
+            j4_fluxes[mm,l] = sum(temp_flux_dict["J4"])
         y_vec_array = y_vec_array_new # for Myosim
+        for  m in range(no_of_int_points):
+
+            for k in range(n_array_length):
+
+                dumped_populations[l, m, k] = y_interp[m * n_array_length + k]
+
         y_vec.vector()[:] = y_vec_array # for PDE
 
     #    print y_vec_array[0:53]
@@ -429,27 +461,11 @@ def fenics(sim_params,file_inputs,output_params,passive_params,hs_params,cell_io
 
         #print(cb_f_array)
 
-        """if t <= 100: # stretch to 1300
-            u_D.u_D += .003
-        if t < 500 and t > 100:
-            u_D.u_D =u_D.u_D
-        if t < 600 and t >= 500:
-            u_D.u_D += .0005
-        if t < 800 and t >=600:
+        if t <= 5:
+            u_D.u_D += .014
+        else:
             u_D.u_D = u_D.u_D
-        if t < 900 and t >= 800:
-            u_D.u_D -= .0005
-        if t >= 900:
-            u_D.u_D = u_D.u_D"""
-        """if t < 170 and t > 150:
-            u_D.u_D -= 0.005
-        else:
-            u_D.u_D = u_D.u_D"""
-        """if t < 20:
-            u_D.u_D += 0.001
-        else:
-            u_D.u_D = u_D.u_D"""
-        u_D.u_D = u_D.u_D
+        print "time = " + str(t)
         t = t + step_size
 
         calarray.append(hs.Ca_conc*np.ones(no_of_int_points))
@@ -488,6 +504,11 @@ def fenics(sim_params,file_inputs,output_params,passive_params,hs_params,cell_io
     #np.save("/home/fenics/shared/python_dev/test_10_pm/HSL",hslarray)
 
     #np.save("/home/fenics/shared/test_10/DHSL",delta_hsls)
+    if pso:
+        passive_params["c"] = c_param.vector()[0]
+        passive_params["c2"] = c2_param.vector()[0]
+        passive_params["c3"] = c3_param.vector()[0]
+
     outputs = {
     "rates": rates,
     "dumped_populations": dumped_populations,
