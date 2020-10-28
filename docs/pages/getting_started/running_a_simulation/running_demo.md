@@ -38,4 +38,4 @@ Finally, the mesh and displacement solutions are saved as ParaView files. It is 
 Under construction
 
 <a href="../installation/installation.html" class="btn btn--primary"><< Installation</a>
-<a href="../creating_input_files/fenics_input_readme.html" class="btn btn--primary">Creating Input Files >></a>
+<a href="../creating_input_files/fenics_input_readme.html" class="btn btn--primary">Instruction Files >></a>
