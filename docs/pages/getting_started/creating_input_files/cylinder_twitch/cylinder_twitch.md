@@ -1,6 +1,6 @@
 ---
-title: "Instruction Files"
-parent: Getting Started
+title: "Cylinder Twitch"
+parent: Instruction Files
 nav_order: 3
 ---
 
@@ -8,10 +8,6 @@ nav_order: 3
   <h4>Message</h4>
   <p>This page is under  construction.</p>
 </div>
-
-Overview
-========
-
 ```json
 {
   "simulation_parameters": {
