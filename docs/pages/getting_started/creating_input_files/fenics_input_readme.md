@@ -1,5 +1,5 @@
 ---
-title: "Instruction Files"
+title: Instruction Files
 parent: Getting Started
 nav_order: 3
 ---
