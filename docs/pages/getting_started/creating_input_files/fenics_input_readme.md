@@ -2,6 +2,7 @@
 title: Instruction Files
 parent: Getting Started
 nav_order: 3
+has_children: true
 ---
 
 <div class="notice--info">
