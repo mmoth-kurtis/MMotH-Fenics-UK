@@ -18,9 +18,9 @@ def import_mesh(sim_geometry, options):
         # default values
         #----------------
         # Center point for end of cylinder
-        cylinder_specs["x"] = 10.0
-        cylinder_specs["y"] = 0.0
-        cylinder_specs["z"] = 0.0
+        cylinder_specs["end_x"] = 10.0
+        cylinder_specs["end_y"] = 0.0
+        cylinder_specs["end_z"] = 0.0
 
         # Center point for base of cylinder
         cylinder_specs["base_x"] = 0.0
