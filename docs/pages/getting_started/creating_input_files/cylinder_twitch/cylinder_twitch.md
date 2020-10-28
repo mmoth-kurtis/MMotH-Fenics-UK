@@ -1,7 +1,6 @@
 ---
 title: Cylinder Twitch
 parent: Instruction Files
-nav_order: 1
 ---
 
 <div class="notice--info">
