@@ -19,6 +19,11 @@ def fenics(sim_params,file_inputs,output_params,passive_params,hs_params,cell_io
     global i
     global j
 
+    # forcing hsl from other simulation
+    hsl_template = np.zeros(701)
+    hsl_template[0:700] = np.load('hsl_template_altered.npy')
+    hsl_template[700] = hsl_template[699]
+    print "hsl template " + str(np.shape(hsl_template))
     output_path = output_params["output_path"][0]
     displacementfile = File(output_path + "u_disp.pvd")
 
@@ -461,11 +466,13 @@ def fenics(sim_params,file_inputs,output_params,passive_params,hs_params,cell_io
 
         #print(cb_f_array)
 
-        if t <= 5:
+        """if t <= 5:
             u_D.u_D += .014
         else:
             u_D.u_D = u_D.u_D
-        print "time = " + str(t)
+        print "time = " + str(t)"""
+        print hsl_template[l]
+        u_D.u_D = hsl_template[l]-1
         t = t + step_size
 
         calarray.append(hs.Ca_conc*np.ones(no_of_int_points))

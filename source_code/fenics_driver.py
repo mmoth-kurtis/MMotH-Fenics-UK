@@ -80,6 +80,10 @@ def sim_driver(input_file_name):
 	fenics_script = "myosim_cylinder"
     elif sim_params["sim_geometry"][0] == "ellipsoid_set_hsl":
         fenics_script = "fenics_LV_physPVloop_forcehsl"
+    elif sim_params["sim_geometry"][0] == "kroon":
+        fenics_script = "fenics_isometric_kroon_kurtis"
+    elif sim_params["sim_geometry"][0] == "kroon_alexus":
+        fenics_script = "fenics_isometric_kroon_alexus"
     else:
         sys.exit("FEnICS cript does not exist. Please include an existing fenics script.")
 

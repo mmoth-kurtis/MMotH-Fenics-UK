@@ -34,15 +34,15 @@ class cell_ion_driver():
             self.k_leak = float(self.model_params["k_leak"][0])
             self.k_act = float(self.model_params["k_act"][0])
             self.k_serca = float(self.model_params["k_serca"][0])
-            self.activation = np.zeros(2001)
-            self.activation[30:46]=1.0
+            self.activation = np.zeros(710)
+            self.activation[31:40]=1.0
             #for jj in np.arange(30):
             #    self.activation[400+(12*jj+6):400+(12*jj+11)] = 1.0
 
             self.y = np.zeros(2)
             self.y[1] = self.Ca_content
             self.y[0] = 1e-7
-
+            #self.y[0] = 0.0
             self.myofilament_Ca_conc = self.y[0]
 
         # Import the model

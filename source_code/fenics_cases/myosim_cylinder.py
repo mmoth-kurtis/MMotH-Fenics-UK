@@ -20,7 +20,7 @@ import copy
 import pandas as pd
 
 
-def fenics(sim_params,file_inputs,output_params,passive_params,hs_params,cell_ion_params,monodomain_params,windkessel_params):
+def fenics(sim_params,file_inputs,output_params,passive_params,hs_params,cell_ion_params,monodomain_params,windkessel_params,pso):
 
     # marking these as indices because this is a function called from fenics_driver
     i,j = indices(2)
@@ -82,12 +82,11 @@ def fenics(sim_params,file_inputs,output_params,passive_params,hs_params,cell_io
     cyl_bottom = Point(0,0,0)
     top_radius = 1.0
     bottom_radius = 1.0
-    segments = 20
+    segments = 4
     geometry = mshr.Cylinder(cyl_top,cyl_bottom,top_radius,bottom_radius,segments)
 
     # Create the mesh
-    mesh = mshr.generate_mesh(geometry,30)
-
+    mesh = mshr.generate_mesh(geometry,20)
     # Save the mesh
     File('cylinder_3.pvd') << mesh
 
@@ -795,7 +794,7 @@ def fenics(sim_params,file_inputs,output_params,passive_params,hs_params,cell_io
     #np.save("/home/fenics/shared/python_dev/test_10_pm/HSL",hslarray)
 
     #np.save("/home/fenics/shared/test_10/DHSL",delta_hsls)
-    outputs = {
+    """outputs = {
     "rates": rates,
     "dumped_populations": dumped_populations,
     "tarray": tarray,
@@ -806,7 +805,8 @@ def fenics(sim_params,file_inputs,output_params,passive_params,hs_params,cell_io
     "hsl": hslarray,
     #"overlap": overlaparray
 
-    }
+    }"""
+    outputs = {}
 
     """np.save(output_path +"dumped_populations", dumped_populations)
     np.save(output_path + "tarray", tarray)

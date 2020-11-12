@@ -178,6 +178,8 @@ class Forms(object):
         #QQ_m = C3*(alpha - 1.0)**2.0
 
         QQ_c = bff*Eff**2.0 + bfx*(Ess**2.0 + Enn**2.0 + 2.0*Ens**2.0) + bxx*(2.0*Efs**2.0 + 2.0*Efn**2.0)
+        #QQ_i = (C/2)*Eff**2 + bfx*(Ess**2.0 + Enn**2.0 + 2.0*Ens**2.0) + bxx*(2.0*Efs**2.0 + 2.0*Efn**2.0)
+
 
 
         Wp_m = C2*(exp(QQ_m) -  1.0)
@@ -357,3 +359,23 @@ class Forms(object):
         ratio = s0_evaluated.y()/s0_evaluated.x()
 
         return ratio
+
+    def Umat(self):
+
+        Fmat = self.Fmat()
+        F0 = Fmat
+        for j in range(15):
+            F0 = 0.5* (F0 + inv(F0).T)
+        R = F0
+        return inv(R)*Fmat
+
+    def kroon_law(self,ffs):
+
+        f = Function(ffs)
+        kappa = 1.0
+        U = self.Umat()
+        f0 = self.parameters["fiber"]
+        f = U*f0/sqrt(inner(U*f0,U*f0))
+        df0 = 1.0/kappa * (f - f0)
+
+        return df0, f
