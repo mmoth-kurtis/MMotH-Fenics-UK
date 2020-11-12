@@ -270,7 +270,7 @@ def fenics(sim_params,file_inputs,output_params,passive_params,hs_params,cell_io
             f0.vector()[jj*3+2] = 0.0
             hs_params_list[jj]["myofilament_parameters"]["k_3"][0] = 0.0
             #passive_params_list[jj]["c"][0] = 2000
-            c_param.vector()[jj] = 2000
+            c_param.vector()[jj] = 1000
             c2_param.vector()[jj] = 250
             c3_param.vector()[jj] = 10
 
