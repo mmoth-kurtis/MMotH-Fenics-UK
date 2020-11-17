@@ -23,6 +23,9 @@ def fenics(sim_params,file_inputs,output_params,passive_params,hs_params,cell_io
     displacementfile = File(output_path + "u_disp.pvd")
     print "saving fiber file"
     fiber_file = File(output_path + "f0_direction.pvd")
+    pseudo_alpha_file = File(output_path + "pseudo_alpha.pvd")
+    alpha_file = File(output_path + "alpha.pvd")
+    error_file = File(output_path + "error.pvd")
 
     filament_compliance_factor = hs_params["myofilament_parameters"]["filament_compliance_factor"][0]
 #    filament_compliance_factor = 0.5
@@ -44,6 +47,7 @@ def fenics(sim_params,file_inputs,output_params,passive_params,hs_params,cell_io
     x_bin_min = hs_params["myofilament_parameters"]["bin_min"][0]
     x_bin_max = hs_params["myofilament_parameters"]["bin_max"][0]
     x_bin_increment = hs_params["myofilament_parameters"]["bin_width"][0]
+    k_myo_damp = hs_params["myofilament_parameters"]["k_myo_damp"][0]
     #no_of_transitions = 4
     #state_attached = [0, 0, 1]
     #cb_extensions = [ 0, 0, 4.75642]
@@ -184,6 +188,7 @@ def fenics(sim_params,file_inputs,output_params,passive_params,hs_params,cell_io
     c_param = Function(Quad)
     c2_param = Function(Quad)
     c3_param = Function(Quad)
+    #pseudo_alpha = Function(Quad)
 
     c_param.vector()[:] = passive_params["c"][0]
     c2_param.vector()[:] = passive_params["c2"][0]
@@ -273,8 +278,25 @@ def fenics(sim_params,file_inputs,output_params,passive_params,hs_params,cell_io
 
     #Active force calculation------------------------------------------------------
     y_vec = Function(Quad_vectorized_Fspace)
-    hsl = sqrt(dot(f0, Cmat*f0))*hsl0
+    #hsl = sqrt(dot(f0, Cmat*f0))*hsl0
     hsl_old = Function(Quad)
+    hsl_old.vector()[:] = hsl0
+    pseudo_alpha = Function(Quad)
+    pseudo_old = Function(Quad)
+    pseudo_old.vector()[:] = 1.0
+    error = Function(Quad)
+    error.vector()[:] = 0.0
+    error = hsl_old - hsl0
+    #hsl_old.vector()[:] = hsl0
+    #pseudo_alpha = (sqrt(dot(f0, Cmat*f0))-k_myo_damp*(sqrt(dot(f0, Cmat*f0))-1.)/(1.-((hsl_old - hsl0)/hsl0)))
+    #pseudo_alpha.vector()[:] = 1.
+    pseudo_alpha = pseudo_old*(1.-k_myo_damp*error)
+    alpha_f = sqrt(dot(f0, Cmat*f0))
+    #pseudo_alpha_file << project(pseudo_alpha, FunctionSpace(mesh, "DG", 0))
+
+    #hsl = (sqrt(dot(f0, Cmat*f0)))*hsl0
+    hsl = pseudo_alpha*alpha_f*hsl0
+    #hsl_old = Function(Quad)
     #hsl_old = hsl
     delta_hsl = hsl - hsl_old
     #delta_hsl = 0.0
@@ -445,9 +467,9 @@ def fenics(sim_params,file_inputs,output_params,passive_params,hs_params,cell_io
     #    print y_vec_array[0:53]
         hsl_array_old = hsl_array
 
-        if l > 12:
+        """if l > 12:
             Press.P = fx_rxn[11]
-            bcs = [bcleft, bclower, bcfront,bcfix]
+            bcs = [bcleft, bclower, bcfront,bcfix]"""
 
 
         solve(Ftotal == 0, w, bcs, J = Jac, form_compiler_parameters={"representation":"uflacs"},solver_parameters={"newton_solver":{"relative_tolerance":1e-8},"newton_solver":{"maximum_iterations":50},"newton_solver":{"absolute_tolerance":1e-8}})
@@ -463,12 +485,27 @@ def fenics(sim_params,file_inputs,output_params,passive_params,hs_params,cell_io
 
         displacementfile << w.sub(0)
 
+        #pseudo_alpha_file.rename('pseudo','pseudo')
+        #alpha_file.file.rename('alpha','alpha')
+
         hsl_old.vector()[:] = project(hsl, Quad).vector().get_local()[:] # for PDE
+        #pseudo_alpha *= 1.-k_myo_damp*(hsl_old-hsl0)
+        pseudo_old.vector()[:] = project(pseudo_alpha, Quad).vector().get_local()[:]
+
+        temp_pseudo = project(pseudo_alpha,FunctionSpace(mesh,"DG",0))
+        temp_pseudo.rename('pseudo','pseudo')
+        pseudo_alpha_file << temp_pseudo
+        temp_error = project(error,FunctionSpace(mesh,"DG",0))
+        temp_error.rename('error','error')
+        error_file << temp_error
+        temp_alpha = project(alpha_f,FunctionSpace(mesh,"DG",0))
+        temp_alpha.rename('alpha','alpha')
+        alpha_file << temp_alpha
 
         hsl_array = project(hsl, Quad).vector().get_local()[:]           # for Myosim
 
-        delta_hsl_array = project(sqrt(dot(f0, Cmat*f0))*hsl0, Quad).vector().get_local()[:] - hsl_array_old # for Myosim
-
+        #delta_hsl_array = project(hsl, Quad).vector().get_local()[:] - hsl_array_old # for Myosim
+        delta_hsl_array = project(delta_hsl, Quad).vector().get_local()[:]
         #delta_hsls[l] = delta_hsl_array
         temp_DG = project(Pff, FunctionSpace(mesh, "DG", 1), form_compiler_parameters={"representation":"uflacs"})
         p_f = interpolate(temp_DG, Quad)
@@ -483,14 +520,14 @@ def fenics(sim_params,file_inputs,output_params,passive_params,hs_params,cell_io
         overlaparray[l,:] = temp_overlap
 
         # Calculate reaction force at right end
-        b = assemble(Ftotal,form_compiler_parameters={"representation":"uflacs"})
+        """b = assemble(Ftotal,form_compiler_parameters={"representation":"uflacs"})
         bcleft.apply(b)
 
         f_int_total = b.copy()
         for kk in x_dofs:
             fx_rxn[l] += f_int_total[kk]
 
-        np.save(output_path + "fx",fx_rxn)
+        np.save(output_path + "fx",fx_rxn)"""
 
 
         #print(cb_f_array)
@@ -519,7 +556,15 @@ def fenics(sim_params,file_inputs,output_params,passive_params,hs_params,cell_io
             u_D.u_D = u_D.u_D
         if t > 5.0 and t <= 10.0:
             u_D.u_D += 0.03
-        if t > 10.0:
+        if t > 10.0 and t <=50.0:
+            u_D.u_D = u_D.u_D
+        if t > 50.0 and t <= 55.0:
+            u_D.u_D += 0.03
+        if t > 55.0 and t <= 100.0:
+            u_D.u_D = u_D.u_D
+        if t > 100.0 and t <=105.0:
+            u_D.u_D -= 0.03
+        if t > 105.0:
             u_D.u_D = u_D.u_D
         t = t + step_size
 
@@ -534,7 +579,7 @@ def fenics(sim_params,file_inputs,output_params,passive_params,hs_params,cell_io
         #f0 += uflforms.kroon_law(fiberFS)[0] * step_size
         #temp_f = project(Umat*f0,VectorFunctionSpace(mesh,"DG",1),form_compiler_parameters={"representation":"uflacs"})
         #temp_f_2 = interpolate(temp_f, fiberFS)
-        temp_f = Umat*f0
+        """temp_f = Umat*f0
         f_mag = sqrt(inner(temp_f,temp_f))
         f = temp_f/f_mag
         f_diff = f-f0
@@ -548,7 +593,7 @@ def fenics(sim_params,file_inputs,output_params,passive_params,hs_params,cell_io
         f0_temp.rename('fiber_direction','fiber_direction')
 
         #File(output_path + "fiber_" + str(l) + ".pvd") << project(f0, VectorFunctionSpace(mesh, "DG", 0))
-        fiber_file << f0_temp
+        fiber_file << f0_temp"""
 
         b = assemble(Ftotal,form_compiler_parameters={"representation":"uflacs"})
         bcleft.apply(b)

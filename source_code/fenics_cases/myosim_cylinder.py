@@ -68,6 +68,8 @@ def fenics(sim_params,file_inputs,output_params,passive_params,hs_params,cell_io
 
     fdataCa = open(output_path + "calcium_.txt", "w", 0)
     pk1file = File(output_path + "pk1_act_on_f0.pvd")
+    hsl_file = File(output_path + "hsl_mesh.pvd")
+
 
     # holder for reaction force at right end
     fx_rxn = np.zeros((time_steps))
@@ -626,6 +628,9 @@ def fenics(sim_params,file_inputs,output_params,passive_params,hs_params,cell_io
         pk1temp = project(inner(f0,Pactive*f0),FunctionSpace(mesh,'DG',0))
         pk1temp.rename("pk1temp","pk1temp")
         pk1file << pk1temp
+        hsl_temp = project(hsl,FunctionSpace(mesh,'DG',1))
+        hsl_temp.rename("hsl_temp","hsl")
+        hsl_file << hsl_temp
 
         hsl_old.vector()[:] = project(hsl, Quad).vector().get_local()[:] # for PDE
 
