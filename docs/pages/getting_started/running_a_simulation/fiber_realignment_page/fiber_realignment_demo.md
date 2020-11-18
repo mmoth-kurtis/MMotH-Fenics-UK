@@ -1,8 +1,8 @@
 ---
-title: Cell Isometric Twitch
+title: Sarcomere Realignment
 parent: Demos
 grand_parent: Getting Started
-nav_order: 1
+nav_order: 8
 ---
 
 Summary

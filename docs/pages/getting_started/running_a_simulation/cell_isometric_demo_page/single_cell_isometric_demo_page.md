@@ -1,5 +1,5 @@
 ---
-title: Cell Isometric Twitch
+title: Single Cell Isometric Twitch
 parent: Demos
 grand_parent: Getting Started
 nav_order: 1

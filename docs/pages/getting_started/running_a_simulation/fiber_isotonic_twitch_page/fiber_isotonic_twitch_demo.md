@@ -1,8 +1,8 @@
 ---
-title: Cell Isometric Twitch
+title: Fiber Isotonic Twitch With Compliance
 parent: Demos
 grand_parent: Getting Started
-nav_order: 1
+nav_order: 4
 ---
 
 Summary
