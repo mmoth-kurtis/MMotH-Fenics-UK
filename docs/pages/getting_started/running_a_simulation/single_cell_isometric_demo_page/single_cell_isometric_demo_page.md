@@ -1,13 +1,12 @@
 ---
 title: Single Cell Isometric Twitch
-parent: Demos
+parent: "Demos"
 nav_order: 1
-has_children: false
 ---
 
 Summary
 =======
-A unit cube mesh consisting of six tetrahedron elements is used to model a single muscle cell response. 
+A unit cube mesh consisting of six tetrahedron elements is used to model a single muscle cell response.
 
 Simulation Protocol
 -------------------

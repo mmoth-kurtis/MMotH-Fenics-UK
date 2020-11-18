@@ -11,7 +11,7 @@ MMotH-Vent relies on user-specified information in the form of instruction files
 
 Make sure Docker is running and enter the command line of your container by following the instructions at the bottom of the [previous page](../installation/installation.md#enter-container-command-line).
 
-How to run an instruction file
+How to run an instruction files
 ------------------------------
 
 Navigate to ```/home/fenics/shared/demos/```, where you will see two directories:  
