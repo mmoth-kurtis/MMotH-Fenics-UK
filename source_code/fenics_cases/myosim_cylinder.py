@@ -88,7 +88,7 @@ def fenics(sim_params,file_inputs,output_params,passive_params,hs_params,cell_io
     geometry = mshr.Cylinder(cyl_top,cyl_bottom,top_radius,bottom_radius,segments)
 
     # Create the mesh
-    mesh = mshr.generate_mesh(geometry,20)
+    mesh = mshr.generate_mesh(geometry,25)
     # Save the mesh
     File('cylinder_3.pvd') << mesh
 

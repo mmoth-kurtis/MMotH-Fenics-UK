@@ -51,18 +51,18 @@ This displays a list of all containers created on the local machine.
 ![List of containers](docker_display_images.png)
 Once the container has been created, it needs to be started. Using "Container ID" from the previous command,
 ```
-docker start < CONTAINER_ID >
+docker start <CONTAINER_ID>
 ```
 
 ## Enter Container Command Line
 Now that the container is started, the following command takes the user to a command line within the container to execute the MMotH code. Replace CONTAINER_NAME with the name of the container as seen from the ```docker ps -a``` command.
 ```
-sudo docker exec -ti -u fenics < CONTAINER_NAME > /bin/bash -l
+sudo docker exec -ti -u fenics <CONTAINER_NAME> /bin/bash -l
 ```
 It is recommended to create an alias shortcut to issue this command regularly. Once the container is created from the image, the regular workflow to use MMotH-Vent is:
 * Start Docker
-* From the command line, start the created container using ```docker start < CONTAINER_ID >```
-* Enter the command line in the container using ```sudo docker exec -ti -u fenics < CONTAINER_NAME>  /bin/bash -l```.
+* From the command line, start the created container using ```docker start <CONTAINER_ID>```
+* Enter the command line in the container using ```sudo docker exec -ti -u fenics <CONTAINER_NAME>  /bin/bash -l```.
 * When finished, exit the container by issuing the ```exit``` command.  
 
 <a href="../running_a_simulation/running_demo.html" class="btn btn--primary">Demos >></a>

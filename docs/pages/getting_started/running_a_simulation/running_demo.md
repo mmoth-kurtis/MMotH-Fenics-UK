@@ -14,7 +14,7 @@ How to Run An Instruction File
 Make sure Docker is running and enter the command line of your container by following the instructions at the bottom of the [previous page](../installation/installation.md#enter-container-command-line). Then navigate to the directory that contains the instruction file. In general, the syntax for running MMotH-Vent is:
 
 ```
-python < path to fenics_driver.py > < path to instruction file >
+python <path to fenics_driver.py> <path to instruction file>
 ```
 
 Navigate to ```/home/fenics/shared/demos/```, where you will see two directories:  
