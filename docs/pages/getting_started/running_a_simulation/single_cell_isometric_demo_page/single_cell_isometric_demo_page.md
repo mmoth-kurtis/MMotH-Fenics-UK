@@ -1,6 +1,7 @@
 ---
 title: Single Cell Isometric Twitch
-parent: "Demos"
+parent: Demos
+grand_parent: Getting Started
 nav_order: 1
 ---
 
