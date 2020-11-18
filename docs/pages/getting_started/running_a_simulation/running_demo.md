@@ -1,5 +1,5 @@
 ---
-title: "Demos"
+title: Demos
 parent: Getting Started
 nav_order: 2
 has_children: true
@@ -10,6 +10,9 @@ Overview
 MMotH-Vent relies on user-specified information in the form of instruction files. These instruction files use the JSON format and define dictionaries of information to be parsed. Note, the convention is for input values to be specified as elements of a list, e.g. "keyword": [value] rather than "keyword": value. This page gives an overview of the expected keywords of an instruction file and their options. Demos are provided to show some of the current simulations that can be performed.  
 
 Make sure Docker is running and enter the command line of your container by following the instructions at the bottom of the [previous page](../installation/installation.md#enter-container-command-line).
+
+How to run an instruction file
+------------------------------
 
 Navigate to ```/home/fenics/shared/demos/```, where you will see two directories:  
 * ```single_cell_length_control_demo/```

@@ -65,4 +65,4 @@ It is recommended to create an alias shortcut to issue this command regularly. O
 * Enter the command line in the container using ```sudo docker exec -ti -u fenics [CONTAINER_NAME] /bin/bash -l```.
 * When finished, exit the container by issuing the ```exit``` command.  
 
-<a href="../running_a_simulation/running_demo.html" class="btn btn--primary">Running a Simulation >></a>
+<a href="../running_a_simulation/running_demo.html" class="btn btn--primary">Demos >></a>
