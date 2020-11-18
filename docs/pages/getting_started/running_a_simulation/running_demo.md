@@ -9,10 +9,13 @@ Overview
 
 MMotH-Vent relies on user-specified information in the form of instruction files. These instruction files use the JSON format and define dictionaries of information to be parsed. Note, the convention is for input values to be specified as elements of a list, e.g. "keyword": [value] rather than "keyword": value. This page gives an overview of the expected keywords of an instruction file and their options. Demos are provided to show some of the current simulations that can be performed.  
 
-Make sure Docker is running and enter the command line of your container by following the instructions at the bottom of the [previous page](../installation/installation.md#enter-container-command-line).
-
-How to run an instruction files
+How to Run An Instruction File
 ------------------------------
+Make sure Docker is running and enter the command line of your container by following the instructions at the bottom of the [previous page](../installation/installation.md#enter-container-command-line). Then navigate to the directory that contains the instruction file. In general, the syntax for running MMotH-Vent is:
+
+```
+python <path to fenics_driver.py> <path to instruction file>
+```
 
 Navigate to ```/home/fenics/shared/demos/```, where you will see two directories:  
 * ```single_cell_length_control_demo/```
@@ -25,9 +28,7 @@ python [path to fenics_driver.py] [path to instruction file]
 ```
 Therefore to execute this instruction file, use the following command:  
 
-```
-python ../../source_code/fenics_driver.py singlecell_demo.json
-```
+
 
 The default option in this instruction file is to save all of the output in the same directory from which MMotH-Vent is called. MMotH-Vent outputs a number of numpy arrays that contain cell-level information. The cell data at any gauss point can be plotted by executing
 ```
