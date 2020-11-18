@@ -15,6 +15,7 @@ from cell_ion_module import cell_ion_driver
 from edgetypebc import *
 import objgraph as obg
 import pandas as pd
+import copy
 #np.set_printoptions(threshold=np.inf)
 
 ## Fenics simulation function
@@ -54,7 +55,7 @@ import pandas as pd
 # @param[in] monodomain_params Dictionary for monodomain parameters (not implemented)
 # @param[in] windkessel_params Dictionary for all Windkessel parameters
 # @param[out]
-def fenics(sim_params,file_inputs,output_params,passive_params,hs_params,cell_ion_params,monodomain_params,windkessel_params):
+def fenics(sim_params,file_inputs,output_params,passive_params,hs_params,cell_ion_params,monodomain_params,windkessel_params,pso):
     i,j = indices(2)
     #global i
     #global j
@@ -251,6 +252,16 @@ def fenics(sim_params,file_inputs,output_params,passive_params,hs_params,cell_io
     # function for original hsl distribution
     hsl0_transmural = Function(Quad)
 
+    # These are now functions because they don't have to be uniform
+    c_param = Function(Quad)
+    c2_param = Function(Quad)
+    c3_param = Function(Quad)
+
+    # Setting the value of the passive functions
+    c_param.vector()[:] = passive_params["c"][0]
+    c2_param.vector()[:] = passive_params["c2"][0]
+    c3_param.vector()[:] = passive_params["c3"][0]
+
     # Go ahead and read in rest of info from mesh file and close
     # mesh lclee created doesn't have hsl0 variation
     #f.read(hsl0_transmural, casename+"/"+"hsl0")
@@ -362,9 +373,14 @@ def fenics(sim_params,file_inputs,output_params,passive_params,hs_params,cell_io
     delta_hsl_array_ds = pd.DataFrame(np.zeros(no_of_int_points),index=None)
     delta_hsl_array_ds = delta_hsl_array_ds.transpose()
 
+    temp_overlap = np.zeros((no_of_int_points))
+    y_vec_array_new = np.zeros(((no_of_int_points)*n_array_length))
+    j3_fluxes = np.zeros((no_of_int_points,no_of_time_steps))
+    j4_fluxes = np.zeros((no_of_int_points,no_of_time_steps))
+    y_interp = np.zeros((no_of_int_points+1)*n_array_length)
+
+
     #test_cbf_storage = pd.Series(np.zeros(no_of_int_points))
-
-
 
     # Saving pressure/volume data
     # define communicator
@@ -421,6 +437,9 @@ def fenics(sim_params,file_inputs,output_params,passive_params,hs_params,cell_io
 
     # Update params from loaded in parameters from json file
     params.update(passive_params)
+    params["c"] = c_param
+    params["c2"] = c2_param
+    params["c3"] = c3_param
 
     # initialize the forms module
     uflforms = Forms(params)
@@ -671,11 +690,20 @@ def fenics(sim_params,file_inputs,output_params,passive_params,hs_params,cell_io
     # Initialize the half-sarcomere class. Its methods will be used to solve for cell populations
     hs = half_sarcomere.half_sarcomere(hs_params,1)
 
+    # Need to create a list of dictionaries for parameters for each gauss point
+    hs_params_list = [{}]*no_of_int_points
+    passive_params_list = [{}]*no_of_int_points
+
+    # For now, uniform properties
+    for jj in np.arange(np.shape(hs_params_list)[0]):
+        hs_params_list[jj] = copy.deepcopy(hs_params)
+        passive_params_list[jj] = copy.deepcopy(passive_params)
+
     # Initialize cell ion module
     cell_ion = cell_ion_driver.cell_ion_driver(cell_ion_params)
 
     # Initialize calcium
-    calcium[0] = cell_ion.model_class.calculate_concentrations(0,0)
+    calcium[0] = cell_ion.calculate_concentrations(0,0)
 
     #dumped_populations = np.zeros((no_of_time_steps+1, no_of_int_points, n_array_length))
     dumped_populations = np.zeros((no_of_int_points,n_array_length))
@@ -794,7 +822,7 @@ def fenics(sim_params,file_inputs,output_params,passive_params,hs_params,cell_io
         #y_vec_array_new = np.zeros(no_of_int_points*n_array_length)
 
         # Update calcium
-        calcium[counter] = cell_ion.model_class.calculate_concentrations(cycle,cell_time) #LCL Commented off
+        calcium[counter] = cell_ion.calculate_concentrations(cycle,tstep) #LCL Commented off
 
         # Now print out volumes, pressures, calcium
         if(MPI.rank(comm) == 0):
@@ -807,8 +835,10 @@ def fenics(sim_params,file_inputs,output_params,passive_params,hs_params,cell_io
             overlap_counter = counter
     # Going to try to loop through integration points in python, not in fenics script
         #temp_overlap, y_interp, y_vec_array_new = implement.update_simulation(hs, step_size, delta_hsl_array, hsl_array, y_vec_array, p_f_array, cb_f_array, calcium[counter], n_array_length, cell_time, overlaparray[overlap_counter,:])
-        temp_overlap, y_interp, y_vec_array_new = implement.update_simulation(hs, step_size, delta_hsl_array, hsl_array, y_vec_array, p_f_array, cb_f_array, calcium[counter], n_array_length, cell_time)
-
+        #temp_overlap, y_interp, y_vec_array_new = implement.update_simulation(hs, step_size, delta_hsl_array, hsl_array, y_vec_array, p_f_array, cb_f_array, calcium[counter], n_array_length, cell_time)
+        for mm in np.arange(no_of_int_points):
+                    #print hsl_array[mm]
+                    temp_overlap[mm], y_interp[mm*n_array_length:(mm+1)*n_array_length], y_vec_array_new[mm*n_array_length:(mm+1)*n_array_length] = implement.update_simulation(hs, step_size, delta_hsl_array[mm], hsl_array[mm], y_vec_array[mm*n_array_length:(mm+1)*n_array_length], p_f_array[mm], cb_f_array[mm], calcium[counter], n_array_length, tstep,hs_params_list[mm])
         for  i in range(no_of_int_points):
 
             for j in range(n_array_length):

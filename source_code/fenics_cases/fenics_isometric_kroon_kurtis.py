@@ -256,6 +256,7 @@ def fenics(sim_params,file_inputs,output_params,passive_params,hs_params,cell_io
          "sheet-normal": n0,
          #"C_param": Cparam,
     	 "incompressible": isincomp,
+         "hsl0": hsl0,
     	 "Kappa":Constant(1e5)}
     params.update(passive_params)
 
@@ -274,7 +275,7 @@ def fenics(sim_params,file_inputs,output_params,passive_params,hs_params,cell_io
     dx = dolfin.dx(mesh,metadata = {"integration_order":2})
 
     #Ematrix = project(Emat, TF)
-    Wp = uflforms.PassiveMatSEF()
+    #Wp = uflforms.PassiveMatSEF(hsl)
 
     #Active force calculation------------------------------------------------------
     y_vec = Function(Quad_vectorized_Fspace)
@@ -305,6 +306,8 @@ def fenics(sim_params,file_inputs,output_params,passive_params,hs_params,cell_io
     cb_force = Constant(0.0)
 
     y_vec_split = split(y_vec)
+    Wp = uflforms.PassiveMatSEF(hsl)
+
 
     for jj in range(no_of_states):
 
@@ -391,7 +394,7 @@ def fenics(sim_params,file_inputs,output_params,passive_params,hs_params,cell_io
         y_vec_array[counter] = 1
         y_vec_array[counter-2] = 1
 
-    Pg, Pff, alpha = uflforms.stress()
+    Pg, Pff, alpha = uflforms.stress(hsl)
 
     temp_DG = project(Pff, FunctionSpace(mesh, "DG", 1), form_compiler_parameters={"representation":"uflacs"})
     p_f = interpolate(temp_DG, Quad)
@@ -497,10 +500,10 @@ def fenics(sim_params,file_inputs,output_params,passive_params,hs_params,cell_io
         pseudo_alpha_file << temp_pseudo
         temp_error = project(error,FunctionSpace(mesh,"DG",0))
         temp_error.rename('error','error')
-        error_file << temp_error
+        #error_file << temp_error
         temp_alpha = project(alpha_f,FunctionSpace(mesh,"DG",0))
         temp_alpha.rename('alpha','alpha')
-        alpha_file << temp_alpha
+        #alpha_file << temp_alpha
 
         hsl_array = project(hsl, Quad).vector().get_local()[:]           # for Myosim
 

@@ -26,7 +26,7 @@ class cell_ion_driver():
             self.counter = 0
 
         if self.model_name == "three_state_calcium":
-            self.t_act = 0.03
+            self.t_act = 0.00
             self.cardiac_period = 0.17
 
         if self.model_name == "two_compartment":
@@ -62,7 +62,8 @@ class cell_ion_driver():
         if self.model_name == "three_state_calcium":
             cycle = 0.0
             # Time is passed in as ms, not seconds
-            t = float(time_step)/1000
+            t = float(l)/1000
+            print "calcium time is = " + str(t)
             # Don't plan on using this transient much, hard coding some stuff
             #t_act = 0.0
             cardiac_period = .17
