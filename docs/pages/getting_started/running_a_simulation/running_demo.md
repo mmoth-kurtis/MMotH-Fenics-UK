@@ -23,6 +23,7 @@ python /home/fenics/shared/source_code/fenics_driver.py <name of instruction fil
 
 Demos
 -----
+1. TOC
 {:toc}
 
 <a href="../installation/installation.html" class="btn btn--primary"><< Installation</a>
