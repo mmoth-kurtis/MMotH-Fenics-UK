@@ -22,5 +22,9 @@ Assuming the file structure is the default from the repository, you can run an i
 python /home/fenics/shared/source_code/fenics_driver.py <name of instruction file>
 ```
 
+Demos
+-----
+{:toc}
+
 <a href="../installation/installation.html" class="btn btn--primary"><< Installation</a>
 <a href="../creating_input_files/fenics_input_readme.html" class="btn btn--primary">Building a Mesh >></a>
