@@ -23,8 +23,15 @@ python /home/fenics/shared/source_code/fenics_driver.py <name of instruction fil
 
 Demos
 -----
-1. TOC
-{:toc}
+- [Cell Isometric Twitch](/cell_isometric_demo_page/single_cell_isometrice_demo_page.md)
+- [Cell Isotonic Twitch](/cell_isotonic_twitch_page/cell_isotonic_twitch_demo.md)
+- [Fiber Isometric Twitch With Compliance](/fiber_isometric_twitch_with_compliance_page/fiber_isometric_twitch_with_compliance_demo.md)
+- [Fiber Isotonic Twitch With Compliance](/fiber_isotonic_twitch_page/fiber_isotonic_twitch_demo.md)
+- [Fiber Isometric Tetanus](/fiber_isometric_tetanus_page/fiber_isometric_tetanus_demo.md)
+- [Ellipsoidal Ventricle](/ventricle_ellipsoid_page/ventricle_ellipsoid_demo.md)
+- [Rat Ventricle](/ventricle_rat_page/ventricle_rat_demo.md)
+- [Sarcomere Realignment](/fiber_realignment_page/fiber_realignment_demo.md)
+- [Particle Swarm Optimization](/particle_swarm_page/particle_swarm_demo.md)
 
 <a href="../installation/installation.html" class="btn btn--primary"><< Installation</a>
 <a href="../creating_input_files/fenics_input_readme.html" class="btn btn--primary">Building a Mesh >></a>
