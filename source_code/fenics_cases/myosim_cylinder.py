@@ -84,11 +84,11 @@ def fenics(sim_params,file_inputs,output_params,passive_params,hs_params,cell_io
     cyl_bottom = Point(0,0,0)
     top_radius = 1.0
     bottom_radius = 1.0
-    segments = 20
+    segments = 4
     geometry = mshr.Cylinder(cyl_top,cyl_bottom,top_radius,bottom_radius,segments)
 
     # Create the mesh
-    mesh = mshr.generate_mesh(geometry,35)
+    mesh = mshr.generate_mesh(geometry,20)
     # Save the mesh
     File('cylinder_3.pvd') << mesh
 
@@ -272,7 +272,7 @@ def fenics(sim_params,file_inputs,output_params,passive_params,hs_params,cell_io
             f0.vector()[jj*3+2] = 0.0
             hs_params_list[jj]["myofilament_parameters"]["k_3"][0] = 0.0
             #passive_params_list[jj]["c"][0] = 2000
-            c_param.vector()[jj] = 1000
+            c_param.vector()[jj] = 500
             c2_param.vector()[jj] = 250
             c3_param.vector()[jj] = 10
 

@@ -15,34 +15,11 @@ Make sure Docker is running and enter the command line of your container by foll
 python <path to fenics_driver.py> <path to instruction file>
 ```
 
-Navigate to ```/home/fenics/shared/demos/```, where you will see two directories:  
-* ```single_cell_length_control_demo/```
-* ```ellipsoidal_ventricle_demo/```
+Assuming the file structure is the default from the repository, you can run an instruction file by changing the directory to the one containing the instruction file and executing the following:  
 
-# Single Cell Demo
-Enter the ```single_cell_length_control_demo/``` directory, which contains the instruction file ```singlecell_demo.json```. In general, the syntax to execute MMotH-Vent is
 ```
-python [path to fenics_driver.py] [path to instruction file]
+python /home/fenics/shared/source_code/fenics_driver.py <name of instruction file>
 ```
-Therefore to execute this instruction file, use the following command:  
-
-
-
-The default option in this instruction file is to save all of the output in the same directory from which MMotH-Vent is called. MMotH-Vent outputs a number of numpy arrays that contain cell-level information. The cell data at any gauss point can be plotted by executing
-```
-python [path to k_plotter] [integer gauss point]
-```
-Assuming the path hierarchy is unchanged from the master repository, after running the demo the MyoSim data can be visualized by
-```
-python /home/fenics/shared/plot_tools/k_plotter 0
-```
-which should yield the following plot:
-<img src="https://github.com/mmoth-kurtis/MMotH-Vent/blob/master/docs/assets/images/Screen%20Shot%202020-07-01%20at%205.03.18%20PM.png?raw=true" alt="titlepage" width="800"/>  
-
-Finally, the mesh and displacement solutions are saved as ParaView files. It is recommended to download Paraview to view these solutions.
-
-# Ventricle Demo
-Under construction
 
 <a href="../installation/installation.html" class="btn btn--primary"><< Installation</a>
 <a href="../creating_input_files/fenics_input_readme.html" class="btn btn--primary">Building a Mesh >></a>
