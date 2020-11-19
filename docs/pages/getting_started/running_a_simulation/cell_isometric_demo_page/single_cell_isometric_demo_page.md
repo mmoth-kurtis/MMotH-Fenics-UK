@@ -7,11 +7,11 @@ nav_order: 1
 
 Summary
 -------
-A unit cube mesh consisting of six tetrahedron elements is used to model a single muscle cell response.
+A unit cube mesh consisting of six tetrahedral elements is used to model a single muscle cell tension response to a twitch calcium transient.
 
 Simulation Protocol
 -------------------
-The muscle cell is stretched xx% and activated with a skeletal muscle calcium transient approximation using the two-compartment calcium model.
+The muscle cell is stretched 11.5% over 5 ms so that the half-sarcomere length increases from 950 nm to 1100 nm. This stretch is maintained for 10 ms at a calcium concentration of 1e-7 M to allow the cross-bridges to reach steady state. Then the cell is activated with a skeletal muscle calcium transient approximation using the [two-compartment calcium] model.
 
 Boundary Conditions & Assumptions
 ---------------------------------
