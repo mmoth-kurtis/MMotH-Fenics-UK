@@ -3,7 +3,6 @@ title: Demos
 parent: Getting Started
 nav_order: 2
 has_children: true
-has_toc: false
 ---
 
 MMotH-Vent relies on user-specified information in the form of instruction files. These instruction files use the JSON format and define dictionaries of information to be parsed. Note, the convention is for input values to be specified as elements of a list, e.g. "keyword": [value] rather than "keyword": value. This page gives an overview of the expected keywords of an instruction file and their options. Demos are provided to show some of the current simulations that can be performed.  
