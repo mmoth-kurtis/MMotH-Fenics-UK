@@ -24,7 +24,7 @@ python /home/fenics/shared/source_code/fenics_driver.py <name of instruction fil
 
 Demos
 -----
-- [Cell Isometric Twitch](/cell_isometric_demo_page/single_cell_isometrice_demo_page.md)
+- [Cell Isometric Twitch](/cell_isometric_demo_page/single_cell_isometric_demo_page.md)
 - [Cell Isotonic Twitch](/cell_isotonic_twitch_page/cell_isotonic_twitch_demo.md)
 - [Fiber Isometric Twitch With Compliance](/fiber_isometric_twitch_with_compliance_page/fiber_isometric_twitch_with_compliance_demo.md)
 - [Fiber Isotonic Twitch With Compliance](/fiber_isotonic_twitch_page/fiber_isotonic_twitch_demo.md)
