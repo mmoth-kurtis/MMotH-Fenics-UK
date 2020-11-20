@@ -73,6 +73,7 @@ M_OFF = np.zeros(num_timesteps)
 M_ON =  np.zeros(num_timesteps)
 M_BOUND =  np.zeros(num_timesteps)
 N_ON =  np.zeros(num_timesteps)
+N_OFF = np.zeros(num_timesteps)
 #print np.shape(fenics_pop_data)
 for i in range(data_range):
 
@@ -80,7 +81,8 @@ for i in range(data_range):
     M_OFF[i] = fenics_pop_data[i,gauss_point,0]
     M_ON[i] = fenics_pop_data[i,gauss_point,1]
     M_BOUND[i] = np.sum(fenics_pop_data[i,gauss_point,2:array_length-3])
-    N_ON[i] = fenics_pop_data[i,gauss_point,array_length-2]
+    N_ON[i] = fenics_pop_data[i,gauss_point,array_length-1]
+    N_OFF[i] = fenics_pop_data[i,gauss_point,array_length-2]
 
 fig = plt.figure()
 #------------------------------------------------------------------------------
@@ -131,7 +133,10 @@ plt.xlabel('time (ms)')
 plt.ylabel("Proportions")
 #------------------------------------------------------------------------------
 plt.subplot(425)
-plt.plot(tarray[0:data_range], overlap[0:data_range,gauss_point])
+#plt.plot(tarray[0:data_range], overlap[0:data_range,gauss_point])
+plt.plot(tarray[0:data_range],N_ON[0:data_range])
+plt.plot(tarray[0:data_range],N_OFF[0:data_range])
+plt.plot(tarray[0:data_range],N_ON[0:data_range]+N_OFF[0:data_range])
 plt.ylabel('Overlap')
 #------------------------------------------------------------------------------
 ax3 = plt.subplot(426)

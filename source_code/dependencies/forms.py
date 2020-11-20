@@ -375,13 +375,25 @@ class Forms(object):
         R = F0
         return inv(R)*Fmat
 
-    def kroon_law(self,ffs):
+    def kroon_law(self,FunctionSpace,step_size,kappa):
 
-        f = Function(ffs)
-        kappa = 1.0
+        mesh = self.parameters["mesh"]
         U = self.Umat()
         f0 = self.parameters["fiber"]
         f = U*f0/sqrt(inner(U*f0,U*f0))
-        df0 = 1.0/kappa * (f - f0)
+        f_adjusted = 1./kappa * (f - f0) * step_size
+        f_adjusted = project(f_adjusted,VectorFunctionSpace(mesh,"DG",1),form_compiler_parameters={"representation":"uflacs"})
+        f_adjusted = interpolate(f_adjusted,FunctionSpace)
 
-        return df0, f
+        return f_adjusted
+
+    def rand_walk(self,width):
+
+        f0 = self.parameters["fiber"]
+        for i in np.arange(np.shape(f0.vector().array())[0]/3):
+            i = int(i)
+            f0.vector()[i*3] = np.random.normal(f0.vector().array()[i*3],width)
+            f0.vector()[i*3+1] = np.random.normal(f0.vector().array()[i*3+1],width)
+            f0.vector()[i*3+2] = np.random.normal(f0.vector().array()[i*3+2],width)
+
+        return f0
