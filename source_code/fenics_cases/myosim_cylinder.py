@@ -272,7 +272,7 @@ def fenics(sim_params,file_inputs,output_params,passive_params,hs_params,cell_io
             f0.vector()[jj*3+2] = 0.0
             hs_params_list[jj]["myofilament_parameters"]["k_3"][0] = 0.0
             #passive_params_list[jj]["c"][0] = 2000
-            c_param.vector()[jj] = 500
+            c_param.vector()[jj] = 400
             c2_param.vector()[jj] = 250
             c3_param.vector()[jj] = 10
 
@@ -285,13 +285,13 @@ def fenics(sim_params,file_inputs,output_params,passive_params,hs_params,cell_io
             if np.abs(temp_radius - top_radius) < 0.01:
                 temp_width = 0.0
             else:
-                temp_width = width*(1.0-(temp_radius/top_radius))
+                temp_width = width*(1.0-(temp_radius*temp_radius/(top_radius*top_radius)))
             f0.vector()[jj*3] = r.normal(m_x,temp_width,1)[0]
             f0.vector()[jj*3+1] = r.normal(m_y,temp_width,1)[0]
             f0.vector()[jj*3+2] = r.normal(m_z,temp_width,1)[0]
-            c_param.vector()[jj] = 4000
-            c2_param.vector()[jj] = 500
-            c3_param.vector()[jj] = 20
+            c_param.vector()[jj] = 1000
+            c2_param.vector()[jj] = 250
+            c3_param.vector()[jj] = 15
         """f0.vector()[kk*3] = x_comps[kk]
         # assign y component
         f0.vector()[kk*3+1] = y_comps[kk]
@@ -509,7 +509,7 @@ def fenics(sim_params,file_inputs,output_params,passive_params,hs_params,cell_io
     cb_f_array = project(cb_force, Quad).vector().get_local()[:]
 
     dumped_populations = np.zeros((no_of_int_points, n_array_length))
-    y_interp = np.zeros((no_of_int_points+1)*n_array_length)
+    y_interp = np.zeros((no_of_int_points)*n_array_length)
 
     x_dofs = W.sub(0).sub(0).dofmap().dofs()
 
@@ -625,12 +625,12 @@ def fenics(sim_params,file_inputs,output_params,passive_params,hs_params,cell_io
         np.save(output_path + "calcium",calarray)"""
 
         displacementfile << w.sub(0)
-        pk1temp = project(inner(f0,Pactive*f0),FunctionSpace(mesh,'DG',0))
+        pk1temp = project(inner(f0,Pactive*f0),FunctionSpace(mesh,'CG',1))
         pk1temp.rename("pk1temp","pk1temp")
         pk1file << pk1temp
         hsl_temp = project(hsl,FunctionSpace(mesh,'DG',1))
         hsl_temp.rename("hsl_temp","hsl")
-        hsl_file << hsl_temp
+        #hsl_file << hsl_temp
 
         hsl_old.vector()[:] = project(hsl, Quad).vector().get_local()[:] # for PDE
 
@@ -721,39 +721,39 @@ def fenics(sim_params,file_inputs,output_params,passive_params,hs_params,cell_io
             active_stress_ds.to_csv(output_path + 'active_stress.csv',mode='a',header=False)
 
             #active_stress_ds = active_stress_ds.transpose()
-            hsl_array_ds.iloc[0,:] = hsl_array[:]
-            hsl_array_ds.to_csv(output_path + 'half_sarcomere_lengths.csv',mode='a',header=False)
+            #hsl_array_ds.iloc[0,:] = hsl_array[:]
+            #hsl_array_ds.to_csv(output_path + 'half_sarcomere_lengths.csv',mode='a',header=False)
 
             calcium_ds.iloc[0,:] = calcium[l]
             calcium_ds.to_csv(output_path + 'calcium.csv',mode='a',header=False)
 
-            for i in range(no_of_int_points):
-                dumped_populations_ds.iloc[i,:] = dumped_populations[i,:]
-            dumped_populations_ds.to_csv(output_path + 'populations.csv',mode='a',header=False)
+            #for i in range(no_of_int_points):
+            #    dumped_populations_ds.iloc[i,:] = dumped_populations[i,:]
+            #dumped_populations_ds.to_csv(output_path + 'populations.csv',mode='a',header=False)
 
             tarray_ds[l] = tarray[l]
             tarray_ds.to_csv(output_path + 'time.csv',mode='a',header=False)
 
-            p_f_array_ds.iloc[0,:] = p_f_array[:]
-            p_f_array_ds.to_csv(output_path + 'myofiber_passive.csv',mode='a',header=False)
+            #p_f_array_ds.iloc[0,:] = p_f_array[:]
+            #p_f_array_ds.to_csv(output_path + 'myofiber_passive.csv',mode='a',header=False)
 
-            pgf_array_ds.iloc[0,:] = pgf_array[:]
-            pgf_array_ds.to_csv(output_path + 'gucc_fiber_pstress.csv',mode='a',header=False)
+            #pgf_array_ds.iloc[0,:] = pgf_array[:]
+            #pgf_array_ds.to_csv(output_path + 'gucc_fiber_pstress.csv',mode='a',header=False)
 
-            pgt_array_ds.iloc[0,:] = pgt_array[:]
-            pgt_array_ds.to_csv(output_path + 'gucc_trans_pstress.csv',mode='a',header=False)
+            #pgt_array_ds.iloc[0,:] = pgt_array[:]
+            #pgt_array_ds.to_csv(output_path + 'gucc_trans_pstress.csv',mode='a',header=False)
 
-            pgs_array_ds.iloc[0,:] = pgs_array[:]
-            pgs_array_ds.to_csv(output_path + 'gucc_shear_pstress.csv',mode='a',header=False)
+            #pgs_array_ds.iloc[0,:] = pgs_array[:]
+            #pgs_array_ds.to_csv(output_path + 'gucc_shear_pstress.csv',mode='a',header=False)
 
-            temp_overlap_ds.iloc[0,:] = temp_overlap[:]
-            temp_overlap_ds.to_csv(output_path + 'overlap.csv',mode='a',header=False)
+            #temp_overlap_ds.iloc[0,:] = temp_overlap[:]
+            #temp_overlap_ds.to_csv(output_path + 'overlap.csv',mode='a',header=False)
 
-            alpha_array_ds.iloc[0,:] = alpha_array[:]
-            alpha_array_ds.to_csv(output_path + 'alpha.csv',mode='a',header=False)
+            #alpha_array_ds.iloc[0,:] = alpha_array[:]
+            #alpha_array_ds.to_csv(output_path + 'alpha.csv',mode='a',header=False)
 
-            delta_hsl_array_ds.iloc[0,:] = delta_hsl_array[:]
-            delta_hsl_array_ds.to_csv(output_path + 'delta_hsl.csv',mode='a',header=False)
+            #delta_hsl_array_ds.iloc[0,:] = delta_hsl_array[:]
+            #delta_hsl_array_ds.to_csv(output_path + 'delta_hsl.csv',mode='a',header=False)
 
         # Update Fiber orientation
         #f0 = f0+step_size*(Cmat*f0-f0)/sqrt(inner(Cmat*f0-f0,Cmat*f0-f0))

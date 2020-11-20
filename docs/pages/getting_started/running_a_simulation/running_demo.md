@@ -16,7 +16,7 @@ Make sure Docker is running and enter the command line of your container by foll
 python <path to fenics_driver.py> <path to instruction file>
 ```
 
-Assuming the file structure is the default from the repository, you can run an instruction file by changing the directory to the one containing the instruction file and executing the following:  
+Assuming the file structure is the default from the repository, an instruction file from its direction by executing the following:
 
 ```
 python /home/fenics/shared/source_code/fenics_driver.py <name of instruction file>

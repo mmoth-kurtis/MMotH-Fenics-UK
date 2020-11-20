@@ -466,13 +466,13 @@ def fenics(sim_params,file_inputs,output_params,passive_params,hs_params,cell_io
 
         #print(cb_f_array)
 
-        """if t <= 5:
+        if t <= 5:
             u_D.u_D += .014
         else:
             u_D.u_D = u_D.u_D
-        print "time = " + str(t)"""
-        print hsl_template[l]
-        u_D.u_D = hsl_template[l]-1
+        #print "time = " + str(t)
+        #print hsl_template[l]
+        #u_D.u_D = hsl_template[l]-1
         t = t + step_size
 
         calarray.append(hs.Ca_conc*np.ones(no_of_int_points))
