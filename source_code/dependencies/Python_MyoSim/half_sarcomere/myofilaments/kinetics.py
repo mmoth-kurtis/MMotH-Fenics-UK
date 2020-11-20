@@ -6,11 +6,8 @@ from scipy.integrate import solve_ivp
 
 def evolve_kinetics(self, time_step, Ca_conc, cell_time):
     """Updates kinetics, switches to different sub-functions as required"""
-    #print self.kinetic_scheme[0]
     if (self.kinetic_scheme[0] == '3state_with_SRX'):
-        #print "calling update 3state"
         update_3state_with_SRX(self, time_step, Ca_conc,cell_time)
-
 
 def return_fluxes(self, y, Ca_conc):
     # Returns fluxes
@@ -26,7 +23,6 @@ def return_fluxes(self, y, Ca_conc):
 
         r1 = np.minimum(self.parent_hs.max_rate,
                         self.k_1 *(1.0 + self.k_force * self.parent_hs.hs_force))
-
         J1 = r1 * M_OFF
 
         r2 = np.minimum(self.parent_hs.max_rate, self.k_2)
@@ -41,10 +37,7 @@ def return_fluxes(self, y, Ca_conc):
         r4 = self.k_4_0 + (self.k_4_1 * np.power(self.x, 4))
         r4[r4 > self.parent_hs.max_rate] = self.parent_hs.max_rate
         J4 = r4 * M_bound
-
-
-# Kurtis trying something
-        """if (self.n_overlap > 0.0):
+        if (self.n_overlap > 0.0):
             Jon = (self.k_on * Ca_conc * (self.n_overlap - n_on) *
             (1.0 + self.k_coop * (n_on / self.n_overlap)))
         else:
@@ -54,8 +47,8 @@ def return_fluxes(self, y, Ca_conc):
             Joff = self.k_off * (n_on - n_bound) * \
             (1.0 + self.k_coop * ((self.n_overlap - n_on) / self.n_overlap))
         else:
-            Joff = 0.0"""
-        if (self.n_overlap > 0.0):
+            Joff = 0.0
+        """if (self.n_overlap > 0.0):
             if self.n_overlap > n_on:
                 Jon = (self.k_on * Ca_conc * (self.n_overlap - n_on) *
                 (1.0 + self.k_coop * (n_on / self.n_overlap)))
@@ -88,7 +81,7 @@ def return_fluxes(self, y, Ca_conc):
             else:
                 Joff = self.k_off * (n_on - n_bound)
         else:
-            Joff = 0.0
+            Joff = 0.0"""
 
         fluxes = dict()
         fluxes['J1'] = J1

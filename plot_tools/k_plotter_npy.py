@@ -18,9 +18,9 @@ gauss_point = 0
 sim_dir = os.getcwd()
 
 # For now, hard coding bin discretization information
-xmin = -10
-xmax = 10
-bin_width = 1.0
+xmin = -12
+xmax = 12
+bin_width = 0.5
 cb_domain = np.arange(xmin,xmax+bin_width,bin_width)
 num_bins = np.shape(cb_domain)
 
@@ -49,9 +49,11 @@ else:
 
 # Define number of time steps and array length here
 sim_info = fenics_pop_data.shape
+print sim_info
 num_timesteps = np.shape(tarray)[0]
 num_int_points = sim_info[0]/num_timesteps
-array_length = sim_info[1]
+array_length = sim_info[2]
+print "array length is = " + str(array_length)
 #print sys.argv[0]
 #print sys.argv[1]
 gauss_point = int(sys.argv[1])
@@ -157,7 +159,7 @@ plt.ylabel("Calcium [M]")
 
 #------------------------------------------------------------------------------
 # Animate cross-bridges during simulation
-max_nbound = np.max(fenics_pop_data[:,2])
+"""max_nbound = np.max(fenics_pop_data[:,2])
 #print max_nbound
 ax1 = plt.subplot(427,xlim=(xmin-1,xmax+1),ylim=(0.00,max_nbound/3))
 #ax = plt.axes(xlim=(xmin,xmax),ylim=(0,1))
@@ -191,10 +193,12 @@ def animate(i):
     line[1].set_data(t,m)
     line[2].set_data(t,m2)
     time.sleep(0.25)
-    return line
+    return line"""
+plt.subplot(427)
+plt.plot(tarray[0:data_range], overlap[0:data_range,gauss_point])
 
 
-anim = FuncAnimation(fig, animate, init_func=init, frames = num_timesteps-1, interval = 1, blit=True)
+#anim = FuncAnimation(fig, animate, init_func=init, frames = num_timesteps-1, interval = 1, blit=True)
 
 #mng = plt.get_current_fig_manager()
 #mng.frame.Maximize(True)
