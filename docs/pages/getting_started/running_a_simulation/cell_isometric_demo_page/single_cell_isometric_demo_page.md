@@ -35,6 +35,3 @@ And the cube deformation is seen in Paraview, shown below. The color shows the m
   <source src="displacement_animation.m4v" type="video/mp4">
 </video>
 <img src="https://github.com/mmoth-kurtis/MMotH-Vent/blob/master/docs/pages/getting_started/running_a_simulation/cell_isometric_demo_page/f0_cell_isometric_demo_2.png" width="800" height="500">
-
-
-![f0_vectors](/f0_cell_isometric_demo_2.png | width=800)
