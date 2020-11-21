@@ -29,10 +29,10 @@ If plotted using the k_plotter.py file, the cell-level model results are below:
 </video>
 
 
-And the cube deformation is seen in Paraview, shown below. The color shows the magnitude of active stress generated in the f0 direction shown by the vectors in the image below:
+And the cube deformation is seen in Paraview, shown below. The color shows the magnitude of active stress generated in the f0 direction (the direction shown by the vectors in the bottom image):
 
 <video width="800" height="500" controls>
   <source src="displacement_animation.m4v" type="video/mp4">
 </video>
 
-![f0_vectors](/f0_cell_isometric_demo.png)
+![f0_vectors](/f0_cell_isometric_demo_2.png)
