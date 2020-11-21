@@ -35,4 +35,4 @@ And the cube deformation is seen in Paraview, shown below. The color shows the m
   <source src="displacement_animation.m4v" type="video/mp4">
 </video>
 
-![f0_vectors](/f0_cell_isometric_demo_2.png)
+![f0_vectors](/f0_cell_isometric_demo_2.png | width=800)
