@@ -18,7 +18,7 @@ gauss_point = 0
 import math
 
 sim_dir = os.getcwd()
-font_size = 10
+font_size = 14
 
 # Set up plot style info here
 font = {'weight':'normal',
@@ -29,6 +29,8 @@ red = '#F99394'
 green = '#92FF93'
 blue = '#ABD2FF'
 gray = '#707180'
+
+#plt.rcParams('tick',labelsize=15)
 
 def get_yticks(y_bound=[]):
 
@@ -185,7 +187,7 @@ for i in range(data_range):
     N_ON[i] = fenics_pop_data[i,gauss_point,array_length-1]
     N_OFF[i] = fenics_pop_data[i,gauss_point,array_length-2]
 
-fig = plt.figure()
+fig = plt.figure(figsize=(16,9))
 #fig.set_size_inches([22,8])
 #------------------------------------------------------------------------------
 ax2 = plt.subplot(421)
@@ -201,7 +203,8 @@ ax2.tick_params(
     which='both',      # both major and minor ticks are affected
     bottom=False,      # ticks along the bottom edge are off
     top=False,         # ticks along the top edge are off
-    labelbottom=False)
+    labelbottom=False,
+    labelsize = 15)
 ax2.tick_params(
     axis='y',
     direction='out'
@@ -367,6 +370,8 @@ plt.plot(tarray[0:data_range],N_ON[0:data_range]+N_OFF[0:data_range])"""
 plt.ylabel('Filament Overlap',fontdict=font,rotation=0)
 y_bound = ax6.get_ybound()
 y_ticks = get_yticks(y_bound)
+plt.xlabel('Time (ms)',fontdict=font)
+#ax6.set_xlabel('Time (ms)', fontsize = font_size)
 ax6.set_ylim(y_ticks)
 ax6.set_yticks(y_ticks)
 x_range = [tarray[0],tarray[data_range-1]]
@@ -424,7 +429,7 @@ top8.set_visible(False)
 pca = -1*np.log10(calcium)
 plt.plot(tarray[0:data_range], pca[0:data_range,0],color=purple,linewidth=2)
 #plt.scatter(myosim_summary_data[:,0], myosim_summary_data[:,1],color='r')
-plt.xlabel('Time (ms)')
+ax8.set_xlabel('Time (ms)', fontsize = font_size)
 #plt.ylabel("Calcium [M]",fontdict=font,rotation=0)
 #plt.ylim((0.9*np.amin(calcium[0:data_range,0]),1.1*np.amax(calcium[0:data_range,0])))
 #ax8.set_ylim(0.9*np.amin(calcium[0:data_range,0]),1.1*np.amax(calcium[0:data_range,0]))
@@ -448,10 +453,13 @@ ax8.invert_yaxis()
 max_nbound = np.max(fenics_pop_data[:,2])
 #print max_nbound
 ax1 = plt.subplot(427,xlim=(xmin-1,xmax+1),ylim=(0.00,max_nbound/3))
+y_label = 'M_FG(x)'
 y_bound = ax1.get_ybound()
 y_ticks = get_yticks(y_bound)
 ax1.set_ylim(y_ticks)
 ax1.set_yticks(y_ticks)
+ax1.set_xlabel('Working Cross-bridge \n Range \n (nm)', fontsize = font_size)
+#plt.xlabel('Working Cross-bridge Range (nm)')
 right_side1 = ax1.spines["right"]
 bottom1 = ax1.spines["bottom"]
 top1 = ax1.spines["top"]
@@ -502,11 +510,13 @@ anim = FuncAnimation(fig, animate, init_func=init, frames = num_timesteps-1, int
 #plt.figure()
 
 plt.subplots_adjust(left=.175,right=.95,wspace=0.5)
-#plt.switch_backend('pdf')
+plt.switch_backend('Qt4Agg')
 mng=plt.get_current_fig_manager()
-mng.full_screen_toggle()
+mng.window.showMaximized()
+
 #mng.show()
-print(anim.to_html5_video())
+#print(anim.to_html5_video())
+anim.save('test_animation.mp4','ffmpeg',15)
 #anim.to_html5_video('test_animation')
 plt.show()
 #plt.show()
