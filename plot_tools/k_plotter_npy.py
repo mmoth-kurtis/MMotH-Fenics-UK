@@ -11,16 +11,115 @@ import numpy as np
 import matplotlib.pyplot as plt
 import sys
 from matplotlib.animation import FuncAnimation
+import matplotlib.ticker as ticker
 import time
 plt.style.use('seaborn-pastel')
 gauss_point = 0
+import math
 
 sim_dir = os.getcwd()
+font_size = 10
+
+# Set up plot style info here
+font = {'weight':'normal',
+    'size': 14}
+
+purple = '#7656E7'
+red = '#F99394'
+green = '#92FF93'
+blue = '#ABD2FF'
+gray = '#707180'
+
+def get_yticks(y_bound=[]):
+
+    def get_my_ceil(number,decimals):
+        number = number * 10**decimals
+        ceil = math.ceil(number/5)*5/(10**decimals)
+        return ceil
+    def get_my_floor (number,decimals):
+        number = number * 10**decimals
+        floor = math.floor(number/5)*5/(10**decimals)
+        return floor
+
+    y_max = y_bound[1]
+    print "y max " + str(y_max)
+    y_min = y_bound[0]
+
+    y_max_tick = int(math.ceil(y_max/5)*5)
+    print "ymax tick " + str(y_max_tick)
+    y_min_tick = int(math.floor(y_min/5)*5)
+
+    if y_max < 0.01:
+        y_max_tick = get_my_ceil(y_max,3)
+        y_min_tick = get_my_floor(y_min,3)
+    elif y_max < 1 :
+        y_max_tick = get_my_ceil(y_max,2)
+        y_min_tick = get_my_floor(y_min,2)
+    elif y_max<10:
+        y_max_tick = int(math.ceil(y_max))
+        y_min_tick = int(math.floor(y_min))
+
+    if y_min_tick<0:
+        y_min_tick = 0
+
+    y_ticks = [y_min_tick,y_max_tick]
+
+    return y_ticks
+
+def find_all_char_index(str,sub_str):
+    index_array = []
+    start_index = 0
+    while start_index < len(str):
+        start_index = str.find(sub_str,start_index)
+        if  start_index == -1:
+            return index_array
+        else:
+            index_array.append(start_index)
+            start_index += 1
+    return index_array
+
+def get_labelpad(y_max_tick,x_range):
+    max_len_ticks = 4
+    x_mid = 50 #x_range/2
+    len_y_tick = len(str(y_max_tick))
+    if '.' in str(y_max_tick):
+       len_y_tick = len_y_tick - 0.5
+
+    len_dif_ticks = max_len_ticks-len_y_tick
+
+    labelpad = x_mid+len_dif_ticks*10
+
+    return labelpad
+
+def get_y_label_y_coord(string):
+
+    number_of_lines =string.count("\n")+1
+    line_index_array = find_all_char_index(string,'\n')
+    half_line_counter = 0
+    start_index = 0
+    if len(line_index_array) == 0:
+        if '^' in string:
+            half_line_counter = 1
+    else:
+        for i in range(number_of_lines):
+            if i < len(line_index_array):
+                end_index = line_index_array[i]
+            else:
+                end_index = -1
+            if '^' in string[start_index:end_index]:
+                half_line_counter += 1
+            if end_index != -1:
+                 start_index = end_index + 1
+
+    number_of_lines = number_of_lines + half_line_counter*1
+    y_coord = 0.5-number_of_lines*0.1
+
+    return y_coord
 
 # For now, hard coding bin discretization information
-xmin = -12
-xmax = 12
-bin_width = 0.5
+xmin = -10
+xmax = 10
+bin_width = 1.0
 cb_domain = np.arange(xmin,xmax+bin_width,bin_width)
 num_bins = np.shape(cb_domain)
 
@@ -87,33 +186,113 @@ for i in range(data_range):
     N_OFF[i] = fenics_pop_data[i,gauss_point,array_length-2]
 
 fig = plt.figure()
+#fig.set_size_inches([22,8])
 #------------------------------------------------------------------------------
 ax2 = plt.subplot(421)
-if single_cell_sim_flag > 0:
-    plt.plot(tarray[0:data_range],HSL[0:data_range])
-else:
-    plt.plot(tarray[0:data_range], HSL[0:data_range,:])
+right_side = ax2.spines["right"]
+bottom = ax2.spines["bottom"]
+top = ax2.spines["top"]
+right_side.set_visible(False)
+bottom.set_visible(False)
+top.set_visible(False)
 
-plt.xlabel('time [ms]')
-plt.ylabel("hsl (nm)")
+ax2.tick_params(
+    axis='x',          # changes apply to the x-axis
+    which='both',      # both major and minor ticks are affected
+    bottom=False,      # ticks along the bottom edge are off
+    top=False,         # ticks along the top edge are off
+    labelbottom=False)
+ax2.tick_params(
+    axis='y',
+    direction='out'
+)
+print np.amin(HSL)
+
+majors = [int(0.9*np.amin(HSL[0:data_range])),1.1*int(np.amax(HSL[0:data_range]))]
+ax2.yaxis.set_major_locator(ticker.MultipleLocator(majors[1]-majors[0]))
+
+plt.ylim((0.9*np.amin(HSL[0:data_range]),1.1*np.amax(HSL)))
+
+
+
+if single_cell_sim_flag > 0:
+    plt.plot(tarray[0:data_range],HSL[0:data_range],color=purple,linewidth=2)
+else:
+    plt.plot(tarray[0:data_range], HSL[0:data_range,:],color=purple,linewidth=2)
+
+#plt.xlabel('Time [ms]',fontdict=font)
+#plt.ylabel("Half-sarcomere Length \n  (nm)",fontdict=font,rotation=0)
+ax2.yaxis.set_label_coords(-0.25,0.5)
+y_bound = ax2.get_ybound()
+y_ticks = get_yticks(y_bound)
+x_range = [tarray[0],tarray[data_range-1]]
+ax2.set_ylim(y_ticks)
+ax2.set_yticks(y_ticks)
+labelpad= get_labelpad(y_ticks[1],x_range)
+y_label = 'Half-sarcomere Length \n (nm)'
+y_coord = get_y_label_y_coord(y_label)
+ax2.set_ylabel(y_label, fontsize = font_size,rotation=0,labelpad=labelpad,y=y_coord)
+
 #------------------------------------------------------------------------------
 
-plt.subplot(422)
+ax3 = plt.subplot(422)
+right_side3 = ax3.spines["right"]
+bottom3 = ax3.spines["bottom"]
+top3 = ax3.spines["top"]
+right_side3.set_visible(False)
+bottom3.set_visible(False)
+top3.set_visible(False)
+
+ax3.tick_params(
+    axis='x',          # changes apply to the x-axis
+    which='both',      # both major and minor ticks are affected
+    bottom=False,      # ticks along the bottom edge are off
+    top=False,         # ticks along the top edge are off
+    labelbottom=False)
+
+plt.ylim((0,1))
+
 #print np.shape(tarray)
 #print np.shape(M_OFF)
-state_1_pops_fenics, = plt.plot(tarray[0:data_range], M_OFF[0:data_range],label='SRX')
-state_2_pops_fenics, = plt.plot(tarray[0:data_range], M_ON[0:data_range],label='Detached')
-state_3_pops_fenics, = plt.plot(tarray[0:data_range], M_BOUND[0:data_range],label='M Bound')
+state_1_pops_fenics, = plt.plot(tarray[0:data_range], M_OFF[0:data_range],label='SRX',color=gray,linewidth=2)
+state_2_pops_fenics, = plt.plot(tarray[0:data_range], M_ON[0:data_range],label='Detached',color=green,linewidth=2)
+state_3_pops_fenics, = plt.plot(tarray[0:data_range], M_BOUND[0:data_range],label='M Bound',color=red,linewidth=2)
 
-plt.legend((M_OFF,M_ON,M_BOUND), ('OFF', 'ON', 'FG'))
-plt.title("Myosin Populations")
-plt.xlabel('time (ms)')
-plt.ylabel("Proportions")
-
+plt.legend((state_1_pops_fenics,state_2_pops_fenics,state_3_pops_fenics), ('M_SRX', 'M_DRX', 'M_FG'))
+#plt.title("Myosin Populations")
+#plt.xlabel('Time (ms)')
+#plt.ylabel("Proportions",fontdict=font,rotation=0)
+y_bound = ax3.get_ybound()
+y_ticks = get_yticks(y_bound)
+ax3.set_ylim(y_ticks)
+ax3.set_yticks(y_ticks)
+x_range = [tarray[0],tarray[data_range-1]]
+ax3.set_ylim(y_ticks)
+ax3.set_yticks(y_ticks)
+labelpad= get_labelpad(y_ticks[1],x_range)
+y_label = 'Myosin Populations \n (Proportion)'
+y_coord = get_y_label_y_coord(y_label)
+ax3.set_ylabel(y_label, fontsize = font_size,rotation=0,labelpad=labelpad,y=y_coord)
 #---------------------------------------------------------------------------------
-plt.subplot(423)
+ax4 = plt.subplot(423)
+right_side4 = ax4.spines["right"]
+bottom4 = ax4.spines["bottom"]
+top4 = ax4.spines["top"]
+right_side4.set_visible(False)
+bottom4.set_visible(False)
+top4.set_visible(False)
+
+ax4.tick_params(
+    axis='x',          # changes apply to the x-axis
+    which='both',      # both major and minor ticks are affected
+    bottom=False,      # ticks along the bottom edge are off
+    top=False,         # ticks along the top edge are off
+    labelbottom=False)
+
+plt.ylim((0.9*np.amin(pstress),1.1*np.amax(pstress)))
+
 if single_cell_sim_flag > 0:
-    fiber_pstress, = plt.plot(tarray[0:data_range], pstress[0:data_range])
+    fiber_pstress, = plt.plot(tarray[0:data_range], pstress[0:data_range],color=purple,linewidth=2)
 else:
     fiber_pstress, = plt.plot(tarray[0:data_range], pstress[0:data_range,gauss_point])
     gfiber, = plt.plot(tarray[0:data_range], gucc_fiber[0:data_range,gauss_point])
@@ -122,50 +301,167 @@ else:
     plt.legend((fiber_pstress, gfiber, gtrans, gshear), ('fiber', 'G_fiber', 'G_trans', 'G_shear'))
 
 #plt.plot(tarray, pstress[0:data_range])
-plt.ylabel('Passive Stress (Pa)')
+#plt.ylabel('Passive Stress (Pa)',fontdict=font,rotation=0)
+y_bound = ax4.get_ybound()
+y_ticks = get_yticks(y_bound)
+x_range = [tarray[0],tarray[data_range-1]]
+ax4.set_ylim(y_ticks)
+ax4.set_yticks(y_ticks)
+labelpad= get_labelpad(y_ticks[1],x_range)
+y_label = ' Myofiber Passive Stress\n (Pa)'
+y_coord = get_y_label_y_coord(y_label)
+ax4.set_ylabel(y_label, fontsize = font_size,rotation=0,labelpad=labelpad,y=y_coord)
+ax4.set_ylim(y_ticks)
+ax4.set_yticks(y_ticks)
 #------------------------------------------------------------------------------
-plt.subplot(424)
+ax5 = plt.subplot(424)
+right_side5= ax5.spines["right"]
+bottom5= ax5.spines["bottom"]
+top5= ax5.spines["top"]
+right_side5.set_visible(False)
+bottom5.set_visible(False)
+top5.set_visible(False)
 #state_3_pops_fenics, = plt.plot(tarray, np.sum(fenics_pop_data[0:data_range,2:array_length-2]), 'r')
-state_3_pops_fenics, = plt.plot(tarray[0:data_range], M_BOUND[0:data_range])
-binding_sites, = plt.plot(tarray[0:data_range], N_ON[0:data_range])
+state_3_pops_fenics, = plt.plot(tarray[0:data_range], M_BOUND[0:data_range],color=red,linewidth=2)
+binding_sites, = plt.plot(tarray[0:data_range], N_ON[0:data_range],color=blue,linewidth=2)
 
+ax5.tick_params(
+    axis='x',          # changes apply to the x-axis
+    which='both',      # both major and minor ticks are affected
+    bottom=False,      # ticks along the bottom edge are off
+    top=False,         # ticks along the top edge are off
+    labelbottom=False)
 
-plt.legend((binding_sites,state_3_pops_fenics), ('Binding sites','Xbridges'))
-plt.xlabel('time (ms)')
-plt.ylabel("Proportions")
+plt.ylim((0,1))
+
+plt.legend((binding_sites,state_3_pops_fenics), ('Binding Sites','M_FG'))
+#plt.xlabel('Time (ms)')
+#plt.ylabel("Proportions",fontdict=font,rotation=0)
+y_bound = ax5.get_ybound()
+y_ticks = get_yticks(y_bound)
+ax5.set_ylim(y_ticks)
+ax5.set_yticks(y_ticks)
+x_range = [tarray[0],tarray[data_range-1]]
+ax5.set_ylim(y_ticks)
+ax5.set_yticks(y_ticks)
+labelpad= get_labelpad(y_ticks[1],x_range)
+y_label = '  Filament Populations \n (Proportion)'
+y_coord = get_y_label_y_coord(y_label)
+ax5.set_ylabel(y_label, fontsize = font_size,rotation=0,labelpad=labelpad,y=y_coord)
 #------------------------------------------------------------------------------
-plt.subplot(425)
-#plt.plot(tarray[0:data_range], overlap[0:data_range,gauss_point])
-plt.plot(tarray[0:data_range],N_ON[0:data_range])
+ax6=plt.subplot(425)
+right_side6 = ax6.spines["right"]
+bottom6 = ax6.spines["bottom"]
+top6 = ax6.spines["top"]
+right_side6.set_visible(False)
+
+plt.ylim((0.9*np.amin(overlap[0:data_range,gauss_point]),1.1*np.amax(overlap[0:data_range,gauss_point])))
+
+
+#bottom.set_visible(False)
+top6.set_visible(False)
+plt.plot(tarray[0:data_range], overlap[0:data_range,gauss_point],color=purple,linewidth=2)
+"""plt.plot(tarray[0:data_range],N_ON[0:data_range])
 plt.plot(tarray[0:data_range],N_OFF[0:data_range])
-plt.plot(tarray[0:data_range],N_ON[0:data_range]+N_OFF[0:data_range])
-plt.ylabel('Overlap')
+plt.plot(tarray[0:data_range],N_ON[0:data_range]+N_OFF[0:data_range])"""
+plt.ylabel('Filament Overlap',fontdict=font,rotation=0)
+y_bound = ax6.get_ybound()
+y_ticks = get_yticks(y_bound)
+ax6.set_ylim(y_ticks)
+ax6.set_yticks(y_ticks)
+x_range = [tarray[0],tarray[data_range-1]]
+ax6.set_ylim(y_ticks)
+ax6.set_yticks(y_ticks)
+labelpad= get_labelpad(y_ticks[1],x_range)
+y_label = 'Filament \n Overlap \n (Proportion)'
+y_coord = get_y_label_y_coord(y_label)
+ax6.set_ylabel(y_label, fontsize = font_size,rotation=0,labelpad=labelpad,y=y_coord)
 #------------------------------------------------------------------------------
-ax3 = plt.subplot(426)
+ax7 = plt.subplot(426)
+right_side7 = ax7.spines["right"]
+bottom7 = ax7.spines["bottom"]
+top7 = ax7.spines["top"]
+right_side7.set_visible(False)
+bottom7.set_visible(False)
+top7.set_visible(False)
+
+ax7.tick_params(
+    axis='x',          # changes apply to the x-axis
+    which='both',      # both major and minor ticks are affected
+    bottom=False,      # ticks along the bottom edge are off
+    top=False,         # ticks along the top edge are off
+    labelbottom=False)
+
+plt.ylim((0.9*np.amin(stress_array),1.1*np.amax(stress_array)))
+
+
 if single_cell_sim_flag > 0:
-    plt.plot(tarray[0:data_range],stress_array[0:data_range])
+    plt.plot(tarray[0:data_range],stress_array[0:data_range],color=purple,linewidth=2)
 else:
-    plt.plot(tarray[0:data_range], stress_array[0:data_range,gauss_point])
+    plt.plot(tarray[0:data_range], stress_array[0:data_range,gauss_point],color=purple,linewidth=2)
 
-plt.xlabel('time (ms)')
-plt.ylabel("Stress (Pa)")
-
+#plt.xlabel('Time (ms)')
+#plt.ylabel("Active Stress (Pa)",fontdict=font,rotation=0)
+y_bound = ax7.get_ybound()
+y_ticks = get_yticks(y_bound)
+ax7.set_ylim(y_ticks)
+ax7.set_yticks(y_ticks)
+x_range = [tarray[0],tarray[data_range-1]]
+ax7.set_ylim(y_ticks)
+ax7.set_yticks(y_ticks)
+labelpad= get_labelpad(y_ticks[1],x_range)
+y_label = 'Active Stress \n (Pa)'
+y_coord = get_y_label_y_coord(y_label)
+ax7.set_ylabel(y_label, fontsize = font_size,rotation=0,labelpad=labelpad,y=y_coord)
 #------------------------------------------------------------------------------
-plt.subplot(428)
-plt.plot(tarray[0:data_range], calcium[0:data_range,0])
+ax8 = plt.subplot(428)
+right_side8 = ax8.spines["right"]
+bottom8 = ax8.spines["bottom"]
+top8 = ax8.spines["top"]
+right_side8.set_visible(False)
+#bottom.set_visible(False)
+top8.set_visible(False)
+pca = -1*np.log10(calcium)
+plt.plot(tarray[0:data_range], pca[0:data_range,0],color=purple,linewidth=2)
 #plt.scatter(myosim_summary_data[:,0], myosim_summary_data[:,1],color='r')
-plt.xlabel('time (ms)')
-plt.ylabel("Calcium [M]")
-
+plt.xlabel('Time (ms)')
+#plt.ylabel("Calcium [M]",fontdict=font,rotation=0)
+#plt.ylim((0.9*np.amin(calcium[0:data_range,0]),1.1*np.amax(calcium[0:data_range,0])))
+#ax8.set_ylim(0.9*np.amin(calcium[0:data_range,0]),1.1*np.amax(calcium[0:data_range,0]))
+#x_range = [tarray[0],tarray[data_range-1]]
+y_bound = ax8.get_ybound()
+print "ybound " + str(y_bound)
+y_ticks = get_yticks(y_bound)
+print "y ticks " + str(y_ticks[1])
+ax8.set_ylim(y_ticks)
+ax8.set_yticks(y_ticks)
+#x_range = [tarray[0],tarray[data_range-1]]
+#ax8.set_ylim(y_ticks)
+#ax8.set_yticks(y_ticks)
+labelpad= get_labelpad(y_ticks[1],x_range)
+y_label = '          pCa'
+y_coord = get_y_label_y_coord(y_label)
+ax8.set_ylabel(y_label, fontsize = font_size,rotation=0,labelpad=labelpad,y=y_coord)
+ax8.invert_yaxis()
 #------------------------------------------------------------------------------
 # Animate cross-bridges during simulation
-"""max_nbound = np.max(fenics_pop_data[:,2])
+max_nbound = np.max(fenics_pop_data[:,2])
 #print max_nbound
 ax1 = plt.subplot(427,xlim=(xmin-1,xmax+1),ylim=(0.00,max_nbound/3))
+y_bound = ax1.get_ybound()
+y_ticks = get_yticks(y_bound)
+ax1.set_ylim(y_ticks)
+ax1.set_yticks(y_ticks)
+right_side1 = ax1.spines["right"]
+bottom1 = ax1.spines["bottom"]
+top1 = ax1.spines["top"]
+right_side1.set_visible(False)
+#bottom.set_visible(False)
+top1.set_visible(False)
 #ax = plt.axes(xlim=(xmin,xmax),ylim=(0,1))
-line1, = ax1.plot([],[],lw=3)
-line2, = ax2.plot([],[])
-line3, = ax3.plot([],[])
+line1, = ax1.plot([],[],lw=3,color=red)
+line2, = ax2.plot([],[],color=red)
+line3, = ax3.plot([],[],color=red)
 line = [line1, line2, line3]
 
 def init():
@@ -179,7 +475,9 @@ y = np.zeros(np.shape(cb_domain))
 def animate(i):
     # array_length -1 for cpp, -2 for python
     #y = fenics_pop_file[i,gauss_point,2:array_length-2]
-    y = fenics_pop_data[i*num_int_points+gauss_point,2:array_length-2]
+    print np.shape(fenics_pop_data)
+    y = fenics_pop_data[i,num_int_points+gauss_point,2:array_length-2]
+    print np.shape(cb_domain)
     if single_cell_sim_flag > 0:
         m.append(HSL[i])
         m2.append(stress_array[i])
@@ -192,17 +490,23 @@ def animate(i):
     line[0].set_data(cb_domain,y)
     line[1].set_data(t,m)
     line[2].set_data(t,m2)
-    time.sleep(0.25)
-    return line"""
-plt.subplot(427)
-plt.plot(tarray[0:data_range], overlap[0:data_range,gauss_point])
+    #time.sleep(0.25)
+    return line
 
 
-#anim = FuncAnimation(fig, animate, init_func=init, frames = num_timesteps-1, interval = 1, blit=True)
+
+anim = FuncAnimation(fig, animate, init_func=init, frames = num_timesteps-1, interval = 1, blit=True,save_count=200)
 
 #mng = plt.get_current_fig_manager()
 #mng.frame.Maximize(True)
 #plt.figure()
 
-plt.get_current_fig_manager().full_screen_toggle()
+plt.subplots_adjust(left=.175,right=.95,wspace=0.5)
+#plt.switch_backend('pdf')
+mng=plt.get_current_fig_manager()
+mng.full_screen_toggle()
+#mng.show()
+print(anim.to_html5_video())
+#anim.to_html5_video('test_animation')
 plt.show()
+#plt.show()

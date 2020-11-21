@@ -20,12 +20,13 @@ def fenics(sim_params,file_inputs,output_params,passive_params,hs_params,cell_io
     global j
 
     # forcing hsl from other simulation
-    hsl_template = np.zeros(701)
+    """hsl_template = np.zeros(701)
     hsl_template[0:700] = np.load('hsl_template_altered.npy')
     hsl_template[700] = hsl_template[699]
-    print "hsl template " + str(np.shape(hsl_template))
+    print "hsl template " + str(np.shape(hsl_template))"""
     output_path = output_params["output_path"][0]
     displacementfile = File(output_path + "u_disp.pvd")
+    pk1_file = File(output_path + "active_stress.pvd")
 
     filament_compliance_factor = hs_params["myofilament_parameters"]["filament_compliance_factor"][0]
 #    filament_compliance_factor = 0.5
@@ -78,6 +79,7 @@ def fenics(sim_params,file_inputs,output_params,passive_params,hs_params,cell_io
     fdataCa = open(output_path + "calcium_.txt", "w", 0)
 
     fx_rxn = np.zeros((time_steps))
+
 
     #prev_ca = np.load("calcium_10.npy")
     #prev_ca = prev_ca[:,0]
@@ -136,7 +138,16 @@ def fenics(sim_params,file_inputs,output_params,passive_params,hs_params,cell_io
     #plot(mesh)
     #plt.show()
 
-    f0 = Constant((1.0, 0.0, 0.0))
+    #f0 = Constant((1.0, 0.0, 0.0))
+    # Vector element at gauss points (for fibers)
+    VQuadelem = VectorElement("Quadrature", mesh.ufl_cell(), degree=2, quad_scheme="default")
+    VQuadelem._quad_scheme = 'default'
+    fiberFS = FunctionSpace(mesh, VQuadelem)
+    f0 = Function(fiberFS)
+    for jj in np.arange(no_of_int_points):
+        f0.vector()[jj*3] = 1.0
+    File(output_path + "fiber.pvd") << project(f0,VectorFunctionSpace(mesh, "DG", 0))
+
     s0 = Constant((0.0, 1.0, 0.0))
     n0 = Constant((0.0, 0.0, 1.0))
 
@@ -433,6 +444,9 @@ def fenics(sim_params,file_inputs,output_params,passive_params,hs_params,cell_io
         np.save(output_path + "calcium",calarray)
 
         displacementfile << w.sub(0)
+        pk1temp = project(inner(f0,Pactive*f0),FunctionSpace(mesh,'CG',1))
+        pk1temp.rename("active_stress","active_stress")
+        pk1_file << pk1temp
 
         hsl_old.vector()[:] = project(hsl, Quad).vector().get_local()[:] # for PDE
 
@@ -450,7 +464,7 @@ def fenics(sim_params,file_inputs,output_params,passive_params,hs_params,cell_io
         strarray[l,:] = cb_f_array[:]
         pstrarray[l,:] = p_f_array[:]
         #hslarray.append(hsl_array[0]+delta_hsl_array[0])
-        hslarray[l,:] = hsl_array[:] + delta_hsl_array[:]
+        hslarray[l,:] = hsl_array[:] #+ delta_hsl_array[:]
         overlaparray[l,:] = temp_overlap
 
         # Calculate reaction force at right end
