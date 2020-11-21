@@ -8,7 +8,7 @@ nav_order: 1
 Summary
 -------
 A unit cube mesh consisting of six tetrahedral elements is used to model a single muscle cell tension response to a twitch calcium transient.  
-<a href="path/to/file" download>Download instruction file</a>
+<a href="https://github.com/mmoth-kurtis/MMotH-Vent/blob/master/demos/cell_isometric_twitch_demo/cell_isometric_twitch_demo.json" download>Download instruction file</a>
 
 Simulation Protocol
 -------------------
