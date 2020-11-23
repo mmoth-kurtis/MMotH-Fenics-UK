@@ -22,7 +22,7 @@ Boundary Conditions & Assumptions
 
 Results
 -------
-If plotted using the k_plotter.py file, the cell-level model results are below:
+If plotted using the k_plotter_npy.py file, the cell-level model results are below:
 
 <video width="800" height="500" controls>
   <source src="test_animation.mp4" type="video/mp4">
