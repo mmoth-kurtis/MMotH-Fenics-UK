@@ -7,8 +7,9 @@ def move_cb_distributions(self, delta_hsl):
 
     delta_x = delta_hsl * self.filament_compliance_factor
 
-    if (self.kinetic_scheme == '3state_with_SRX'):
+    if (self.kinetic_scheme[0] == '3state_with_SRX'):
         interp_positions = self.x - delta_x
+        #print "interp " + interp_positions
         bin_indices = 2 + np.arange(0, self.no_of_x_bins)
 
         # Count bridges before

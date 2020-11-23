@@ -41,6 +41,7 @@ def update_simulation(self, time_step, delta_hsl, hsl, y0, pf, cbf, calcium, n_a
         # moving interpolation here, so populations match up with active force
         # generated at end of Newton Iteration
     if (np.abs(delta_hsl) > 0.0):
+        #print "moving cb distributions" + str(delta_hsl)
         # Need to move some things
         self.myof.move_cb_distributions(delta_hsl)
     y_interp = self.myof.y

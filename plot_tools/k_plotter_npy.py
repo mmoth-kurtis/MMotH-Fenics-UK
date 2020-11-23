@@ -16,6 +16,8 @@ import time
 plt.style.use('seaborn-pastel')
 gauss_point = 0
 import math
+import pandas as pd
+gauss_point = int(sys.argv[1])
 
 sim_dir = os.getcwd()
 font_size = 14
@@ -29,6 +31,9 @@ red = '#F99394'
 green = '#92FF93'
 blue = '#ABD2FF'
 gray = '#707180'
+
+csv_flag = sys.argv[2] # 1 for csv files
+print "csv" + str(csv_flag)
 
 #plt.rcParams('tick',labelsize=15)
 
@@ -44,11 +49,11 @@ def get_yticks(y_bound=[]):
         return floor
 
     y_max = y_bound[1]
-    print "y max " + str(y_max)
+    #print "y max " + str(y_max)
     y_min = y_bound[0]
 
     y_max_tick = int(math.ceil(y_max/5)*5)
-    print "ymax tick " + str(y_max_tick)
+    #print "ymax tick " + str(y_max_tick)
     y_min_tick = int(math.floor(y_min/5)*5)
 
     if y_max < 0.01:
@@ -126,20 +131,63 @@ cb_domain = np.arange(xmin,xmax+bin_width,bin_width)
 num_bins = np.shape(cb_domain)
 
 # overlap is saved last, so will use shape to determine data range
-overlap = np.load(sim_dir + '/overlap.npy')
-tarray = np.load(sim_dir+'/tarray.npy')
-#tarray = np.linspace(0,100,200)
-calcium = np.load(sim_dir + '/calcium.npy')
-HSL = np.load(sim_dir + '/hsl.npy')
-HSL = HSL[:,gauss_point]
-stress_array = np.load(sim_dir + '/stress_array.npy')
-stress_array = stress_array[:,gauss_point]
-fenics_pop_data = np.load(sim_dir + '/dumped_populations.npy')
-pstress = np.load(sim_dir + '/pstress_array.npy')
-pstress = pstress[:,gauss_point]
-#gucc_fiber = np.load(sim_dir + '/gucc_fiber_pstress.npy')
-#gucc_trans = np.load(sim_dir + '/gucc_trans_pstress.npy')
-#gucc_shear = np.load(sim_dir + '/gucc_shear_pstress.npy')
+if csv_flag == 0:
+    print csv_flag
+
+    overlap_loaded = pd.read_csv('overlap.csv',delimiter=',')
+    overlap = overlap_loaded.to_numpy()
+    overlap = overlap[:,gauss_point]
+    tarray_loaded = pd.read_csv('time.csv',delimiter=',')
+    tarray_new = tarray_loaded.to_numpy()
+    #print np.shape(tarray_new)
+    tarray = np.zeros(np.shape(tarray_new)[0])
+    for i in np.arange(np.shape(tarray_new)[0]):
+        tarray[i] = tarray_new[i,i]
+    calcium_loaded = pd.read_csv('calcium.csv',delimiter=',')
+    calcium = calcium_loaded.to_numpy()
+    calcium = calcium[:,gauss_point]
+    HSL_loaded = pd.read_csv('half_sarcomere_lengths.csv',delimiter=',')
+    #print HSL.type()
+    HSL = HSL_loaded.to_numpy()
+    HSL = HSL[:,gauss_point]
+    stress_array_loaded = pd.read_csv('active_stress.csv',delimiter=',')
+    stress_array = stress_array_loaded.to_numpy()
+    stress_array = stress_array[:,gauss_point]
+    fenics_pop_data_loaded = pd.read_csv('populations.csv',delimiter=',')
+    fenics_pop_data_uncropped = fenics_pop_data_loaded.to_numpy()
+    fenics_pop_data = fenics_pop_data_uncropped[:,1:26]
+    pstress_loaded = pd.read_csv('myofiber_passive.csv',delimiter=',')
+    pstress = pstress_loaded.to_numpy()
+    pstress = pstress[:,gauss_point]
+    sim_info = np.shape(fenics_pop_data)
+    array_length = sim_info[1]
+    num_timesteps = np.shape(tarray)[0]
+    print "shape of pops " + str(sim_info[0])
+    #num_int_points = sim_info[0]/num_timesteps
+    num_int_points = 4416
+    data_range = np.shape(overlap)[0]
+
+else:
+    overlap = np.load(sim_dir + '/overlap.npy')
+    tarray = np.load(sim_dir+'/tarray.npy')
+    #tarray = np.linspace(0,100,200)
+    calcium = np.load(sim_dir + '/calcium.npy')
+    HSL = np.load(sim_dir + '/hsl.npy')
+    HSL = HSL[:,gauss_point]
+    stress_array = np.load(sim_dir + '/stress_array.npy')
+    stress_array = stress_array[:,gauss_point]
+    fenics_pop_data = np.load(sim_dir + '/dumped_populations.npy')
+    pstress = np.load(sim_dir + '/pstress_array.npy')
+    pstress = pstress[:,gauss_point]
+    sim_info = fenics_pop_data.shape
+    array_length = sim_info[2]
+    num_timesteps = np.shape(tarray)[0]
+    num_int_points = sim_info[0]/num_timesteps
+    data_range = np.shape(overlap)[0]-1
+
+    #gucc_fiber = np.load(sim_dir + '/gucc_fiber_pstress.npy')
+    #gucc_trans = np.load(sim_dir + '/gucc_trans_pstress.npy')
+    #gucc_shear = np.load(sim_dir + '/gucc_shear_pstress.npy')
 
 if stress_array.ndim > 1:
     # single cell sims only save for one gauss point, dimension is one less than
@@ -149,18 +197,13 @@ else:
     single_cell_sim_flag = 1
 
 # Define number of time steps and array length here
-sim_info = fenics_pop_data.shape
-print sim_info
-num_timesteps = np.shape(tarray)[0]
-num_int_points = sim_info[0]/num_timesteps
-array_length = sim_info[2]
-print "array length is = " + str(array_length)
+#print sim_info
+
+#print "array length is = " + str(array_length)
 #print sys.argv[0]
 #print sys.argv[1]
-gauss_point = int(sys.argv[1])
 
 #gauss_point = 1000
-data_range = np.shape(overlap)[0]-1
 #data_range = 400
 #data_range = 50
 # Look at how info is dumped from FEniCS. For now, hard code number of detached and attached states, and bins
@@ -172,20 +215,33 @@ data_range = np.shape(overlap)[0]-1
 #bin_max
 
 #fenics_pop_data = np.zeros((num_timesteps,array_length))
-M_OFF = np.zeros(num_timesteps)
-M_ON =  np.zeros(num_timesteps)
-M_BOUND =  np.zeros(num_timesteps)
-N_ON =  np.zeros(num_timesteps)
-N_OFF = np.zeros(num_timesteps)
+M_OFF = np.zeros(data_range)
+M_ON =  np.zeros(data_range)
+M_BOUND =  np.zeros(data_range)
+N_ON =  np.zeros(data_range)
+N_OFF = np.zeros(data_range)
 #print np.shape(fenics_pop_data)
+
+#print fenics_pop_data[0,0]
+print "shape of cropped pops " + str(np.shape(fenics_pop_data))
+print " num int points " + str(num_int_points)
+
 for i in range(data_range):
 
     # Reading in information from just one Gauss point [i = timestep, 0 = gauss point, : is all pop info]
-    M_OFF[i] = fenics_pop_data[i,gauss_point,0]
-    M_ON[i] = fenics_pop_data[i,gauss_point,1]
-    M_BOUND[i] = np.sum(fenics_pop_data[i,gauss_point,2:array_length-3])
-    N_ON[i] = fenics_pop_data[i,gauss_point,array_length-1]
-    N_OFF[i] = fenics_pop_data[i,gauss_point,array_length-2]
+    if csv_flag == 0:
+        #print np.shape(fenics_pop_data)
+
+        M_OFF[i] = fenics_pop_data[i*num_int_points+gauss_point,0]
+        M_ON[i] = fenics_pop_data[i*num_int_points+gauss_point,1]
+        M_BOUND[i] = np.sum(fenics_pop_data[i*num_int_points+gauss_point,2:array_length-3])
+        N_ON[i] = fenics_pop_data[i*num_int_points+gauss_point,array_length-1]
+    else:
+        M_OFF[i] = fenics_pop_data[i,gauss_point,0]
+        M_ON[i] = fenics_pop_data[i,gauss_point,1]
+        M_BOUND[i] = np.sum(fenics_pop_data[i,gauss_point,2:array_length-3])
+        N_ON[i] = fenics_pop_data[i,gauss_point,array_length-1]
+        N_OFF[i] = fenics_pop_data[i,gauss_point,array_length-2]
 
 fig = plt.figure(figsize=(16,9))
 #fig.set_size_inches([22,8])
@@ -209,9 +265,10 @@ ax2.tick_params(
     axis='y',
     direction='out'
 )
-print np.amin(HSL)
+#print np.amin(HSL)
 
 majors = [int(0.9*np.amin(HSL[0:data_range])),1.1*int(np.amax(HSL[0:data_range]))]
+print np.amax(HSL)
 ax2.yaxis.set_major_locator(ticker.MultipleLocator(majors[1]-majors[0]))
 
 plt.ylim((0.9*np.amin(HSL[0:data_range]),1.1*np.amax(HSL)))
@@ -228,6 +285,8 @@ else:
 ax2.yaxis.set_label_coords(-0.25,0.5)
 y_bound = ax2.get_ybound()
 y_ticks = get_yticks(y_bound)
+print "time"
+print np.shape(tarray)
 x_range = [tarray[0],tarray[data_range-1]]
 ax2.set_ylim(y_ticks)
 ax2.set_yticks(y_ticks)
@@ -358,12 +417,12 @@ bottom6 = ax6.spines["bottom"]
 top6 = ax6.spines["top"]
 right_side6.set_visible(False)
 
-plt.ylim((0.9*np.amin(overlap[0:data_range,gauss_point]),1.1*np.amax(overlap[0:data_range,gauss_point])))
+plt.ylim((0.9*np.amin(overlap[0:data_range]),1.1*np.amax(overlap[0:data_range])))
 
 
 #bottom.set_visible(False)
 top6.set_visible(False)
-plt.plot(tarray[0:data_range], overlap[0:data_range,gauss_point],color=purple,linewidth=2)
+plt.plot(tarray[0:data_range], overlap[0:data_range],color=purple,linewidth=2)
 """plt.plot(tarray[0:data_range],N_ON[0:data_range])
 plt.plot(tarray[0:data_range],N_OFF[0:data_range])
 plt.plot(tarray[0:data_range],N_ON[0:data_range]+N_OFF[0:data_range])"""
@@ -427,7 +486,7 @@ right_side8.set_visible(False)
 #bottom.set_visible(False)
 top8.set_visible(False)
 pca = -1*np.log10(calcium)
-plt.plot(tarray[0:data_range], pca[0:data_range,0],color=purple,linewidth=2)
+plt.plot(tarray[0:data_range], pca[0:data_range],color=purple,linewidth=2)
 #plt.scatter(myosim_summary_data[:,0], myosim_summary_data[:,1],color='r')
 ax8.set_xlabel('Time (ms)', fontsize = font_size)
 #plt.ylabel("Calcium [M]",fontdict=font,rotation=0)
@@ -435,9 +494,9 @@ ax8.set_xlabel('Time (ms)', fontsize = font_size)
 #ax8.set_ylim(0.9*np.amin(calcium[0:data_range,0]),1.1*np.amax(calcium[0:data_range,0]))
 #x_range = [tarray[0],tarray[data_range-1]]
 y_bound = ax8.get_ybound()
-print "ybound " + str(y_bound)
+#print "ybound " + str(y_bound)
 y_ticks = get_yticks(y_bound)
-print "y ticks " + str(y_ticks[1])
+#print "y ticks " + str(y_ticks[1])
 ax8.set_ylim(y_ticks)
 ax8.set_yticks(y_ticks)
 #x_range = [tarray[0],tarray[data_range-1]]
@@ -450,7 +509,7 @@ ax8.set_ylabel(y_label, fontsize = font_size,rotation=0,labelpad=labelpad,y=y_co
 ax8.invert_yaxis()
 #------------------------------------------------------------------------------
 # Animate cross-bridges during simulation
-max_nbound = np.max(fenics_pop_data[:,2])
+max_nbound = np.amax(M_BOUND)
 #print max_nbound
 ax1 = plt.subplot(427,xlim=(xmin-1,xmax+1),ylim=(0.00,max_nbound/3))
 y_label = 'M_FG(x)'
@@ -483,9 +542,12 @@ y = np.zeros(np.shape(cb_domain))
 def animate(i):
     # array_length -1 for cpp, -2 for python
     #y = fenics_pop_file[i,gauss_point,2:array_length-2]
-    print np.shape(fenics_pop_data)
-    y = fenics_pop_data[i,num_int_points+gauss_point,2:array_length-2]
-    print np.shape(cb_domain)
+    #print np.shape(fenics_pop_data)
+    if csv_flag==0:
+        y = fenics_pop_data[i*num_int_points+gauss_point,2:array_length-2]
+    else:
+        y = fenics_pop_data[i,num_int_points+gauss_point,2:array_length-2]
+    #print np.shape(cb_domain)
     if single_cell_sim_flag > 0:
         m.append(HSL[i])
         m2.append(stress_array[i])
@@ -494,6 +556,10 @@ def animate(i):
         m2.append(stress_array[i,gauss_point])
     #print np.shape(cb_domain)
     t.append(tarray[i])
+    print "setting line"
+    print np.shape(cb_domain)
+    print np.shape(y)
+    print array_length
     #print np.shape(y)
     line[0].set_data(cb_domain,y)
     line[1].set_data(t,m)
@@ -503,20 +569,21 @@ def animate(i):
 
 
 
-anim = FuncAnimation(fig, animate, init_func=init, frames = num_timesteps-1, interval = 1, blit=True,save_count=200)
+anim = FuncAnimation(fig, animate, init_func=init, frames = num_timesteps-1, interval = 50, blit=True,save_count=200)
 
 #mng = plt.get_current_fig_manager()
 #mng.frame.Maximize(True)
 #plt.figure()
 
 plt.subplots_adjust(left=.175,right=.95,wspace=0.5)
-plt.switch_backend('Qt4Agg')
-mng=plt.get_current_fig_manager()
-mng.window.showMaximized()
+plt.plot(HSL)
+#plt.switch_backend('Qt4Agg')
+#mng=plt.get_current_fig_manager()
+#mng.window.showMaximized()
 
 #mng.show()
 #print(anim.to_html5_video())
-anim.save('test_animation.mp4','ffmpeg',15)
+anim.save('test_animation_isotonic.mp4','ffmpeg',15)
 #anim.to_html5_video('test_animation')
 plt.show()
 #plt.show()

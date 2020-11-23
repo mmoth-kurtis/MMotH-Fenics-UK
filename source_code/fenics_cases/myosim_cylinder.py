@@ -57,6 +57,7 @@ def fenics(sim_params,file_inputs,output_params,passive_params,hs_params,cell_io
 
     # Define the length of the populations vector
     n_array_length = no_of_attached_states * no_of_x_bins + no_of_detached_states + 2
+    print "n array length = " + str(n_array_length)
     n_vector_indices = [[0,0], [1,1], [2,2+no_of_x_bins-1]]
 
     hsl0 = hs_params["initial_hs_length"][0]
@@ -563,6 +564,9 @@ def fenics(sim_params,file_inputs,output_params,passive_params,hs_params,cell_io
             j4_fluxes[mm,l] = sum(temp_flux_dict["J4"])
     #    print y_vec_array_new[0:53]
         y_vec_array = y_vec_array_new # for Myosim
+        print " num gauss points " + str(no_of_int_points)
+        print "y_vec shape" + str(np.shape(y_vec_array))
+        print "y_interp shape"  + str(np.shape(y_interp))
 
         for  m in range(no_of_int_points):
 

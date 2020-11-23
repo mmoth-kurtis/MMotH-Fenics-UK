@@ -62,6 +62,11 @@ class cell_ion_driver():
             self.myofilament_Ca_conc = self.y[0]
             self.model_name = "two_compartment"
 
+        if self.model_name == "constant_calcium":
+            self.basal_ca = self.model_params["basal_ca"][0]
+            self.active_ca = self.model_params["active_ca"][0]
+            self.t_act = self.model_params["t_act"][0]
+
 
         # Import the model
         #self.model = __import__(model_name)
@@ -119,5 +124,12 @@ class cell_ion_driver():
             sol = solve_ivp(derivs, [0, time_step], y, method = 'RK23')
             self.y = sol.y[:, -1]
             calcium_value = self.y[0]
+
+        if self.model_name == "constant_calcium":
+
+            if l < self.t_act:
+                calcium_value = self.basal_ca
+            else:
+                calcium_value = self.active_ca
 
         return calcium_value

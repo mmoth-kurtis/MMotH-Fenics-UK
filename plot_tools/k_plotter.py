@@ -66,13 +66,16 @@ data_range = np.shape(overlap)[0]-1
 #bin_max
 
 #fenics_pop_data = np.zeros((num_timesteps,array_length))
-M_OFF = np.zeros(num_timesteps)
-M_ON =  np.zeros(num_timesteps)
-M_BOUND =  np.zeros(num_timesteps)
-N_ON =  np.zeros(num_timesteps)
+M_OFF = np.zeros(data_range)
+M_ON =  np.zeros(data_range)
+M_BOUND =  np.zeros(data_range)
+N_ON =  np.zeros(data_range)
+print data_range
+print np.shape(tarray)
 for i in range(data_range):
 
     # Reading in information from just one Gauss point [i = timestep, 0 = gauss point, : is all pop info]
+    #print i
     M_OFF[i] = fenics_pop_data[i*num_int_points+gauss_point,0]
     M_ON[i] = fenics_pop_data[i*num_int_points+gauss_point,1]
     M_BOUND[i] = np.sum(fenics_pop_data[i*num_int_points+gauss_point,2:array_length-3])

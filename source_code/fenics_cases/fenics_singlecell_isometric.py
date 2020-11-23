@@ -48,6 +48,8 @@ def fenics(sim_params,file_inputs,output_params,passive_params,hs_params,cell_io
     x_bin_min = hs_params["myofilament_parameters"]["bin_min"][0]
     x_bin_max = hs_params["myofilament_parameters"]["bin_max"][0]
     x_bin_increment = hs_params["myofilament_parameters"]["bin_width"][0]
+    work_loop = sim_params["work_loop"][0]
+    shorten_flag = 0
     #no_of_transitions = 4
     #state_attached = [0, 0, 1]
     #cb_extensions = [ 0, 0, 4.75642]
@@ -373,6 +375,11 @@ def fenics(sim_params,file_inputs,output_params,passive_params,hs_params,cell_io
     dumped_populations = np.zeros((time_steps, no_of_int_points, n_array_length))
     y_interp = np.zeros(no_of_int_points*n_array_length)
 
+    """marker_space = FunctionSpace(mesh,'CG',1)
+    bc_right_test = DirichletBC(marker_space,Constant(1),facetboundaries,2)
+    test_marker_fcn = Function(marker_space)
+    bc_right_test.apply(test_marker_fcn.vector())"""
+
     t = 0.0
     #delta_hsls = np.zeros((time_steps,24))
     for l in range(time_steps):
@@ -431,6 +438,13 @@ def fenics(sim_params,file_inputs,output_params,passive_params,hs_params,cell_io
     #    print y_vec_array[0:53]
         hsl_array_old = hsl_array
 
+        if work_loop:
+            if l > 12:
+                Press.P = fx_rxn[11]
+                bcs = [bcleft, bclower, bcfront,bcfix]
+
+
+
 
         solve(Ftotal == 0, w, bcs, J = Jac, form_compiler_parameters={"representation":"uflacs"},solver_parameters={"newton_solver":{"relative_tolerance":1e-8},"newton_solver":{"maximum_iterations":50},"newton_solver":{"absolute_tolerance":1e-8}})
 
@@ -480,10 +494,37 @@ def fenics(sim_params,file_inputs,output_params,passive_params,hs_params,cell_io
 
         #print(cb_f_array)
 
-        if t <= 5:
-            u_D.u_D += .014
-        else:
+        # Calculate reaction force at right end
+        b = assemble(Ftotal,form_compiler_parameters={"representation":"uflacs"})
+
+        bcleft.apply(b)
+        bclower.apply(b)
+        bcfront.apply(b)
+        bcfix.apply(b)
+
+
+        f_int_total = b.copy()
+        for kk in x_dofs:
+            fx_rxn[l] += f_int_total[kk]
+        #bcleft.apply(f_int_total)
+        #FX = 0
+        #for kk in x_dofs:
+        #    FX += f_int_total[i]
+
+        #fx_rxn[l] = Fx
+        np.save(output_path + "fx",fx_rxn)
+
+
+        if t <= 10:
+            u_D.u_D += .005
+        if t > 10:
             u_D.u_D = u_D.u_D
+        """if t >=50 and t < 70:
+            u_D.u_D -= 0.007
+        if  t >= 70 and t < 150:
+            u_D.u_D = u_D.u_D
+        if t >= 150:
+            u_D.u_D += 0.003"""
         #print "time = " + str(t)
         #print hsl_template[l]
         #u_D.u_D = hsl_template[l]-1

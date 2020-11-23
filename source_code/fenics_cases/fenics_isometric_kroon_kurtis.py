@@ -555,11 +555,11 @@ def fenics(sim_params,file_inputs,output_params,passive_params,hs_params,cell_io
             u_D.u_D += 0.001
         else:
             u_D.u_D = u_D.u_D"""
-        if t <= 5.0:
-            u_D.u_D = u_D.u_D
-        if t > 5.0 and t <= 10.0:
-            u_D.u_D += 0.03
-        if t > 10.0 and t <=50.0:
+        if t <= 10.0:
+            u_D.u_D += .02
+        #if t > 5.0 and t <= 10.0:
+            #u_D.u_D += 0.03
+        """if t > 10.0 and t <=50.0:
             u_D.u_D = u_D.u_D
         if t > 50.0 and t <= 55.0:
             u_D.u_D += 0.03
@@ -567,7 +567,8 @@ def fenics(sim_params,file_inputs,output_params,passive_params,hs_params,cell_io
             u_D.u_D = u_D.u_D
         if t > 100.0 and t <=105.0:
             u_D.u_D -= 0.03
-        if t > 105.0:
+        if t > 105.0:"""
+        if t > 10.0
             u_D.u_D = u_D.u_D
         t = t + step_size
 
