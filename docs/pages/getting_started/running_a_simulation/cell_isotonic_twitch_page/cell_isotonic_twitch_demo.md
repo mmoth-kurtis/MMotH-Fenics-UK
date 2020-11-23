@@ -28,7 +28,11 @@ If plotted using the k_plotter_npy.py file, the cell-level model results are bel
   <source src="test_animation_isotonic.mp4" type="video/mp4">
 </video>
 
+* make lines more bold
+* make text bigger
+* Decrease upper limit y bound for cb working range
+
 And the cube deformation is seen in Paraview here:
 
 
-Note, "muscle" shortens while being activated such that the active stress contribution from cross-bridges satisfies the traction boundary condition. As [Ca$^2+$] decreases (and thus, active stress), the muscle cell is lengthened such that the passive stress response bears the majority of the traction boundary condition.
+Note, "muscle" shortens while being activated such that the active stress contribution from cross-bridges satisfies the traction boundary condition. As [Ca$^{2+}$] decreases (and thus, active stress), the muscle cell is lengthened such that the passive stress response bears the majority of the traction boundary condition.

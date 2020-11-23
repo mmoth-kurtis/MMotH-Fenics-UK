@@ -20,10 +20,10 @@ def fenics(sim_params,file_inputs,output_params,passive_params,hs_params,cell_io
     global j
 
     # forcing hsl from other simulation
-    """hsl_template = np.zeros(701)
+    hsl_template = np.zeros(701)
     hsl_template[0:700] = np.load('hsl_template_altered.npy')
     hsl_template[700] = hsl_template[699]
-    print "hsl template " + str(np.shape(hsl_template))"""
+    print "hsl template " + str(np.shape(hsl_template))
     output_path = output_params["output_path"][0]
     displacementfile = File(output_path + "u_disp.pvd")
     pk1_file = File(output_path + "active_stress.pvd")
@@ -515,11 +515,11 @@ def fenics(sim_params,file_inputs,output_params,passive_params,hs_params,cell_io
         np.save(output_path + "fx",fx_rxn)
 
 
-        if t <= 10:
+        """if t <= 10:
             u_D.u_D += .005
         if t > 10:
             u_D.u_D = u_D.u_D
-        """if t >=50 and t < 70:
+        if t >=50 and t < 70:
             u_D.u_D -= 0.007
         if  t >= 70 and t < 150:
             u_D.u_D = u_D.u_D
@@ -527,7 +527,7 @@ def fenics(sim_params,file_inputs,output_params,passive_params,hs_params,cell_io
             u_D.u_D += 0.003"""
         #print "time = " + str(t)
         #print hsl_template[l]
-        #u_D.u_D = hsl_template[l]-1
+        u_D.u_D = hsl_template[l]-1
         t = t + step_size
 
         calarray.append(hs.Ca_conc*np.ones(no_of_int_points))

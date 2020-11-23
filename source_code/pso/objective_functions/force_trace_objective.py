@@ -28,9 +28,9 @@ class singlecell_force_trace():
         # hard coding
         self.f_time = np.linspace(0,350,700)
         self.f_trace = np.zeros(700)
-        self.f_trace[64] = 40000.0
-        self.f_trace[130] = 80000.0
-        self.f_trace[462] = 40000.0
+        self.f_trace[66] = 35500.0 #gonzales paper, has max stress of 71kPa, and twitch timing
+        self.f_trace[290] = 71000.0
+        #self.f_trace[462] = 40000.0
         self.f_trace[-1] = 0.0
 
         #Create interpolation function to interpolate experimental data to simulation time points
