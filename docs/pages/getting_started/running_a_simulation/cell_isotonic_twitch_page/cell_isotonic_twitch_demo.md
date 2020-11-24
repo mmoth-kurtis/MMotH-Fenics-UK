@@ -25,7 +25,7 @@ Results
 If plotted using the k_plotter_npy.py file, the cell-level model results are below:
 
 <video width="800" height="500" controls>
-  <source src="cube_deformation_isotonic_twitch.mp4" type="video/mp4">
+  <source src="cube_deformation_isotonic_twitch.m4v" type="video/mp4">
 </video>
 
 And the cube deformation is seen in Paraview here:
