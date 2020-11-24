@@ -33,6 +33,8 @@ If plotted using the k_plotter_npy.py file, the cell-level model results are bel
 * Decrease upper limit y bound for cb working range
 
 And the cube deformation is seen in Paraview here:
-
+<video width="800" height="500" controls>
+  <source src="cube_animation_isotonic_twitch.m4v" type="video/mp4">
+</video>
 
 Note, "muscle" shortens while being activated such that the active stress contribution from cross-bridges satisfies the traction boundary condition. As [Ca<sup>2+</sup>] decreases (and thus, active stress), the muscle cell is lengthened such that the passive stress response bears the majority of the traction boundary condition. Also note the cross-bridges (bottom left plot) are shifted away from x=0 with the length change. In fact, the rapid length change as active stress drops is responsible for pulling the myosin heads off of binding sites, further facilitating relaxation.
