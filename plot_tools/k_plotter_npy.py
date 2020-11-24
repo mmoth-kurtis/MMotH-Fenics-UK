@@ -32,8 +32,8 @@ green = '#92FF93'
 blue = '#ABD2FF'
 gray = '#707180'
 
-csv_flag = sys.argv[2] # 1 for csv files
-print "csv" + str(csv_flag)
+csv_flag = int(sys.argv[2]) # 1 for csv files
+print "csv = " + str(csv_flag)
 
 #plt.rcParams('tick',labelsize=15)
 
@@ -131,7 +131,7 @@ cb_domain = np.arange(xmin,xmax+bin_width,bin_width)
 num_bins = np.shape(cb_domain)
 
 # overlap is saved last, so will use shape to determine data range
-if csv_flag == 0:
+if csv_flag:
     print csv_flag
 
     overlap_loaded = pd.read_csv('overlap.csv',delimiter=',')
@@ -226,24 +226,33 @@ N_OFF = np.zeros(data_range)
 print "shape of cropped pops " + str(np.shape(fenics_pop_data))
 print " num int points " + str(num_int_points)
 
+max_nbound = 0.0
+
 for i in range(data_range):
 
     # Reading in information from just one Gauss point [i = timestep, 0 = gauss point, : is all pop info]
-    if csv_flag == 0:
+    if csv_flag:
         #print np.shape(fenics_pop_data)
 
         M_OFF[i] = fenics_pop_data[i*num_int_points+gauss_point,0]
         M_ON[i] = fenics_pop_data[i*num_int_points+gauss_point,1]
         M_BOUND[i] = np.sum(fenics_pop_data[i*num_int_points+gauss_point,2:array_length-3])
         N_ON[i] = fenics_pop_data[i*num_int_points+gauss_point,array_length-1]
+        if np.amax(fenics_pop_data[i*num_int_points+gauss_point,2:array_length-3]) > max_nbound:
+            max_nbound = np.amax(fenics_pop_data[i*num_int_points+gauss_point,2:array_length-3])
+        else:
+            max_nbound = max_nbound
     else:
         M_OFF[i] = fenics_pop_data[i,gauss_point,0]
         M_ON[i] = fenics_pop_data[i,gauss_point,1]
         M_BOUND[i] = np.sum(fenics_pop_data[i,gauss_point,2:array_length-3])
         N_ON[i] = fenics_pop_data[i,gauss_point,array_length-1]
         N_OFF[i] = fenics_pop_data[i,gauss_point,array_length-2]
-
-fig = plt.figure(figsize=(16,9))
+        if np.amax(fenics_pop_data[i,num_int_points+gauss_point,2:array_length-3]) > max_nbound:
+            max_nbound = np.amax(fenics_pop_data[i,num_int_points+gauss_point,2:array_length-3])
+        else:
+            max_nbound = max_nbound
+fig = plt.figure(figsize=(16,9),dpi=144)
 #fig.set_size_inches([22,8])
 #------------------------------------------------------------------------------
 ax2 = plt.subplot(421)
@@ -276,9 +285,9 @@ plt.ylim((0.9*np.amin(HSL[0:data_range]),1.1*np.amax(HSL)))
 
 
 if single_cell_sim_flag > 0:
-    plt.plot(tarray[0:data_range],HSL[0:data_range],color=purple,linewidth=2)
+    plt.plot(tarray[0:data_range],HSL[0:data_range],color=purple,linewidth=4)
 else:
-    plt.plot(tarray[0:data_range], HSL[0:data_range,:],color=purple,linewidth=2)
+    plt.plot(tarray[0:data_range], HSL[0:data_range,:],color=purple,linewidth=4)
 
 #plt.xlabel('Time [ms]',fontdict=font)
 #plt.ylabel("Half-sarcomere Length \n  (nm)",fontdict=font,rotation=0)
@@ -316,9 +325,9 @@ plt.ylim((0,1))
 
 #print np.shape(tarray)
 #print np.shape(M_OFF)
-state_1_pops_fenics, = plt.plot(tarray[0:data_range], M_OFF[0:data_range],label='SRX',color=gray,linewidth=2)
-state_2_pops_fenics, = plt.plot(tarray[0:data_range], M_ON[0:data_range],label='Detached',color=green,linewidth=2)
-state_3_pops_fenics, = plt.plot(tarray[0:data_range], M_BOUND[0:data_range],label='M Bound',color=red,linewidth=2)
+state_1_pops_fenics, = plt.plot(tarray[0:data_range], M_OFF[0:data_range],label='SRX',color=gray,linewidth=4)
+state_2_pops_fenics, = plt.plot(tarray[0:data_range], M_ON[0:data_range],label='Detached',color=green,linewidth=4)
+state_3_pops_fenics, = plt.plot(tarray[0:data_range], M_BOUND[0:data_range],label='M Bound',color=red,linewidth=4)
 
 plt.legend((state_1_pops_fenics,state_2_pops_fenics,state_3_pops_fenics), ('M_SRX', 'M_DRX', 'M_FG'))
 #plt.title("Myosin Populations")
@@ -354,7 +363,7 @@ ax4.tick_params(
 plt.ylim((0.9*np.amin(pstress),1.1*np.amax(pstress)))
 
 if single_cell_sim_flag > 0:
-    fiber_pstress, = plt.plot(tarray[0:data_range], pstress[0:data_range],color=purple,linewidth=2)
+    fiber_pstress, = plt.plot(tarray[0:data_range], pstress[0:data_range],color=purple,linewidth=4)
 else:
     fiber_pstress, = plt.plot(tarray[0:data_range], pstress[0:data_range,gauss_point])
     gfiber, = plt.plot(tarray[0:data_range], gucc_fiber[0:data_range,gauss_point])
@@ -384,8 +393,8 @@ right_side5.set_visible(False)
 bottom5.set_visible(False)
 top5.set_visible(False)
 #state_3_pops_fenics, = plt.plot(tarray, np.sum(fenics_pop_data[0:data_range,2:array_length-2]), 'r')
-state_3_pops_fenics, = plt.plot(tarray[0:data_range], M_BOUND[0:data_range],color=red,linewidth=2)
-binding_sites, = plt.plot(tarray[0:data_range], N_ON[0:data_range],color=blue,linewidth=2)
+state_3_pops_fenics, = plt.plot(tarray[0:data_range], M_BOUND[0:data_range],color=red,linewidth=4)
+binding_sites, = plt.plot(tarray[0:data_range], N_ON[0:data_range],color=blue,linewidth=4)
 
 ax5.tick_params(
     axis='x',          # changes apply to the x-axis
@@ -422,7 +431,7 @@ plt.ylim((0.9*np.amin(overlap[0:data_range]),1.1*np.amax(overlap[0:data_range]))
 
 #bottom.set_visible(False)
 top6.set_visible(False)
-plt.plot(tarray[0:data_range], overlap[0:data_range],color=purple,linewidth=2)
+plt.plot(tarray[0:data_range], overlap[0:data_range],color=purple,linewidth=4)
 """plt.plot(tarray[0:data_range],N_ON[0:data_range])
 plt.plot(tarray[0:data_range],N_OFF[0:data_range])
 plt.plot(tarray[0:data_range],N_ON[0:data_range]+N_OFF[0:data_range])"""
@@ -460,9 +469,9 @@ plt.ylim((0.9*np.amin(stress_array),1.1*np.amax(stress_array)))
 
 
 if single_cell_sim_flag > 0:
-    plt.plot(tarray[0:data_range],stress_array[0:data_range],color=purple,linewidth=2)
+    plt.plot(tarray[0:data_range],stress_array[0:data_range],color=purple,linewidth=4)
 else:
-    plt.plot(tarray[0:data_range], stress_array[0:data_range,gauss_point],color=purple,linewidth=2)
+    plt.plot(tarray[0:data_range], stress_array[0:data_range,gauss_point],color=purple,linewidth=4)
 
 #plt.xlabel('Time (ms)')
 #plt.ylabel("Active Stress (Pa)",fontdict=font,rotation=0)
@@ -486,7 +495,7 @@ right_side8.set_visible(False)
 #bottom.set_visible(False)
 top8.set_visible(False)
 pca = -1*np.log10(calcium)
-plt.plot(tarray[0:data_range], pca[0:data_range],color=purple,linewidth=2)
+plt.plot(tarray[0:data_range], pca[0:data_range],color=purple,linewidth=4)
 #plt.scatter(myosim_summary_data[:,0], myosim_summary_data[:,1],color='r')
 ax8.set_xlabel('Time (ms)', fontsize = font_size)
 #plt.ylabel("Calcium [M]",fontdict=font,rotation=0)
@@ -509,10 +518,12 @@ ax8.set_ylabel(y_label, fontsize = font_size,rotation=0,labelpad=labelpad,y=y_co
 ax8.invert_yaxis()
 #------------------------------------------------------------------------------
 # Animate cross-bridges during simulation
-max_nbound = np.amax(M_BOUND)
+
 #print max_nbound
-ax1 = plt.subplot(427,xlim=(xmin-1,xmax+1),ylim=(0.00,max_nbound/3))
-y_label = 'M_FG(x)'
+ax1 = plt.subplot(427,xlim=(xmin-1,xmax+1),ylim=(0.00,max_nbound))
+y_label = 'M_FG(x)                       \n (Proportion)                   '
+y_coord = get_y_label_y_coord(y_label)
+ax1.set_ylabel(y_label, fontsize = font_size, rotation=0,y=y_coord)
 y_bound = ax1.get_ybound()
 y_ticks = get_yticks(y_bound)
 ax1.set_ylim(y_ticks)
@@ -526,9 +537,9 @@ right_side1.set_visible(False)
 #bottom.set_visible(False)
 top1.set_visible(False)
 #ax = plt.axes(xlim=(xmin,xmax),ylim=(0,1))
-line1, = ax1.plot([],[],lw=3,color=red)
-line2, = ax2.plot([],[],color=red)
-line3, = ax3.plot([],[],color=red)
+line1, = ax1.plot([],[],lw=4,color=red)
+line2, = ax2.plot([],[],lw=4,color=red)
+line3, = ax3.plot([],[],lw=4,color=red)
 line = [line1, line2, line3]
 
 def init():
@@ -543,7 +554,7 @@ def animate(i):
     # array_length -1 for cpp, -2 for python
     #y = fenics_pop_file[i,gauss_point,2:array_length-2]
     #print np.shape(fenics_pop_data)
-    if csv_flag==0:
+    if csv_flag:
         y = fenics_pop_data[i*num_int_points+gauss_point,2:array_length-2]
     else:
         y = fenics_pop_data[i,num_int_points+gauss_point,2:array_length-2]
@@ -583,7 +594,7 @@ plt.plot(HSL)
 
 #mng.show()
 #print(anim.to_html5_video())
-anim.save('test_animation_isotonic.mp4','ffmpeg',15)
+anim.save('test.mp4','ffmpeg',15)
 #anim.to_html5_video('test_animation')
 plt.show()
 #plt.show()

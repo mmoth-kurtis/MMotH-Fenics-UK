@@ -28,10 +28,6 @@ If plotted using the k_plotter_npy.py file, the cell-level model results are bel
   <source src="test_animation_isotonic.mp4" type="video/mp4">
 </video>
 
-* make lines more bold
-* make text bigger
-* Decrease upper limit y bound for cb working range
-
 And the cube deformation is seen in Paraview here:
 <video width="800" height="500" controls>
   <source src="cube_deformation_isotonic_twitch.m4v" type="video/mp4">
