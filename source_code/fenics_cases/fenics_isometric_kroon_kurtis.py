@@ -583,7 +583,7 @@ def fenics(sim_params,file_inputs,output_params,passive_params,hs_params,cell_io
         #f0 += uflforms.kroon_law(fiberFS)[0] * step_size
         #temp_f = project(Umat*f0,VectorFunctionSpace(mesh,"DG",1),form_compiler_parameters={"representation":"uflacs"})
         #temp_f_2 = interpolate(temp_f, fiberFS)
-        """temp_f = Umat*f0
+        temp_f = Umat*f0
         f_mag = sqrt(inner(temp_f,temp_f))
         f = temp_f/f_mag
         f_diff = f-f0
@@ -597,7 +597,7 @@ def fenics(sim_params,file_inputs,output_params,passive_params,hs_params,cell_io
         f0_temp.rename('fiber_direction','fiber_direction')
 
         #File(output_path + "fiber_" + str(l) + ".pvd") << project(f0, VectorFunctionSpace(mesh, "DG", 0))
-        fiber_file << f0_temp"""
+        fiber_file << f0_temp
 
         b = assemble(Ftotal,form_compiler_parameters={"representation":"uflacs"})
         bcleft.apply(b)

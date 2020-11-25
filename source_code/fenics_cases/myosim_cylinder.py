@@ -306,11 +306,18 @@ def fenics(sim_params,file_inputs,output_params,passive_params,hs_params,cell_io
     #stop
 
     f0_diff = f0 - Constant((1.,0.,0.))
+    long_axis = Function(fiberFS)
+
+    for nn in np.arange(no_of_int_points):
+        long_axis.vector()[nn*3] = 0.0
+        long_axis.vector()[nn*3+1] = 0.0
+        long_axis.vector()[nn*3+2] = 1.0
 
     #s0 = f0 + f0_diff # sum object
     #n0 = cross(f0,s0) # cross object
 
-    s0  = project(Constant((0,1,0))+f0_diff,VectorFunctionSpace(mesh, "DG", 0))
+    #s0  = project(Constant((0,1,0))+f0_diff,VectorFunctionSpace(mesh, "DG", 0))
+    s0 = cross(long_axis,f0)
     s0 = s0/sqrt(inner(s0,s0))
     File(output_path + "sheet.pvd") << project(s0,VectorFunctionSpace(mesh, "DG", 0))
 

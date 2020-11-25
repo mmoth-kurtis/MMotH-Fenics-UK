@@ -7,11 +7,11 @@ nav_order: 4
 
 Summary
 -------
-A unit cube mesh consisting of six tetrahedron elements is used to model a single muscle cell response.
+A muscle fiber twitch simulation. A cylinder geometry in which the ends represent non-contracting, fibrous tissue with a nonlinear stiffness and the quadrature points represent contracting myofibrils.  
 
 Simulation Protocol
 -------------------
-The muscle cell is stretched xx% and activated with a skeletal muscle calcium transient approximation using the two-compartment calcium model.
+The right end of the fiber is displaced 
 
 Boundary Conditions & Assumptions
 ---------------------------------

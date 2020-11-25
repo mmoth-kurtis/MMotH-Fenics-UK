@@ -20,13 +20,15 @@ def fenics(sim_params,file_inputs,output_params,passive_params,hs_params,cell_io
     global j
 
     # forcing hsl from other simulation
-    hsl_template = np.zeros(701)
+    """hsl_template = np.zeros(701)
     hsl_template[0:700] = np.load('hsl_template_altered.npy')
     hsl_template[700] = hsl_template[699]
-    print "hsl template " + str(np.shape(hsl_template))
+    print "hsl template " + str(np.shape(hsl_template))"""
     output_path = output_params["output_path"][0]
     displacementfile = File(output_path + "u_disp.pvd")
     pk1_file = File(output_path + "active_stress.pvd")
+    fiber_file = File(output_path + "f0_direction.pvd")
+
 
     filament_compliance_factor = hs_params["myofilament_parameters"]["filament_compliance_factor"][0]
 #    filament_compliance_factor = 0.5
@@ -49,7 +51,9 @@ def fenics(sim_params,file_inputs,output_params,passive_params,hs_params,cell_io
     x_bin_max = hs_params["myofilament_parameters"]["bin_max"][0]
     x_bin_increment = hs_params["myofilament_parameters"]["bin_width"][0]
     work_loop = sim_params["work_loop"][0]
+    kappa_kroon = sim_params["kroon_rate"][0]
     shorten_flag = 0
+
     #no_of_transitions = 4
     #state_attached = [0, 0, 1]
     #cb_extensions = [ 0, 0, 4.75642]
@@ -146,6 +150,17 @@ def fenics(sim_params,file_inputs,output_params,passive_params,hs_params,cell_io
     VQuadelem._quad_scheme = 'default'
     fiberFS = FunctionSpace(mesh, VQuadelem)
     f0 = Function(fiberFS)
+    temp_f = Function(fiberFS)
+    f = Function(fiberFS)
+    f_diff = Function(fiberFS)
+    scaled_fdiff = Function(fiberFS)
+
+    if kappa_kroon > 0.0:
+        # initialize fibers away from long axis
+        for ff in np.arange(no_of_int_points):
+            f0.vector()[ff*3] = 1.0/sqrt(2)
+            f0.vector()[ff*3+1] = 1.0/sqrt(2)
+            f0.vector()[ff*3+2] = 0.0
     for jj in np.arange(no_of_int_points):
         f0.vector()[jj*3] = 1.0
     File(output_path + "fiber.pvd") << project(f0,VectorFunctionSpace(mesh, "DG", 0))
@@ -248,6 +263,7 @@ def fenics(sim_params,file_inputs,output_params,passive_params,hs_params,cell_io
     Fmat = uflforms.Fmat()
     Cmat = (Fmat.T*Fmat)
     Emat = uflforms.Emat()
+    Umat = uflforms.Umat()
     J = uflforms.J()
 
     n = J*inv(Fmat.T)*N
@@ -444,8 +460,6 @@ def fenics(sim_params,file_inputs,output_params,passive_params,hs_params,cell_io
                 bcs = [bcleft, bclower, bcfront,bcfix]
 
 
-
-
         solve(Ftotal == 0, w, bcs, J = Jac, form_compiler_parameters={"representation":"uflacs"},solver_parameters={"newton_solver":{"relative_tolerance":1e-8},"newton_solver":{"maximum_iterations":50},"newton_solver":{"absolute_tolerance":1e-8}})
 
         np.save(output_path +"dumped_populations", dumped_populations)
@@ -481,6 +495,22 @@ def fenics(sim_params,file_inputs,output_params,passive_params,hs_params,cell_io
         hslarray[l,:] = hsl_array[:] #+ delta_hsl_array[:]
         overlaparray[l,:] = temp_overlap
 
+        if kappa_kroon>0.0:
+            if t >= 15:
+                temp_f = Umat*f0
+                f_mag = sqrt(inner(temp_f,temp_f))
+                f = temp_f/f_mag
+                f_diff = f-f0
+                scaled_fdiff = f_diff * (step_size/kappa_kroon)
+                scaled_f_assign = project(scaled_fdiff,VectorFunctionSpace(mesh,"DG",1),form_compiler_parameters={"representation":"uflacs"})
+                scaled_f_2 = interpolate(scaled_f_assign, fiberFS)
+                #print temp_f.type()
+
+                f0.vector()[:] += scaled_f_2.vector()[:]
+                f0_temp = project(f0, VectorFunctionSpace(mesh, "DG", 0))
+                f0_temp.rename('fiber_direction','fiber_direction')
+                fiber_file << f0_temp
+
         # Calculate reaction force at right end
         b = assemble(Ftotal,form_compiler_parameters={"representation":"uflacs"})
         bcleft.apply(b)
@@ -515,11 +545,13 @@ def fenics(sim_params,file_inputs,output_params,passive_params,hs_params,cell_io
         np.save(output_path + "fx",fx_rxn)
 
 
-        """if t <= 10:
-            u_D.u_D += .005
-        if t > 10:
+        if t <= 10:
             u_D.u_D = u_D.u_D
-        if t >=50 and t < 70:
+        if t > 10 and t < 15:
+            u_D.u_D += 0.05
+        if t >=15:
+            u_D.u_D = u_D.u_D
+        """and t < 70:
             u_D.u_D -= 0.007
         if  t >= 70 and t < 150:
             u_D.u_D = u_D.u_D
@@ -527,7 +559,7 @@ def fenics(sim_params,file_inputs,output_params,passive_params,hs_params,cell_io
             u_D.u_D += 0.003"""
         #print "time = " + str(t)
         #print hsl_template[l]
-        u_D.u_D = hsl_template[l]-1
+        #u_D.u_D = hsl_template[l]-1
         t = t + step_size
 
         calarray.append(hs.Ca_conc*np.ones(no_of_int_points))

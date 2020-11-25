@@ -233,10 +233,11 @@ def fenics(sim_params):
     c3_param = Function(Quad)
 
 # find the rest of the functions (hsl, etc.)
-# assign f0, s0, n0 with outside function?
-# assign heterogeneous properties with outside function? e.g. "if cylinder, make ends fiberous,
-# if ventricle, could change based on wall location, etc."
 # initialize test and trial functions
+# assign f0, s0, n0 with outside function?
+# assign heterogeneous properties with outside function? e.g. "if cylinder, make ends fibrous,
+# if ventricle, could change based on wall location, etc."
+
 # initialize solver and forms params
 # initialize continuum tensors
 # define relationships for pk1, pgt, pgf, etc.
@@ -255,7 +256,6 @@ with open(input_file, 'r') as json_input:
 recode_dictionary.recode(input_parameters)
 
 # Parse out the different types of parameters.
-sim_params = input_parameters["simulation_parameters"]
 sim_params = input_parameters["simulation_parameters"]
 passive_params = input_parameters["forms_parameters"]["passive_law_parameters"]
 hs_params = input_parameters["myosim_parameters"]
