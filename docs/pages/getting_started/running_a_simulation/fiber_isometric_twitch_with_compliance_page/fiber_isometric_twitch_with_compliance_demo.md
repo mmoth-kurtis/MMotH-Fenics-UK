@@ -7,11 +7,11 @@ nav_order: 3
 
 Summary
 -------
-A muscle fiber twitch simulation. A cylinder geometry in which the ends represent non-contracting, fibrous tissue with a nonlinear stiffness and the quadrature points represent contracting myofibrils.  
+A muscle fiber twitch simulation with fixed fiber length. A cylinder geometry in which the ends represent non-contracting, fibrous tissue with a nonlinear stiffness and the quadrature points represent contracting myofibrils.  
 
 Simulation Protocol
 -------------------
-The right end of the fiber is displaced to the right 14% over 5 ms to induce a passive stress response. This stretch is maintained for 10 ms at a calcium concentration of 1e-7 M to allow the cross-bridges to reach steady state. Then the cell is activated with a skeletal muscle calcium transient approximation [^1] using the [two-compartment calcium](../../../model_formulations/calcium_models/two_compartment_model/two_compartment_model.md) model, and stretch held fixed, allowing the myofibrils to contract against the compliance at either end. The contractile parameters are tuned to match twitch stress data from literature[^2]
+The right end of the fiber is displaced to the right 14% over 5 ms to induce a passive stress response. This stretch is maintained for 10 ms at a calcium concentration of 1e-7 M to allow the cross-bridges to reach steady state. Then the cell is activated with a skeletal muscle calcium transient approximation[^1] using the [two-compartment calcium](../../../model_formulations/calcium_models/two_compartment_model/two_compartment_model.md) model, and stretch held fixed, allowing the myofibrils to contract against the compliance at either end. The contractile parameters are tuned to match twitch stress data from literature[^2].
 
 Boundary Conditions & Assumptions
 ---------------------------------
