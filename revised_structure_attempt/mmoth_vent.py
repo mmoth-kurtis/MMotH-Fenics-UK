@@ -5,15 +5,11 @@ sys.path.append("/home/fenics/shared/revised_structure_attempt")
 import os as os
 from dolfin import *
 import numpy as np
-#from petsc4py import PETSc
-#from dependencies import forms
 from forms import Forms
 from nsolver import NSolver as NSolver
 import math
 import Python_MyoSim.half_sarcomere.half_sarcomere as half_sarcomere
 import Python_MyoSim.half_sarcomere.implement as implement
-#import vtk_py
-#import mshr
 from cell_ion_module import cell_ion_driver
 from edgetypebc import *
 import pandas as pd
@@ -22,11 +18,8 @@ from methods import mesh_import
 from methods.mesh_import import mesh_import as mesh_import
 from methods.assign_initial_hsl import assign_initial_hsl as assign_hsl
 from methods.assign_local_coordinate_system import assign_local_coordinate_system as lcs
-#from assign_initial_hsl import assign_initial_hsl
-#from mesh_import import import_mesh
 import recode_dictionary
 import json
-#from assign_initial_hsl import assign_initial_hsl
 
 
 # For now, sticking to hieracrchy that this is called by fenics_driver.py
@@ -234,14 +227,19 @@ def fenics(sim_params):
     f0 = Function(fiberFS)
     s0 = Function(fiberFS)
     n0 = Function(fiberFS)
-    f0_diff = Function(fiberFS)
 
     # put these in a dictionary to pass to function for assignment
     coord_params = {
         "f0":f0,
         "s0":s0,
         "n0":n0,
-        "f0_diff":f0_diff
+        "fiberFS":fiberFS,
+        "marker_space":marker_space,
+        "sim_geometry":sim_geometry,
+        "mesh":mesh,
+        "Quad":Quad,
+        "no_of_int_points":no_of_int_points,
+        "geo_options":geo_options
     }
 
 
@@ -273,27 +271,33 @@ def fenics(sim_params):
     # and adjusted as the Newton Solver tries new displacements
     y_vec = Function(Quad_vectorized_Fspace)
 
-    # Assign some of these function values
+#-------------------------------------------------------------------------------
+#           Assign function values
+#-------------------------------------------------------------------------------
+
     hsl0 = assign_hsl.assign_initial_hsl(lv_options,hs_params,sim_geometry,hsl0)
-    f0,s0,n0 = lcs.assign_local_coordinate_system(fiberFS,lv_options,coord_params)
+    f0,s0,n0 = lcs.assign_local_coordinate_system(lv_options,coord_params,sim_params)
 
-
-    #File(output_path + "fiber.pvd") << project(f0, VectorFunctionSpace(mesh, "CG", 1))
-    #File(output_path + "sheet.pvd") << project(s0, VectorFunctionSpace(mesh, "CG", 1))
-    #File(output_path + "sheet-normal.pvd") << project(n0, VectorFunctionSpace(mesh, "CG", 1))
+    # Assign heterogeneous parameters
 
 
 
-    # print out initial information before time loop
+
+#-------------------------------------------------------------------------------
+#           Save initial values
+#-------------------------------------------------------------------------------
+
     #save initial f0, s0, n0, hsl0
     hsl_temp = project(hsl0,FunctionSpace(mesh,'DG',1))
     hsl_temp.rename("hsl_temp","half-sarcomere length")
     hsl_file << hsl_temp
 
+    File(output_path + "fiber.pvd") << project(f0, VectorFunctionSpace(mesh, "CG", 1))
+    File(output_path + "sheet.pvd") << project(s0, VectorFunctionSpace(mesh, "CG", 1))
+    File(output_path + "sheet-normal.pvd") << project(n0, VectorFunctionSpace(mesh, "CG", 1))
 
-# find the rest of the functions (hsl, etc.)
-# initialize test and trial functions
-# assign f0, s0, n0 with outside function?
+
+
 # assign heterogeneous properties with outside function? e.g. "if cylinder, make ends fibrous,
 # if ventricle, could change based on wall location, etc."
 

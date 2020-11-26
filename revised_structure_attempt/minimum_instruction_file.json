@@ -1,6 +1,6 @@
 {
   "simulation_parameters": {
-    "simulation_geometry": ["unit_cube"],
+    "simulation_geometry": ["ellipsoid"],
     "geometry_options": {
       "mesh_path": ["/home/fenics/shared/revised_structure_attempt/test_LV_meshes/ellipsoidal_refined_transmural_2.hdf5"],
       "base_x": [0.0, "x-coordinate of cylinder base face"],
@@ -22,7 +22,7 @@
     "save_cell_output": [1],
     "save_visual_output": [1],
     "output_path": ["./output/"],
-    "fiber_randomness": [0.0]
+    "fiber_randomness": [0.5]
   },
 
   "forms_parameters": {
