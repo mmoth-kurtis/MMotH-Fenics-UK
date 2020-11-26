@@ -264,7 +264,7 @@ def fenics(sim_params,file_inputs,output_params,passive_params,hs_params,cell_io
 
     # Go ahead and read in rest of info from mesh file and close
     # mesh lclee created doesn't have hsl0 variation
-    #f.read(hsl0_transmural, casename+"/"+"hsl0")
+    f.read(hsl0_transmural, casename+"/"+"hsl0")
     f.read(f0, casename+"/"+"eF")
     f.read(s0, casename+"/"+"eS")
     f.read(n0, casename+"/"+"eN")

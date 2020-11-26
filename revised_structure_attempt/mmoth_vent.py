@@ -18,9 +18,15 @@ from cell_ion_module import cell_ion_driver
 from edgetypebc import *
 import pandas as pd
 import copy
-from mesh_import import import_mesh
+from methods import mesh_import
+from methods.mesh_import import mesh_import as mesh_import
+from methods.assign_initial_hsl import assign_initial_hsl as assign_hsl
+from methods.assign_local_coordinate_system import assign_local_coordinate_system as lcs
+#from assign_initial_hsl import assign_initial_hsl
+#from mesh_import import import_mesh
 import recode_dictionary
 import json
+#from assign_initial_hsl import assign_initial_hsl
 
 
 # For now, sticking to hieracrchy that this is called by fenics_driver.py
@@ -40,12 +46,15 @@ def fenics(sim_params):
     save_visual_output = sim_params["save_visual_output"][0] # paraview files for visualization
     output_path = sim_params["output_path"][0]
 
+    # assign amount of random variation in f0 (cube and cylinder simulations, 0 means normal alignment)
+    gaussian_width = sim_params["fiber_randomness"][0]
+
 #------------------------------------------------------------------------------
 #           Mesh Information
 #------------------------------------------------------------------------------
 
     ## Create/load mesh geometry
-    mesh = import_mesh(sim_geometry, geo_options)
+    mesh,lv_options = mesh_import.import_mesh(sim_geometry, geo_options)
 
     File(output_path + '/test_mesh_import.pvd') << mesh
 
@@ -53,6 +62,8 @@ def fenics(sim_params):
     comm = mesh.mpi_comm()
 
     facetboundaries = MeshFunction('size_t', mesh, mesh.topology().dim()-1)
+    edgeboundaries = MeshFunction('size_t', mesh, mesh.topology().dim()-2)
+
 
     # from the mesh, define some things
     if sim_geometry == "cylinder" or sim_geometry == "unit_cube" :
@@ -104,7 +115,7 @@ def fenics(sim_params):
     # Define the length of the populations vector
     n_array_length = no_of_attached_states * no_of_x_bins + no_of_detached_states + 2
     n_vector_indices = [[0,0], [1,1], [2,2+no_of_x_bins-1]]
-    hsl0 = hs_params["initial_hs_length"][0]
+    #hsl0 = hs_params["initial_hs_length"][0]
 
 #------------------------------------------------------------------------------
 #           Storage data frames
@@ -113,16 +124,14 @@ def fenics(sim_params):
     ## Create files for saving information if needed.
     # cell level info is saved through a pandas command later
     if save_visual_output:
-
         # Can visualize pretty much anything. For now, just looking at deformation
         # and the active stress magnitude
         displacement_file = File(output_path + "u_disp.pvd")
         active_stress_file = File(output_path + "active_stress_magnitude.pvd")
-        #hsl_file = File(output_path + "hsl_mesh.pvd")
+        hsl_file = File(output_path + "hsl_mesh.pvd")
         #alpha_file = File(output_path + "alpha_mesh.pvd")
 
-        if sim_geometry == "ventricle":
-
+        if (sim_geometry == "ventricle") or (sim_geometry == "ellipsoid"):
             # initialize a file for pressures and volumes in windkessel
             fdataPV = open(output_path + "PV_.txt", "w", 0)
 
@@ -209,16 +218,17 @@ def fenics(sim_params):
     fiberFS = FunctionSpace(mesh, VQuadelem)
 
     if sim_geometry == "cylinder" or sim_geometry == "unit_cube":
-        W = FunctionSpace(mesh, MixedElement([Velem,Qelem,VRelem]))
+        W = FunctionSpace(mesh, MixedElement([Velem,Qelem]))
         x_dofs = W.sub(0).sub(0).dofmap().dofs() # will use this for x rxn forces later
     else:
         W = FunctionSpace(mesh, MixedElement([Velem,Qelem,Relem,VRelem]))
 
+    # Function space to differentiate fibrous tissue from contractile for fiber simulations
+    marker_space = FunctionSpace(mesh, 'CG', 1)
+
 #-------------------------------------------------------------------------------
 #           Initialize functions on the above spaces
 #-------------------------------------------------------------------------------
-
-    # initialize everything regardless of simulation?
 
     # fiber, sheet, and sheet-normal functions
     f0 = Function(fiberFS)
@@ -226,11 +236,60 @@ def fenics(sim_params):
     n0 = Function(fiberFS)
     f0_diff = Function(fiberFS)
 
+    # put these in a dictionary to pass to function for assignment
+    coord_params = {
+        "f0":f0,
+        "s0":s0,
+        "n0":n0,
+        "f0_diff":f0_diff
+    }
+
 
     # parameters that are heterogeneous here
     c_param = Function(Quad)
     c2_param = Function(Quad)
     c3_param = Function(Quad)
+
+    # functions for the weak form
+    w                 = Function(W)
+    dw                = TrialFunction(W)
+    wtest             = TestFunction(W)
+
+    if (sim_geometry == "ventricle") or (sim_geometry == "ellipsoid"):
+        # Need the pressure function
+        du,dp,dpendo,dc11 = TrialFunctions(W)
+        (u,p,pendo,c11)   = split(w)
+        (v,q,qendo,v11)   = TestFunctions(W)
+    else:
+        du,dp = TrialFunctions(W)
+        (u,p) = split(w)
+        (v,q) = TestFunctions(W)
+
+    # Initial and previous timestep half-sarcomere length functions
+    hsl0    = Function(Quad)
+    hsl_old = Function(Quad)
+
+    # Population solution holder for myosim, allows active stress to be calculated
+    # and adjusted as the Newton Solver tries new displacements
+    y_vec = Function(Quad_vectorized_Fspace)
+
+    # Assign some of these function values
+    hsl0 = assign_hsl.assign_initial_hsl(lv_options,hs_params,sim_geometry,hsl0)
+    f0,s0,n0 = lcs.assign_local_coordinate_system(fiberFS,lv_options,coord_params)
+
+
+    #File(output_path + "fiber.pvd") << project(f0, VectorFunctionSpace(mesh, "CG", 1))
+    #File(output_path + "sheet.pvd") << project(s0, VectorFunctionSpace(mesh, "CG", 1))
+    #File(output_path + "sheet-normal.pvd") << project(n0, VectorFunctionSpace(mesh, "CG", 1))
+
+
+
+    # print out initial information before time loop
+    #save initial f0, s0, n0, hsl0
+    hsl_temp = project(hsl0,FunctionSpace(mesh,'DG',1))
+    hsl_temp.rename("hsl_temp","half-sarcomere length")
+    hsl_file << hsl_temp
+
 
 # find the rest of the functions (hsl, etc.)
 # initialize test and trial functions
@@ -244,6 +303,15 @@ def fenics(sim_params):
 # active stress calculation
 # weak form
 # initialize hs and cell_ion classes
+
+
+
+
+
+
+
+
+
 
 #-------------------------------------------------------------------------------
 # for stand-alone testing
@@ -260,7 +328,7 @@ sim_params = input_parameters["simulation_parameters"]
 passive_params = input_parameters["forms_parameters"]["passive_law_parameters"]
 hs_params = input_parameters["myosim_parameters"]
 cell_ion_params = input_parameters["electrophys_parameters"]["cell_ion_parameters"]
-monodomain_params = input_parameters["electrophys_parameters"]["monodomain_parameters"]
-windkessel_params = input_parameters["windkessel_parameters"]
-optimization_params = input_parameters["optimization_parameters"]
+#monodomain_params = input_parameters["electrophys_parameters"]["monodomain_parameters"]
+#windkessel_params = input_parameters["windkessel_parameters"]
+#optimization_params = input_parameters["optimization_parameters"]
 fenics(sim_params)

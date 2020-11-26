@@ -10,6 +10,9 @@ import os
 # cylinder, path_to_existing? (exising to just load in mesh from specified path?)
 def import_mesh(sim_geometry, options):
 
+    # create a dictionary to pass info for fcn assignments later
+    lv_options = {}
+
     if sim_geometry == "cylinder":
 
         # initialize dictionary
@@ -18,38 +21,38 @@ def import_mesh(sim_geometry, options):
         # default values
         #----------------
         # Center point for end of cylinder
-        cylinder_specs["end_x"] = 10.0
-        cylinder_specs["end_y"] = 0.0
-        cylinder_specs["end_z"] = 0.0
+        cylinder_specs["end_x"] = [10.0]
+        cylinder_specs["end_y"] = [0.0]
+        cylinder_specs["end_z"] = [0.0]
 
         # Center point for base of cylinder
-        cylinder_specs["base_x"] = 0.0
-        cylinder_specs["base_y"] = 0.0
-        cylinder_specs["base_z"] = 0.0
+        cylinder_specs["base_x"] = [0.0]
+        cylinder_specs["base_y"] = [0.0]
+        cylinder_specs["base_z"] = [0.0]
 
         # Base radius
-        cylinder_specs["base_radius"] = 1.0
-        cylinder_specs["end_radius"] = 1.0
+        cylinder_specs["base_radius"] = [1.0]
+        cylinder_specs["end_radius"] = [1.0]
 
         # Segments for approximating round shape
-        cylinder_specs["segments"] = 20
+        cylinder_specs["segments"] = [20]
 
         # Refinement of mesh
-        cylinder_specs["refinement"] = 30
+        cylinder_specs["refinement"] = [30]
 
         # If user provides any alternate values, update
         # the cylinder_specs dictionary now
         cylinder_specs.update(options)
 
-        cyl_bottom_center = Point(cylinder_specs["base_x"],cylinder_specs["base_y"],cylinder_specs["base_z"])
-        cyl_top_center    = Point(cylinder_specs["x"],cylinder_specs["y"],cylinder_specs["z"])
+        cyl_bottom_center = Point(cylinder_specs["base_x"][0],cylinder_specs["base_y"][0],cylinder_specs["base_z"][0])
+        cyl_top_center    = Point(cylinder_specs["end_x"][0],cylinder_specs["end_y"][0],cylinder_specs["end_z"][0])
 
         # Create cylinder geometry
-        cylinder_geometry = mshr.Cylinder(cyl_top_center,cyl_bottom_center,cylinder_specs["end_radius"],cylinder_specs["base_radius"],cylinder_specs["segments"])
+        cylinder_geometry = mshr.Cylinder(cyl_top_center,cyl_bottom_center,cylinder_specs["end_radius"][0],cylinder_specs["base_radius"][0],cylinder_specs["segments"][0])
 
         # Create mesh
         print "Creating cylinder mesh"
-        mesh = mshr.generate_mesh(cylinder_geometry,cylinder_specs["refinement"])
+        mesh = mshr.generate_mesh(cylinder_geometry,cylinder_specs["refinement"][0])
 
     if sim_geometry == "unit_cube":
 
@@ -57,12 +60,16 @@ def import_mesh(sim_geometry, options):
         mesh = UnitCubeMesh(1,1,1)
 
     if sim_geometry == "ventricle" or sim_geometry == "ellipsoid":
+
         if sim_geometry == "ellipsoid":
             casename = "ellipsoidal"
         else:
             casename = "New_mesh" #New_mesh is the default casename in scripts sent from Dr. Lee
 
         mesh_path = options["mesh_path"][0]
+
+        lv_options["casename"] = casename
+        lv_options["mesh_path"] = mesh_path
 
         # check to see if it exists
         if not os.path.exists(mesh_path):
@@ -77,6 +84,6 @@ def import_mesh(sim_geometry, options):
             ugrid = vtk_py.convertXMLMeshToUGrid(mesh)
             ugrid = vtk_py.rotateUGrid(ugrid, sx=0.1, sy=0.1, sz=0.1)
             mesh = vtk_py.convertUGridToXMLMesh(ugrid)
-            f.close()
+            lv_options["f"] = f
 
-    return mesh
+    return mesh,lv_options
