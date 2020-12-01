@@ -138,8 +138,8 @@ class Forms(object):
         Pactive = cbforce * as_tensor(f0[i]*f0[j], (i,j))
         return Pactive, cbforce
 
-    #def PassiveMatSEF(self,hsl):
-    def PassiveMatSEF(self):
+    def PassiveMatSEF(self,hsl):
+    #def PassiveMatSEF(self):
         Ea = self.Emat()
         f0 = self.parameters["fiber"]
         s0 = self.parameters["sheet"]
@@ -154,7 +154,7 @@ class Forms(object):
         Cmat = self.Cmat()
         phi_m = self.parameters["phi_m"][0]
         phi_g = self.parameters["phi_g"][0]
-        #hsl0 = self.parameters["hsl0"]
+        hsl0 = self.parameters["hsl0"]
 
         if(isincomp):
             p = self.parameters["pressure_variable"]
@@ -169,14 +169,14 @@ class Forms(object):
         Ens = inner(n0, Ea*s0)
 
         alpha = sqrt(2.0 * Eff + 1.0)
-        #myofiber_stretch = hsl/hsl0
+        myofiber_stretch = hsl/hsl0
         #alpha = sqrt(dot(f0, Cmat*f0))
 
 
     		#QQ = bff*pow(Eff,2.0) + bfx*(pow(Ess,2.0)+ pow(Enn,2.0)+ 2.0*pow(Ens,2.0)) + bxx*(2.0*pow(Efs,2.0) + 2.0*pow(Efn,2.0))
 
-        QQ_m = conditional(alpha > 1.0, C3*(alpha - 1.0)**2.0, 0.0)
-        #QQ_m = conditional(myofiber_stretch > 1.0, C3*(myofiber_stretch - 1.0)**2.0, 0.0)
+        #QQ_m = conditional(alpha > 1.0, C3*(alpha - 1.0)**2.0, 0.0)
+        QQ_m = conditional(myofiber_stretch > 1.0, C3*(myofiber_stretch - 1.0)**2.0, 0.0)
         #QQ_m = C3*(alpha - 1.0)**2.0
 
         QQ_c = bff*Eff**2.0 + bfx*(Ess**2.0 + Enn**2.0 + 2.0*Ens**2.0) + bxx*(2.0*Efs**2.0 + 2.0*Efn**2.0)
@@ -250,8 +250,8 @@ class Forms(object):
 
 
 # this returns only myscle stress (no collagen contribution)
-    #def stress(self,hsl):
-    def stress(self):
+    def stress(self,hsl):
+    #def stress(self):
         mesh = self.parameters["mesh"]
 
         e1 = Constant((1.0, 0.0, 0.0))
@@ -272,7 +272,7 @@ class Forms(object):
         phi_m = self.parameters["phi_m"][0]
         phi_g = self.parameters["phi_g"][0]
         isincomp = self.parameters["incompressible"]
-        #hsl0 = self.parameters["hsl0"]
+        hsl0 = self.parameters["hsl0"]
 
         if(isincomp):
             p = self.parameters["pressure_variable"]
@@ -294,14 +294,14 @@ class Forms(object):
         Ens = inner(n0, Ea*s0)
 
         alpha = sqrt(2.0 * Eff + 1.0)
-        #myofiber_stretch = hsl/hsl0
+        myofiber_stretch = hsl/hsl0
 
 
-        Q = C3*conditional(alpha>1.0,alpha - 1.0,0.0)**2.0
+        #Q = C3*conditional(alpha>1.0,alpha - 1.0,0.0)**2.0
         ### KURTIS START HERE, SFF NEEDS TO BE ZERO FOR MYOFIBER_STRETCH < 1 ****
-        #Q = C3*conditional(myofiber_stretch > 1.0, myofiber_stretch - 1.0,0.0)**2.0
-        #Sff = 2.0 * C2 * C3 * (1.0 - conditional(myofiber_stretch > 1.0,1.0/myofiber_stretch,1.0)) * exp(Q)
-        Sff = 2.0 * C2 * C3 * (1.0 - conditional(alpha > 1.0,1.0/alpha,1.0)) * exp(Q)
+        Q = C3*conditional(myofiber_stretch > 1.0, myofiber_stretch - 1.0,0.0)**2.0
+        Sff = 2.0 * C2 * C3 * (1.0 - conditional(myofiber_stretch > 1.0,1.0/myofiber_stretch,1.0)) * exp(Q)
+        #Sff = 2.0 * C2 * C3 * (1.0 - conditional(alpha > 1.0,1.0/alpha,1.0)) * exp(Q)
         Sff_weighted = Sff*phi_m
 
         # Calculate Guccione passive stress?

@@ -17,7 +17,8 @@ def assign_local_coordinate_system(lv_options,coord_params,sim_params):
     f0   = coord_params["f0"]
     s0   = coord_params["s0"]
     n0   = coord_params["n0"]
-
+    facetboundaries = coord_params["facetboundaries"]
+    edgeboundaries = coord_params["edgeboundaries"]
     # mean values for gaussian for fiber orientation
     m_x = 1.0
     m_y = 0.0
@@ -33,6 +34,8 @@ def assign_local_coordinate_system(lv_options,coord_params,sim_params):
         casename = lv_options["casename"]
         f        = lv_options["f"]
         # assign local coordinate system at each gauss point
+        f.read(facetboundaries, casename+"/"+"facetboundaries")
+        f.read(edgeboundaries, casename+"/"+"edgeboundaries")
         f.read(f0, casename + "/" + "eF")
         f.read(s0, casename + "/" + "eS")
         f.read(n0, casename + "/" + "eN")

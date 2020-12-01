@@ -70,7 +70,8 @@
       "passive_exp_sigma": [500],
       "passive_exp_L": [80],
       "passive_l_slack": [950, "nm"],
-      "xfiber_fraction": [0, "unitless"]
+      "xfiber_fraction": [0, "unitless"],
+      "k_myo_damp": [0, "viscoelastic effect to get hsl back to reference"]
   }
 },
 

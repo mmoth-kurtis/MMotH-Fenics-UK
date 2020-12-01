@@ -2,7 +2,7 @@
   "simulation_parameters": {
     "simulation_geometry": ["ellipsoid"],
     "geometry_options": {
-      "mesh_path": ["/home/fenics/shared/revised_structure_attempt/test_LV_meshes/ellipsoidal_refined_transmural_2.hdf5"],
+      "mesh_path": ["/home/fenics/shared/revised_structure_attempt/test_LV_meshes/ellipsoidal_refined_transmural_2.hdf5"]
     },
     "protocol": {
       "simulation_duration": [150, "ms"],
@@ -20,9 +20,9 @@
 
     "passive_law_parameters": {
       "passive_law": ["semi_structural"],
-      "c": [4000, "(Pa), isotropic scaling factor"],
-      "c2": [500, "(Pa), myofiber stiffness"],
-      "c3": [20.0, "(unitless), myofiber exponential factor"],
+      "c": [580, "(Pa), isotropic scaling factor"],
+      "c2": [150, "(Pa), myofiber stiffness"],
+      "c3": [8.0, "(unitless), myofiber exponential factor"],
       "bf": [10.48, "(unitless),Guccione fiber factor"],
       "bt": [3.58, "(unitless), Guccione transverse factor"],
       "bfs": [1.627, "(unitless), Guccione shear factor"],
@@ -71,7 +71,8 @@
       "passive_exp_sigma": [500],
       "passive_exp_L": [80],
       "passive_l_slack": [950, "nm"],
-      "xfiber_fraction": [0, "unitless"]
+      "xfiber_fraction": [0, "unitless"],
+      "k_myo_damp": [0, "viscoelastic effect to get hsl back to reference"]
   }
 },
 

@@ -336,7 +336,7 @@ def fenics(sim_params,file_inputs,output_params,passive_params,hs_params,cell_io
         cb_force = cb_force + f_holder
 
     #cb_force2 = Expression(("f"), f=0.0, degree=0)
-    Pactive = cb_force * as_tensor(f0[m]*f0[k], (m,k))
+    Pactive = cb_force * as_tensor(f0[m]*f0[k], (m,k))+ xfiber_fraction*cb_force * as_tensor(s0[m]*s0[k], (m,k))+ xfiber_fraction*cb_force * as_tensor(n0[m]*n0[k], (m,k))
     Press = Expression(("P"), P=0.0, degree=0)
     # Automatic differentiation  #####################################################################################################
     F1 = derivative(Wp, w, wtest)*dx

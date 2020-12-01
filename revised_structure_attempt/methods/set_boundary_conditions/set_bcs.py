@@ -5,7 +5,6 @@ from dolfin import *
 def set_bcs(sim_geometry,protocol,mesh,W,facetboundaries,u_D):
 
     output = {}
-    sim_type = protocol["simulation_type"]
 
     if (sim_geometry == "ventricle") or (sim_geometry == "ellipsoid"):
 
@@ -18,6 +17,7 @@ def set_bcs(sim_geometry,protocol,mesh,W,facetboundaries,u_D):
         bcs = [bctop]
 
     elif (sim_geometry == "cylinder"):
+        sim_type = protocol["simulation_type"]
 
         # defining parts of the model where the boundary condition should be applied later
         class Left(SubDomain):
@@ -78,6 +78,7 @@ def set_bcs(sim_geometry,protocol,mesh,W,facetboundaries,u_D):
             output["test_marker_fcn"] = test_marker_fcn
 
     elif sim_geometry == "unit_cube":
+        sim_type = protocol["simulation_type"]
 
         class Left(SubDomain):
             def inside(self, x, on_boundary):
