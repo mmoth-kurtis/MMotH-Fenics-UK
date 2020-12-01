@@ -12,12 +12,18 @@
        "end_z":[0.0, "z-coordinate of cylinder end face"],
        "end_radius": [1.0],
        "segments": [20, "number of segments to approximate cylinder"],
-       "refinement": [30, "mesh refinement. This combination of segments and refinement yield nodes on y and z axes"]
+       "refinement": [30, "mesh refinement. This combination of segments and refinement yield nodes on y and z axes"],
+       "fibrous_c": [200],
+       "fibrous_c2": [50],
+       "fibrous_c3": [2]
     },
     "protocol": {
-      "simulation_type": ["twitch"],
+      "simulation_type": ["ramp_and_hold"],
       "simulation_duration": [150, "ms"],
-      "simulation_timestep": [0.5, "ms"]
+      "simulation_timestep": [0.5, "ms"],
+      "ramp_t_start":[0.0],
+      "ramp_t_end":[5.0],
+      "ramp_magnitude":[10, "percentage length change"]
       },
     "save_cell_output": [1],
     "save_visual_output": [1],

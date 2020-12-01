@@ -10,6 +10,7 @@ def assign_local_coordinate_system(lv_options,coord_params,sim_params):
     sim_geometry = coord_params["sim_geometry"]
     geo_options  = coord_params["geo_options"]
     no_of_int_points = coord_params["no_of_int_points"]
+    geo_options = coord_params["geo_options"]
 
     mesh = coord_params["mesh"]
     Quad = coord_params["Quad"]
@@ -56,6 +57,9 @@ def assign_local_coordinate_system(lv_options,coord_params,sim_params):
         # Create array of the expression values
         end_marker_array = end_marker_on_mesh.vector().get_local()
         point_rad_array = point_rad.vector().get_local()
+
+        # Updating geometry options to save end_marker_array to assign heterogeneous parameters later
+        geo_options["end_marker_array"] = end_marker_array
 
         for jj in np.arange(no_of_int_points):
 
@@ -112,4 +116,4 @@ def assign_local_coordinate_system(lv_options,coord_params,sim_params):
         n0 = project(cross(s0,f0),VectorFunctionSpace(mesh, "DG", 0))
         n0 = n0/sqrt(inner(n0,n0))
 
-    return f0,s0,n0
+    return f0,s0,n0,geo_options

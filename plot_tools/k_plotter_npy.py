@@ -227,6 +227,7 @@ print "shape of cropped pops " + str(np.shape(fenics_pop_data))
 print " num int points " + str(num_int_points)
 
 max_nbound = 0.0
+#max_nbound = np.amax(fenics_pop_data[:,2:array_length-3])
 
 for i in range(data_range):
 
@@ -238,10 +239,10 @@ for i in range(data_range):
         M_ON[i] = fenics_pop_data[i*num_int_points+gauss_point,1]
         M_BOUND[i] = np.sum(fenics_pop_data[i*num_int_points+gauss_point,2:array_length-3])
         N_ON[i] = fenics_pop_data[i*num_int_points+gauss_point,array_length-1]
-        if np.amax(fenics_pop_data[i*num_int_points+gauss_point,2:array_length-3]) > max_nbound:
-            max_nbound = np.amax(fenics_pop_data[i*num_int_points+gauss_point,2:array_length-3])
-        else:
-            max_nbound = max_nbound
+        #if np.amax(fenics_pop_data[i*num_int_points+gauss_point,2:array_length-3]) > max_nbound:
+        #    max_nbound = np.amax(fenics_pop_data[i*num_int_points+gauss_point,2:array_length-3])
+        #else:
+        #    max_nbound = max_nbound
     else:
         M_OFF[i] = fenics_pop_data[i,gauss_point,0]
         M_ON[i] = fenics_pop_data[i,gauss_point,1]
@@ -520,14 +521,14 @@ ax8.invert_yaxis()
 # Animate cross-bridges during simulation
 
 #print max_nbound
-ax1 = plt.subplot(427,xlim=(xmin-1,xmax+1),ylim=(0.00,max_nbound))
+ax1 = plt.subplot(427,xlim=(xmin-1,xmax+1),ylim=(0.00,0.0004))
 y_label = 'M_FG(x)                       \n (Proportion)                   '
 y_coord = get_y_label_y_coord(y_label)
 ax1.set_ylabel(y_label, fontsize = font_size, rotation=0,y=y_coord)
-y_bound = ax1.get_ybound()
+#y_bound = ax1.get_ybound()
 y_ticks = get_yticks(y_bound)
-ax1.set_ylim(y_ticks)
-ax1.set_yticks(y_ticks)
+#ax1.set_ylim(max_nbound)
+#ax1.set_yticks(y_ticks)
 ax1.set_xlabel('Working Cross-bridge \n Range \n (nm)', fontsize = font_size)
 #plt.xlabel('Working Cross-bridge Range (nm)')
 right_side1 = ax1.spines["right"]

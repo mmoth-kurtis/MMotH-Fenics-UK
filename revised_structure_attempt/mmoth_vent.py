@@ -18,6 +18,8 @@ from methods import mesh_import
 from methods.mesh_import import mesh_import as mesh_import
 from methods.assign_initial_hsl import assign_initial_hsl as assign_hsl
 from methods.assign_local_coordinate_system import assign_local_coordinate_system as lcs
+from methods.assign_heterogeneous_params import assign_heterogeneous_params as assign_params
+from methods.set_boundary_conditions import set_bcs as set_bcs
 import recode_dictionary
 import json
 
@@ -31,10 +33,16 @@ def fenics(sim_params):
 
     ## Assign simulation parameters
     sim_geometry = sim_params["simulation_geometry"][0] #unit_cube, cylinder, ventricle
-    geo_options = sim_params["geometry_options"]
-    sim_type = sim_params["protocol"]["simulation_type"][0]
-    sim_timestep = sim_params["protocol"]["simulation_timestep"][0]
-    sim_duration = sim_params["protocol"]["simulation_duration"][0] # can be overwritten in ventricle protocol once number of cycles and heartrate specified
+    if sim_geometry == "unit_cube":
+        geo_options = {}
+    else:
+        geo_options = sim_params["geometry_options"]
+
+    sim_protocol = sim_params["protocol"] # contains simulation dependent options
+
+    sim_timestep = sim_protocol["simulation_timestep"][0]
+    sim_duration = sim_protocol["simulation_duration"][0] # can be overwritten in ventricle protocol once number of cycles and heartrate specified
+    no_of_time_steps = int(sim_duration/sim_timestep)
     save_cell_output = sim_params["save_cell_output"][0] # myosim output
     save_visual_output = sim_params["save_visual_output"][0] # paraview files for visualization
     output_path = sim_params["output_path"][0]
@@ -126,7 +134,8 @@ def fenics(sim_params):
 
         if (sim_geometry == "ventricle") or (sim_geometry == "ellipsoid"):
             # initialize a file for pressures and volumes in windkessel
-            fdataPV = open(output_path + "PV_.txt", "w", 0)
+            if (MPI.rank(comm) == 0):
+                fdataPV = open(output_path + "PV_.txt", "w", 0)
 
     if save_cell_output:
 
@@ -169,6 +178,22 @@ def fenics(sim_params):
         # change in half-sarcomere length
         delta_hsl_array_ds = pd.DataFrame(np.zeros(no_of_int_points),index=None)
         delta_hsl_array_ds = delta_hsl_array_ds.transpose()
+
+    # Initialize some data holders that are necessary
+    temp_overlap = np.zeros((no_of_int_points))
+    y_vec_array_new = np.zeros(((no_of_int_points)*n_array_length))
+    j3_fluxes = np.zeros((no_of_int_points,no_of_time_steps))
+    j4_fluxes = np.zeros((no_of_int_points,no_of_time_steps))
+    y_interp = np.zeros((no_of_int_points)*n_array_length)
+    calcium = np.zeros(no_of_time_steps)
+
+    # Put any needed expressions here
+    #--------------------------------
+    # initialize LV cavity volume, only updated if windkessel is called
+    LVCavityvol = Expression(("vol"), vol=0.0, degree=2)
+
+    # displacement boundary expression for end of cell or fiber sims
+    u_D = Expression(("u_D"), u_D = 0.0, degree = 2)
 
 #-------------------------------------------------------------------------------
 #           Initialize finite elements and function spaces
@@ -242,11 +267,28 @@ def fenics(sim_params):
         "geo_options":geo_options
     }
 
+    # create lists of dictionaries that hold parameters for each gauss point
+    hs_params_list = [{}]*no_of_int_points
+    passive_params_list = [{}]*no_of_int_points
 
-    # parameters that are heterogeneous here
+    # Must make a deep copy so each item in the list is independent, and not linked
+    # to the original paramter dictionary
+    for jj in np.arange(np.shape(hs_params_list)[0]):
+        hs_params_list[jj] = copy.deepcopy(hs_params)
+        passive_params_list[jj] = copy.deepcopy(passive_params)
+
+    # parameters that are heterogeneous declared here as functions
+    # Do these need to come from the input file? As part of declaration, "heterogenous = true"?
+    # for key in input dictionary:
+    #    if dict[key] has value "heterogeneous =  true":
+    #        add this param to the list, but how to declare as a function? Hard code for now...
     c_param = Function(Quad)
     c2_param = Function(Quad)
     c3_param = Function(Quad)
+
+    # create heterogeneous function list to be passed in to method "assign_heterogeneous_params"
+    # Then
+    heterogeneous_fcn_list = [c_param, c2_param, c3_param]
 
     # functions for the weak form
     w                 = Function(W)
@@ -258,6 +300,13 @@ def fenics(sim_params):
         du,dp,dpendo,dc11 = TrialFunctions(W)
         (u,p,pendo,c11)   = split(w)
         (v,q,qendo,v11)   = TestFunctions(W)
+        ventricle_params  = {
+            "lv_volconst_variable": pendo,
+            "lv_constrained_vol":LVCavityvol,
+            "LVendoid": LVendoid,
+            "LVendo_comp": 2,
+        }
+
     else:
         du,dp = TrialFunctions(W)
         (u,p) = split(w)
@@ -270,18 +319,17 @@ def fenics(sim_params):
     # Population solution holder for myosim, allows active stress to be calculated
     # and adjusted as the Newton Solver tries new displacements
     y_vec = Function(Quad_vectorized_Fspace)
+    y_vec_array = y_vec.vector().get_local()[:]
 
 #-------------------------------------------------------------------------------
 #           Assign function values
 #-------------------------------------------------------------------------------
 
     hsl0 = assign_hsl.assign_initial_hsl(lv_options,hs_params,sim_geometry,hsl0)
-    f0,s0,n0 = lcs.assign_local_coordinate_system(lv_options,coord_params,sim_params)
+    f0,s0,n0,geo_options = lcs.assign_local_coordinate_system(lv_options,coord_params,sim_params)
 
-    # Assign heterogeneous parameters
-
-
-
+    # Assign the heterogeneous parameters
+    heterogeneous_fcn_list,hs_params_list,passive_params_list = assign_params.assign_heterogeneous_params(sim_params,hs_params_list,passive_params_list,geo_options,heterogeneous_fcn_list,no_of_int_points)
 
 #-------------------------------------------------------------------------------
 #           Save initial values
@@ -296,10 +344,87 @@ def fenics(sim_params):
     File(output_path + "sheet.pvd") << project(s0, VectorFunctionSpace(mesh, "CG", 1))
     File(output_path + "sheet-normal.pvd") << project(n0, VectorFunctionSpace(mesh, "CG", 1))
 
+#-------------------------------------------------------------------------------
+#           Initialize the solver and forms parameters, continuum tensors
+#-------------------------------------------------------------------------------
+
+    # parameters for forms file
+    params= {"mesh": mesh,
+             "facetboundaries": facetboundaries,
+             "facet_normal": N,
+             "mixedfunctionspace": W,
+             "mixedfunction": w,
+             "displacement_variable": u,
+             "pressure_variable": p,
+             "fiber": f0,
+             "sheet": s0,
+             "sheet-normal": n0,
+             "incompressible": isincomp,
+             "Kappa":Constant(1e5)}
+
+    # update passive params because now they are heterogeneous functions
+    # need to generalize this?
+    params.update(passive_params)
+    if (sim_geometry == "ventricle") or (sim_geometry == "ventricle"):
+        params.update(ventricle_params)
+    params["c"] = c_param
+    params["c2"] = c2_param
+    params["c3"] = c3_param
+
+    # Initialize the forms module
+    uflforms = Forms(params)
+
+    #LVCavityvol.vol = uflforms.LVcavityvol() may initialize this later to avoid another if statement here
+
+    # Get deformation gradient
+    Fmat = uflforms.Fmat()
+
+    # Get right cauchy stretch tensor
+    Cmat = (Fmat.T*Fmat)
+
+    # Get Green strain tensor
+    Emat = uflforms.Emat()
+
+    # Polar decomposition stretch tensor, used for Kroon (for now)
+    Umat = uflforms.Umat()
+
+    # jacobian of deformation gradient
+    J = uflforms.J()
+
+    # facet normal in current config
+    n = J*inv(Fmat.T)*N
+
+    # get passive material strain energy function
+    Wp = uflforms.PassiveMatSEF()
+
+#-------------------------------------------------------------------------------
+#           Initialize boundary conditions
+#-------------------------------------------------------------------------------
+    # returns a dictionary of bcs and potentially a test_marker_fcn for work loops
+    bc_output = set_bcs.set_bcs(sim_geometry,sim_protocol,mesh,W,facetboundaries,u_D)
+    bcs = bc_output["bcs"]
+
+#-------------------------------------------------------------------------------
+#           Active stress calculation
+#-------------------------------------------------------------------------------
+
+#-------------------------------------------------------------------------------
+#           Now hsl function is initiated, make sure all arrays are initialized
+#-------------------------------------------------------------------------------
+
+#-------------------------------------------------------------------------------
+#           Weak Form
+#-------------------------------------------------------------------------------
+
+#-------------------------------------------------------------------------------
+#           Initial loading (for ventricle), do some calculations to get to user specified EDV
+#-------------------------------------------------------------------------------
+
+#-------------------------------------------------------------------------------
+#           Time Loop
+#-------------------------------------------------------------------------------
 
 
-# assign heterogeneous properties with outside function? e.g. "if cylinder, make ends fibrous,
-# if ventricle, could change based on wall location, etc."
 
 # initialize solver and forms params
 # initialize continuum tensors
