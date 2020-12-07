@@ -20,8 +20,11 @@ from methods.assign_initial_hsl import assign_initial_hsl as assign_hsl
 from methods.assign_local_coordinate_system import assign_local_coordinate_system as lcs
 from methods.assign_heterogeneous_params import assign_heterogeneous_params as assign_params
 from methods.set_boundary_conditions import set_bcs as set_bcs
+from methods.circulatory_module import circulatory_module as cm
+from methods.update_boundary_conditions import update_boundary_conditions
 import recode_dictionary
 import json
+import timeit
 
 
 # For now, sticking to hieracrchy that this is called by fenics_driver.py
@@ -45,12 +48,16 @@ def fenics(sim_params):
     sim_timestep = sim_protocol["simulation_timestep"][0]
     sim_duration = sim_protocol["simulation_duration"][0] # can be overwritten in ventricle protocol once number of cycles and heartrate specified
     no_of_time_steps = int(sim_duration/sim_timestep)
+    t = np.linspace(0,sim_duration,no_of_time_steps)
     save_cell_output = sim_params["save_cell_output"][0] # myosim output
     save_visual_output = sim_params["save_visual_output"][0] # paraview files for visualization
     output_path = sim_params["output_path"][0]
 
     # assign amount of random variation in f0 (cube and cylinder simulations, 0 means normal alignment)
     gaussian_width = sim_params["fiber_randomness"][0]
+
+    # growth parameters
+    kroon_time_constant = growth_params["kroon_time_constant"][0]
 
 #------------------------------------------------------------------------------
 #           Mesh Information
@@ -73,6 +80,8 @@ def fenics(sim_params):
         no_of_int_points = 4 * np.shape(mesh.cells())[0]
         deg = 2
         ds = dolfin.ds(subdomain_data = facetboundaries)
+        fx_rxn = np.zeros((no_of_time_steps))
+
     else:
         #ventricle modeling
         deg = 4
@@ -148,8 +157,12 @@ def fenics(sim_params):
         active_stress_ds = pd.DataFrame(np.zeros(no_of_int_points),index=None)
         active_stress_ds = active_stress_ds.transpose()
 
+        calcium_ds = pd.DataFrame(np.zeros(no_of_int_points),index=None)
+        calcium_ds = calcium_ds.transpose()
+
         # myosim populations
         dumped_populations_ds = pd.DataFrame(np.zeros((no_of_int_points,n_array_length)))
+        dumped_populations = np.zeros((no_of_int_points,n_array_length))
 
         # passive stressed in myofiber
         p_f_array_ds = pd.DataFrame(np.zeros(no_of_int_points),index=None)
@@ -190,6 +203,10 @@ def fenics(sim_params):
     j4_fluxes = np.zeros((no_of_int_points,no_of_time_steps))
     y_interp = np.zeros((no_of_int_points)*n_array_length)
     calcium = np.zeros(no_of_time_steps)
+    rxn_force = np.zeros(no_of_time_steps)
+    delta_hsl_array = np.zeros(no_of_int_points)
+    traction_switch_flag = 0
+
 
     # Put any needed expressions here
     #--------------------------------
@@ -206,6 +223,10 @@ def fenics(sim_params):
     # Sometimes define an expression for active stress
     #cb_force2 = Expression(("f"), f=0.0, degree=0)
 
+    expressions = {
+        "u_D":u_D,
+        "Press":Press
+    }
 
 #-------------------------------------------------------------------------------
 #           Initialize finite elements and function spaces
@@ -254,6 +275,7 @@ def fenics(sim_params):
         W = FunctionSpace(mesh, MixedElement([Velem,Qelem,Relem,VRelem]))
 
     # Function space to differentiate fibrous tissue from contractile for fiber simulations
+    # Can use thise to mark gauss points according to a user defined law in "assign_heterogeneous_params"
     marker_space = FunctionSpace(mesh, 'CG', 1)
 
 #-------------------------------------------------------------------------------
@@ -637,7 +659,7 @@ def fenics(sim_params):
                     pk1temp.rename("pk1temp","active_stress")
                     active_stress_file << pk1temp
                     hsl_temp = project(hsl,FunctionSpace(mesh,'DG',1))
-                    hsl_temp.rename("hsl_temp","hsl")
+                    hsl_temp.rename("hsl_temp","half-sarcomere length")
                     hsl_file << hsl_temp
 
             print("cavity-vol = ", LVCavityvol.vol)
@@ -646,21 +668,176 @@ def fenics(sim_params):
 #-------------------------------------------------------------------------------
 #           Time Loop
 #-------------------------------------------------------------------------------
+    # Initialize half-sarcomere class. Methods used to calculate cross-bridges
+    # at gauss points
+    hs = half_sarcomere.half_sarcomere(hs_params,1)
+
+    # Initialize cell ion module
+    cell_ion = cell_ion_driver.cell_ion_driver(cell_ion_params)
+
+    # Initialize calcium concentration from cell_ion module
+    calcium[0] = cell_ion.calculate_concentrations(0,0)
+
+    # Load in circulatory module
+    if (sim_geometry == "ventricle") or (sim_geometry == "ellipsoid"):
+        circ_model = cm.circ_module(windkessel_params)
 
 
+    for l in np.arange(no_of_time_steps):
+        tic = timeit.default_timer()
 
-# initialize solver and forms params
-# weak form
-# initialize hs and cell_ion classes
+        if (sim_geometry == "ventricle") or (sim_geometry == "ellipsoid"):
 
+            # Update circulatory model
+            p_cav = uflforms.LVcavitypressure()
+            V_cav = uflforms.LVcavityvol()
+            circ_dict = circ_model.update_compartments(p_cav,V_cav,sim_timestep)
+            LVCavityvol.vol = V_cav
+            LVcav_array[counter] = V_cav
+            Pcav_array[counter] = p_cav*0.0075
 
+            # Now print out volumes, pressures, calcium
+            if(MPI.rank(comm) == 0):
+                print >>fdataPV, tstep, p_cav*0.0075 , Part*.0075, Pven*.0075, V_cav, V_ven, V_art, calcium[counter]
 
+        # update calcium
+        calcium[l] = cell_ion.calculate_concentrations(sim_timestep,l)
 
+        # Quick hack
+        if l == 0:
+            overlap_counter = 1
+        else:
+            overlap_counter = l
 
+        # At each gauss point, solve for cross-bridge distributions using myosim
+        for mm in np.arange(no_of_int_points):
+            temp_overlap[mm], y_interp[mm*n_array_length:(mm+1)*n_array_length], y_vec_array_new[mm*n_array_length:(mm+1)*n_array_length] = implement.update_simulation(hs, sim_timestep, delta_hsl_array[mm], hsl_array[mm], y_vec_array[mm*n_array_length:(mm+1)*n_array_length], p_f_array[mm], cb_f_array[mm], calcium[l], n_array_length, t,hs_params_list[mm])
+            temp_flux_dict, temp_rate_dict = implement.return_rates_fenics(hs)
+            j3_fluxes[mm,l] = sum(temp_flux_dict["J3"])
+            j4_fluxes[mm,l] = sum(temp_flux_dict["J4"])
 
+        if save_cell_output:
+            for  i in range(no_of_int_points):
+                for j in range(n_array_length):
+                    # saving the interpolated populations. These match up with active
+                    # stress from previous timestep
+                    dumped_populations[i, j] = y_interp[i * n_array_length + j]
 
+        # Update the populations
+        y_vec_array = y_vec_array_new # for Myosim
 
+        # Update the population function for fenics
+        y_vec.vector()[:] = y_vec_array # for PDE
 
+        # Update the array for myosim
+        hsl_array_old = hsl_array
+
+        # Update the hsl_old function for fenics
+        hsl_old.vector()[:] = hsl_array_old[:]
+
+        # including call to nsolver commented out to show it can be used
+        #solver.solvenonlinear()
+
+        # solve for displacement to satisfy balance of linear momentum
+        solve(Ftotal == 0, w, bcs, J = Jac, form_compiler_parameters={"representation":"uflacs"},solver_parameters={"newton_solver":{"relative_tolerance":1e-8},"newton_solver":{"maximum_iterations":50},"newton_solver":{"absolute_tolerance":1e-8}})
+
+        # Update functions and arrays
+        cb_f_array[:] = project(cb_force, Quad).vector().get_local()[:]
+        hsl_old.vector()[:] = project(hsl, Quad).vector().get_local()[:] # for PDE
+        hsl_array = project(hsl, Quad).vector().get_local()[:]           # for Myosim
+        delta_hsl_array = project(sqrt(dot(f0, Cmat*f0))*hsl0, Quad).vector().get_local()[:] - hsl_array_old # for Myosim
+
+        temp_DG = project(Pff, FunctionSpace(mesh, "DG", 1), form_compiler_parameters={"representation":"uflacs"})
+        p_f = interpolate(temp_DG, Quad)
+        p_f_array = p_f.vector().get_local()[:]
+
+        for ii in range(np.shape(hsl_array)[0]):
+            if p_f_array[ii] < 0.0:
+                p_f_array[ii] = 0.0
+
+        # Kroon update fiber orientation?
+        if kroon_time_constant != 0.0:
+            # update fiber orientations
+            print "updating fiber orientation"
+
+        # Update boundary conditions/expressions (need to include general displacements and tractions)
+        bc_update_dict = update_boundary_conditions.update_bcs(bcs,sim_geometry,Ftotal,geo_options,sim_protocol,expressions,t[l],traction_switch_flag,x_dofs)
+        bcs = bc_update_dict["bcs"]
+        traction_switch_flag = bc_update_dict["traction_switch_flag"]
+        rxn_force[l] = bc_update_dict["rxn_force"]
+        u_D = bc_update_dict["expr"]["u_D"]
+        Press = bc_update_dict["expr"]["Press"]
+
+        # Save visualization info
+        if save_visual_output:
+            displacement_file << w.sub(0)
+            pk1temp = project(inner(f0,Pactive*f0),FunctionSpace(mesh,'CG',1))
+            pk1temp.rename("pk1temp","active_stress")
+            active_stress_file << pk1temp
+            hsl_temp = project(hsl,FunctionSpace(mesh,'DG',1))
+            hsl_temp.rename("hsl_temp","half-sarcomere length")
+            hsl_file << hsl_temp
+
+        # Save cell info
+        tic_save_cell = timeit.default_timer()
+        if save_cell_output:
+
+            temp_DG_2 = project(Pg_fiber, FunctionSpace(mesh, "DG", 1), form_compiler_parameters={"representation":"uflacs"})
+            pgf = interpolate(temp_DG_2, Quad)
+            pgf_array = pgf.vector().get_local()[:]
+            temp_DG_3 = project(Pg_transverse, FunctionSpace(mesh, "DG", 1), form_compiler_parameters={"representation":"uflacs"})
+            pgt = interpolate(temp_DG_3, Quad)
+            pgt_array = pgt.vector().get_local()[:]
+            temp_DG_4 = project(Pg_shear, FunctionSpace(mesh, "DG", 1), form_compiler_parameters={"representation":"uflacs"})
+            pgs = interpolate(temp_DG_4, Quad)
+            pgs_array = pgs.vector().get_local()[:]
+
+            active_stress_ds.iloc[0,:] = cb_f_array[:]
+            active_stress_ds.to_csv(output_path + 'active_stress.csv',mode='a',header=False)
+
+            #active_stress_ds = active_stress_ds.transpose()
+            hsl_array_ds.iloc[0,:] = hsl_array[:]
+            hsl_array_ds.to_csv(output_path + 'half_sarcomere_lengths.csv',mode='a',header=False)
+
+            calcium_ds.iloc[0,:] = calcium[l]
+            calcium_ds.to_csv(output_path + 'calcium.csv',mode='a',header=False)
+
+            for i in range(no_of_int_points):
+                dumped_populations_ds.iloc[i,:] = dumped_populations[i,:]
+            dumped_populations_ds.to_csv(output_path + 'populations.csv',mode='a',header=False)
+
+            #tarray_ds[l] = tarray[l]
+            #tarray_ds.to_csv(output_path + 'time.csv',mode='a',header=False)
+            np.save("time", t) # fix this
+
+            p_f_array_ds.iloc[0,:] = p_f_array[:]
+            p_f_array_ds.to_csv(output_path + 'myofiber_passive.csv',mode='a',header=False)
+
+            pgf_array_ds.iloc[0,:] = pgf_array[:]
+            pgf_array_ds.to_csv(output_path + 'gucc_fiber_pstress.csv',mode='a',header=False)
+
+            pgt_array_ds.iloc[0,:] = pgt_array[:]
+            pgt_array_ds.to_csv(output_path + 'gucc_trans_pstress.csv',mode='a',header=False)
+
+            pgs_array_ds.iloc[0,:] = pgs_array[:]
+            pgs_array_ds.to_csv(output_path + 'gucc_shear_pstress.csv',mode='a',header=False)
+
+            temp_overlap_ds.iloc[0,:] = temp_overlap[:]
+            temp_overlap_ds.to_csv(output_path + 'overlap.csv',mode='a',header=False)
+
+            alpha_array_ds.iloc[0,:] = alpha_array[:]
+            alpha_array_ds.to_csv(output_path + 'alpha.csv',mode='a',header=False)
+
+            delta_hsl_array_ds.iloc[0,:] = delta_hsl_array[:]
+            delta_hsl_array_ds.to_csv(output_path + 'delta_hsl.csv',mode='a',header=False)
+
+        toc_save_cell = timeit.default_timer() - tic_save_cell
+        print "time to save cell info = " + str(toc_save_cell)
+        toc = timeit.default_timer() - tic
+        print "time loop performance time = " + str(toc)
+    if sim_geometry == "ventricle" or sim_geometry == "ellipsoid":
+        if(MPI.rank(comm) == 0):
+            fdataPV.close()
 
 #-------------------------------------------------------------------------------
 # for stand-alone testing
@@ -679,5 +856,6 @@ hs_params = input_parameters["myosim_parameters"]
 cell_ion_params = input_parameters["electrophys_parameters"]["cell_ion_parameters"]
 #monodomain_params = input_parameters["electrophys_parameters"]["monodomain_parameters"]
 #windkessel_params = input_parameters["windkessel_parameters"]
+growth_params = input_parameters["growth_and_remodeling"]
 #optimization_params = input_parameters["optimization_parameters"]
 fenics(sim_params)

@@ -136,35 +136,37 @@ if csv_flag:
 
     overlap_loaded = pd.read_csv('overlap.csv',delimiter=',')
     overlap = overlap_loaded.to_numpy()
-    overlap = overlap[:,gauss_point]
-    tarray_loaded = pd.read_csv('time.csv',delimiter=',')
-    tarray_new = tarray_loaded.to_numpy()
+    overlap = overlap[:,gauss_point+1]
+    #tarray_loaded = pd.read_csv('time.csv',delimiter=',')
+    #tarray_new = tarray_loaded.to_numpy()
     #print np.shape(tarray_new)
-    tarray = np.zeros(np.shape(tarray_new)[0])
-    for i in np.arange(np.shape(tarray_new)[0]):
-        tarray[i] = tarray_new[i,i]
+    #tarray = np.zeros(np.shape(tarray_new)[0])
+    #for i in np.arange(np.shape(tarray_new)[0]):
+    #    tarray[i] = tarray_new[i,i]
+    #tarray = np.load('time.npy')
+    tarray = np.linspace(0,200,200)
     calcium_loaded = pd.read_csv('calcium.csv',delimiter=',')
     calcium = calcium_loaded.to_numpy()
-    calcium = calcium[:,gauss_point]
+    calcium = calcium[:,gauss_point+1]
     HSL_loaded = pd.read_csv('half_sarcomere_lengths.csv',delimiter=',')
     #print HSL.type()
     HSL = HSL_loaded.to_numpy()
-    HSL = HSL[:,gauss_point]
+    HSL = HSL[:,gauss_point+1]
     stress_array_loaded = pd.read_csv('active_stress.csv',delimiter=',')
     stress_array = stress_array_loaded.to_numpy()
-    stress_array = stress_array[:,gauss_point]
+    stress_array = stress_array[:,gauss_point+1]
     fenics_pop_data_loaded = pd.read_csv('populations.csv',delimiter=',')
     fenics_pop_data_uncropped = fenics_pop_data_loaded.to_numpy()
     fenics_pop_data = fenics_pop_data_uncropped[:,1:26]
     pstress_loaded = pd.read_csv('myofiber_passive.csv',delimiter=',')
     pstress = pstress_loaded.to_numpy()
-    pstress = pstress[:,gauss_point]
+    pstress = pstress[:,gauss_point+1]
     sim_info = np.shape(fenics_pop_data)
     array_length = sim_info[1]
     num_timesteps = np.shape(tarray)[0]
     print "shape of pops " + str(sim_info[0])
     #num_int_points = sim_info[0]/num_timesteps
-    num_int_points = 4416
+    num_int_points = 24
     data_range = np.shape(overlap)[0]
 
 else:
@@ -521,7 +523,7 @@ ax8.invert_yaxis()
 # Animate cross-bridges during simulation
 
 #print max_nbound
-ax1 = plt.subplot(427,xlim=(xmin-1,xmax+1),ylim=(0.00,0.0004))
+ax1 = plt.subplot(427,xlim=(xmin-1,xmax+1),ylim=(0.00,0.05))
 y_label = 'M_FG(x)                       \n (Proportion)                   '
 y_coord = get_y_label_y_coord(y_label)
 ax1.set_ylabel(y_label, fontsize = font_size, rotation=0,y=y_coord)

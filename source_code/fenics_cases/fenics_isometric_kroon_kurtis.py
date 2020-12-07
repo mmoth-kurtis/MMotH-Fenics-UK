@@ -47,6 +47,7 @@ def fenics(sim_params,file_inputs,output_params,passive_params,hs_params,cell_io
     x_bin_min = hs_params["myofilament_parameters"]["bin_min"][0]
     x_bin_max = hs_params["myofilament_parameters"]["bin_max"][0]
     x_bin_increment = hs_params["myofilament_parameters"]["bin_width"][0]
+    xfiber_fraction = hs_params["myofilament_parameters"]["xfiber_fraction"][0]
     k_myo_damp = hs_params["myofilament_parameters"]["k_myo_damp"][0]
     #no_of_transitions = 4
     #state_attached = [0, 0, 1]
@@ -169,6 +170,7 @@ def fenics(sim_params,file_inputs,output_params,passive_params,hs_params,cell_io
 
     TF = TensorFunctionSpace(mesh, 'DG', 1)
 
+
     Velem = VectorElement("Lagrange", tetrahedron, 2, quad_scheme="default")
     Velem._quad_scheme = 'default'
     Qelem = FiniteElement("Lagrange", tetrahedron, 1, quad_scheme="default")
@@ -264,8 +266,14 @@ def fenics(sim_params,file_inputs,output_params,passive_params,hs_params,cell_io
 
 
     Fmat = uflforms.Fmat()
+    i1 = as_vector([1.0,0.0,0.0])
+    i2 = as_vector([0.0,1.0,0.0])
+    i3 = as_vector([0.0,0.0,1.0])
+    Fp = as_tensor([[i1[0],i1[1],i1[2]],[i2[0],i2[1],i2[2]],[i3[0],i3[1],i3[2]]])
+    Fe = Fmat*inv(Fp)
+    #Fmat_e = uflforms.Fmat()
     Cmat = (Fmat.T*Fmat)
-    Emat = uflforms.Emat()
+    Emat = uflforms.Emat(Fe)
     Umat = uflforms.Umat()
     kappa_kroon = 20.0
     J = uflforms.J()
@@ -306,7 +314,7 @@ def fenics(sim_params,file_inputs,output_params,passive_params,hs_params,cell_io
     cb_force = Constant(0.0)
 
     y_vec_split = split(y_vec)
-    Wp = uflforms.PassiveMatSEF(hsl)
+    Wp = uflforms.PassiveMatSEF(hsl,Fe)
 
 
     for jj in range(no_of_states):
@@ -380,6 +388,7 @@ def fenics(sim_params,file_inputs,output_params,passive_params,hs_params,cell_io
     strarray = np.zeros((time_steps+1,no_of_int_points))
     pstrarray = np.zeros((time_steps+1,no_of_int_points))
     overlaparray = np.zeros((time_steps+1,no_of_int_points))
+    gucc_fiber_stress = np.zeros((time_steps,no_of_int_points))
 
     y_vec_array = y_vec.vector().get_local()[:]
 
@@ -394,7 +403,7 @@ def fenics(sim_params,file_inputs,output_params,passive_params,hs_params,cell_io
         y_vec_array[counter] = 1
         y_vec_array[counter-2] = 1
 
-    Pg, Pff, alpha = uflforms.stress(hsl)
+    Pg, Pff, alpha, eff_final = uflforms.stress(hsl,Quad,Fe,mesh,0)
 
     temp_DG = project(Pff, FunctionSpace(mesh, "DG", 1), form_compiler_parameters={"representation":"uflacs"})
     p_f = interpolate(temp_DG, Quad)
@@ -514,6 +523,7 @@ def fenics(sim_params,file_inputs,output_params,passive_params,hs_params,cell_io
         p_f = interpolate(temp_DG, Quad)
         p_f_array = p_f.vector().get_local()[:]
 
+
         cb_f_array = project(cb_force, Quad).vector().get_local()[:]
         #strarray.append(cb_f_array[0])
         strarray[l,:] = cb_f_array[:]
@@ -568,7 +578,7 @@ def fenics(sim_params,file_inputs,output_params,passive_params,hs_params,cell_io
         if t > 100.0 and t <=105.0:
             u_D.u_D -= 0.03
         if t > 105.0:"""
-        if t > 10.0
+        if t > 10.0:
             u_D.u_D = u_D.u_D
         t = t + step_size
 
@@ -598,6 +608,38 @@ def fenics(sim_params,file_inputs,output_params,passive_params,hs_params,cell_io
 
         #File(output_path + "fiber_" + str(l) + ".pvd") << project(f0, VectorFunctionSpace(mesh, "DG", 0))
         fiber_file << f0_temp
+
+        # For now, set k_myo_damp and kroon_kappa to zero
+        # try to calculate the needed E to give desired passive stress
+        #Pg, Pff, alpha, eff_final = uflforms.stress(hsl,Quad,Fe,mesh,l)
+
+        set_point = 5000
+        set_point_fcn = Function(Quad)
+        set_point_fcn.vector()[:] = set_point
+        Pg_fiber = inner(f0,Pg*f0)
+        temp_DG_2 = project(Pg_fiber, FunctionSpace(mesh, "DG", 1), form_compiler_parameters={"representation":"uflacs"})
+        pgf = interpolate(temp_DG_2, Quad)
+        pgf_array = pgf.vector().get_local()[:]
+
+        if t > 10.0:
+            # Right now, everything is uniform and aligned
+            k_rate = 0.01
+            deviation_from_passive_stress = np.abs(set_point - pgf_array)
+            e_growth = 1.1528*(1-k_rate*deviation_from_passive_stress[0]/pgf_array[0])
+            print "e_growth = " + str(e_growth)
+            #print "eff final = " + str(eff_final.vector().get_local()[:])
+            a1 = as_vector([e_growth,0.0,0.0])
+            a2 = as_vector([0.0,1./e_growth,0.0])
+            a3 = as_vector([0.0,0.0,1./e_growth])
+            Fp = as_tensor([[a1[0],a1[1],a1[2]],[a2[0],a2[1],a2[2]],[a3[0],a3[1],a3[2]]])
+            print "Fp " +str(inner(f0,Fp*f0))
+            Fe = Fmat*inv(Fp)
+            print "Fe" + str(inner(f0,Fe*f0))
+            print "F" + str(inner(f0,Fmat*f0))
+
+            gucc_fiber_stress[l,:] = pgf_array[:]
+            np.save(output_path + "g_fiber_stress", gucc_fiber_stress)
+
 
         b = assemble(Ftotal,form_compiler_parameters={"representation":"uflacs"})
         bcleft.apply(b)

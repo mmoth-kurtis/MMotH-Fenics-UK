@@ -13,6 +13,7 @@ import Python_MyoSim.half_sarcomere.half_sarcomere as half_sarcomere
 import Python_MyoSim.half_sarcomere.implement as implement
 from cell_ion_module import cell_ion_driver
 import copy
+import timeit
 
 
 def fenics(sim_params,file_inputs,output_params,passive_params,hs_params,cell_ion_params,monodomain_params,windkessel_params,pso):
@@ -254,6 +255,7 @@ def fenics(sim_params,file_inputs,output_params,passive_params,hs_params,cell_io
          "sheet-normal": n0,
          #"C_param": Cparam,
     	 "incompressible": isincomp,
+         "hsl0": hsl0,
     	 "Kappa":Constant(1e5)}
     params.update(passive_params)
 
@@ -268,13 +270,13 @@ def fenics(sim_params,file_inputs,output_params,passive_params,hs_params,cell_io
 
     n = J*inv(Fmat.T)*N
     dx = dolfin.dx(mesh,metadata = {"integration_order":2})
+    hsl = sqrt(dot(f0, Cmat*f0))*hsl0
 
     #Ematrix = project(Emat, TF)
-    Wp = uflforms.PassiveMatSEF()
+    Wp = uflforms.PassiveMatSEF(hsl)
 
     #Active force calculation------------------------------------------------------
     y_vec = Function(Quad_vectorized_Fspace)
-    hsl = sqrt(dot(f0, Cmat*f0))*hsl0
     hsl_old = Function(Quad)
     #hsl_old = hsl
     delta_hsl = hsl - hsl_old
@@ -369,7 +371,7 @@ def fenics(sim_params,file_inputs,output_params,passive_params,hs_params,cell_io
         y_vec_array[counter] = 1
         y_vec_array[counter-2] = 1
 
-    Pg, Pff, alpha = uflforms.stress()
+    Pg, Pff, alpha = uflforms.stress(hsl)
 
     temp_DG = project(Pff, FunctionSpace(mesh, "DG", 1), form_compiler_parameters={"representation":"uflacs"})
     p_f = interpolate(temp_DG, Quad)
@@ -399,6 +401,7 @@ def fenics(sim_params,file_inputs,output_params,passive_params,hs_params,cell_io
     t = 0.0
     #delta_hsls = np.zeros((time_steps,24))
     for l in range(time_steps):
+        start_time = timeit.default_timer()
 
 
 
@@ -563,6 +566,8 @@ def fenics(sim_params,file_inputs,output_params,passive_params,hs_params,cell_io
         t = t + step_size
 
         calarray.append(hs.Ca_conc*np.ones(no_of_int_points))
+        elapsed = timeit.default_timer() - start_time
+        print "time loop elapsed = " + str(elapsed)
 
         """for  m in range(no_of_int_points):
 

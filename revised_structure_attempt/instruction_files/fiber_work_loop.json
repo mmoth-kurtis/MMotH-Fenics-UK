@@ -103,5 +103,9 @@
       "k_serca": [80.0]
     }
   }
+},
+
+"growth_and_remodeling": {
+    "kroon_time_constant": [0.0]
 }
 }

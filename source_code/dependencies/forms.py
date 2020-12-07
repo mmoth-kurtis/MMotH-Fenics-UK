@@ -252,6 +252,7 @@ class Forms(object):
 # this returns only myscle stress (no collagen contribution)
     def stress(self,hsl):
     #def stress(self):
+        set_point = 5000 # kurtis trying something
         mesh = self.parameters["mesh"]
 
         e1 = Constant((1.0, 0.0, 0.0))
@@ -280,6 +281,7 @@ class Forms(object):
         d = u.ufl_domain().geometric_dimension()
         I = Identity(d)
         F = self.Fmat()
+        #F=Fe
         J = self.J()
         Ea = self.Emat()
 
@@ -306,6 +308,14 @@ class Forms(object):
 
         # Calculate Guccione passive stress?
         Qbulk = bff*Eff**2.0 + bfx*(Ess**2.0 + Enn**2.0 + 2.0*Ens**2.0) + bxx*(2.0*Efs**2.0 + 2.0*Efn**2.0)
+        #test_E = Function(Quad)
+        #test_E.vector()[:] = 1.01
+        #Qbulk_test = bff*test_E**2.0
+        #Wp_c_test = C/2.0*(exp(Qbulk_test) - 1.0) - p*(self.J() - 1.0)
+        #sbulk_test = diff(Wp_c_test,Ea)
+        #Pg_test = F*sbulk_test
+        #test_passive_stress = inner(f0,Pg_test*f0)
+
 
         Wp_c = C/2.0*(exp(Qbulk) -  1.0) - p*(self.J() - 1.0)
         Wp_c_weighted = Wp_c*phi_g
@@ -313,6 +323,34 @@ class Forms(object):
         #sbulk differentiated wrt Ea, in global coordinates
         #thus sbulk is PK2 in global?
         sbulk = diff(Wp_c_weighted,Ea)
+        #eff_final = test_E
+        #test_value = project(test_passive_stress-set_point, FunctionSpace(mesh, "DG", 1), form_compiler_parameters={"representation":"uflacs"})
+        #test_v = interpolate(test_value,Quad)
+        #test_v_array = test_v.vector().get_local()[:]
+        #test_max = np.amax(test_v_array)
+        #print "test_max = " + str(test_max)
+        """if mm > 10:
+
+            while np.abs(test_max) > 10:
+                print "in while loop"
+                test_E -= test_passive_stress/inner(f0,diff(Pg_test,Ea)*f0)
+                #test_E_fcn= project(test_E,FunctionSpace(mesh,"DG",1),form_compiler_parameters={"representation":"uflacs"})
+                #print test_E_fcn.vector().get_local()[:]
+                Qbulk_test = bff*test_E**2.0
+                Wp_c_test = C/2.0*(exp(Qbulk_test) - 1.0) - p*(self.J() - 1.0)
+                sbulk_test = diff(Wp_c_test,Ea)
+                Pg_test = F*sbulk_test
+                test_passive_stress = inner(f0,Pg_test*f0)
+                test_value = project(test_passive_stress-set_point, FunctionSpace(mesh, "DG", 1), form_compiler_parameters={"representation":"uflacs"})
+                test_v = interpolate(test_value,Quad)
+                test_v_array = test_v.vector().get_local()[:]
+                test_max = np.amax(test_v_array)
+                print "test max = " +str(test_max)
+                #ps = project(test_passive_stress,FunctionSpace(mesh,"DG",1),form_compiler_parameters={"representation":"uflacs"})
+                #print "test passive =" +str(ps.vector())"""
+
+        #eff_final = test_E
+        #rint "eff final forms " +str(eff_final.vector().get_local()[:])
 
         #passive stress in fiber direction
         """Sbulk_f = inner(f0,sbulk*f0)
