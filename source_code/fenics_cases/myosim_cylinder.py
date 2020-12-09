@@ -18,6 +18,7 @@ import mshr
 from numpy import random as r
 import copy
 import pandas as pd
+import timeit
 
 
 def fenics(sim_params,file_inputs,output_params,passive_params,hs_params,cell_ion_params,monodomain_params,windkessel_params,pso):
@@ -359,6 +360,7 @@ def fenics(sim_params,file_inputs,output_params,passive_params,hs_params,cell_io
     	 "fiber": f0,
          "sheet": s0,
          "sheet-normal": n0,
+         "hsl0":hsl0,
          #"C_param": Cparam,
     	 "incompressible": isincomp,
     	 "Kappa":Constant(1e5)}
@@ -379,11 +381,12 @@ def fenics(sim_params,file_inputs,output_params,passive_params,hs_params,cell_io
     dx = dolfin.dx(mesh,metadata = {"integration_order":2})
 
     #Ematrix = project(Emat, TF)
-    Wp = uflforms.PassiveMatSEF()
+
 
     #Active force calculation------------------------------------------------------
     y_vec = Function(Quad_vectorized_Fspace)
     hsl = sqrt(dot(f0, Cmat*f0))*hsl0
+    Wp = uflforms.PassiveMatSEF(hsl)
     hsl_old = Function(Quad)
     #hsl_old = hsl
     delta_hsl = hsl - hsl_old
@@ -499,7 +502,7 @@ def fenics(sim_params,file_inputs,output_params,passive_params,hs_params,cell_io
         y_vec_array[counter] = 1
         y_vec_array[counter-2] = 1
 
-    Pg, Pff, alpha = uflforms.stress()
+    Pg, Pff, alpha = uflforms.stress(hsl)
 
     # Magnitude of bulk passive stress in fiber direction
     Pg_fiber = inner(f0,Pg*f0)
@@ -562,6 +565,7 @@ def fenics(sim_params,file_inputs,output_params,passive_params,hs_params,cell_io
         #temp_overlap, y_interp, y_vec_array_new = implement.update_simulation(hs, step_size, delta_hsl_array, hsl_array, y_vec_array, p_f_array, cb_f_array, calcium[l], n_array_length, t,overlaparray[overlap_counter,:])
         #print "hs list dict " + str(hs_params_list
         #print "y_vec_new " + str(y_vec_array_new)
+        tic_myo = timeit.default_timer()
         for mm in np.arange(no_of_int_points):
             #print hsl_array[mm]
             temp_overlap[mm], y_interp[mm*n_array_length:(mm+1)*n_array_length], y_vec_array_new[mm*n_array_length:(mm+1)*n_array_length] = implement.update_simulation(hs, step_size, delta_hsl_array[mm], hsl_array[mm], y_vec_array[mm*n_array_length:(mm+1)*n_array_length], p_f_array[mm], cb_f_array[mm], calcium[l], n_array_length, t,hs_params_list[mm])
@@ -569,6 +573,9 @@ def fenics(sim_params,file_inputs,output_params,passive_params,hs_params,cell_io
             #print temp_flux_dict["J3"]
             j3_fluxes[mm,l] = sum(temp_flux_dict["J3"])
             j4_fluxes[mm,l] = sum(temp_flux_dict["J4"])
+
+        toc_myo = timeit.default_timer() - tic_myo
+        print "myosim time = " + str(toc_myo)
     #    print y_vec_array_new[0:53]
         y_vec_array = y_vec_array_new # for Myosim
         print " num gauss points " + str(no_of_int_points)

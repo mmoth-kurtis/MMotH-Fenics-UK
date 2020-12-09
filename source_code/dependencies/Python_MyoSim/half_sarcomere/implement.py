@@ -47,7 +47,7 @@ def update_simulation(self, time_step, delta_hsl, hsl, y0, pf, cbf, calcium, n_a
     y_interp = self.myof.y
     # passed in overlaps from previous timestep
     #old_overlap = overlap_array[i]
-    self.myof.evolve_kinetics(time_step, self.Ca_conc, cell_time)
+    self.myof.evolve_kinetics(self.myof,time_step, self.Ca_conc, cell_time)
     #print self.myof.y
     #if i==1:
         #print self.myof.y
@@ -74,7 +74,7 @@ def update_simulation(self, time_step, delta_hsl, hsl, y0, pf, cbf, calcium, n_a
     return self.temp_overlaps, y_interp, y_pops
 
 def return_rates_fenics(self):
-    fluxes, rates = self.myof.return_fluxes(self.myof.y, self.Ca_conc)
+    fluxes, rates = self.myof.return_fluxes(self.myof,self.myof.y, self.Ca_conc)
 
     return fluxes, rates
 

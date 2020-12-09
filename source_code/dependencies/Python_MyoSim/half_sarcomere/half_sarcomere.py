@@ -1,6 +1,8 @@
 import numpy as np
 import pandas as pd
 import Python_MyoSim.half_sarcomere.myofilaments.myofilaments as myofilaments
+import sys
+sys.path.append('/home/fenics/shared/source_code_dependencies/Python_MyoSim/half_sarcomere/')
 #import Python_MyoSim.half_sarcomere.membranes.membranes as membranes
 
 #import membranes

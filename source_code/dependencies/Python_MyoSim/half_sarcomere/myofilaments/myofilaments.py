@@ -1,10 +1,14 @@
 import numpy as np
+import sys
+sys.path.append('/home/fenics/shared/source_code/dependencies/Python_MyoSim/half_sarcomere/myofilaments/')
 
 
 class myofilaments():
     """Class for myofilaments"""
 
-    from .kinetics import evolve_kinetics, return_fluxes
+    print sys.path
+    #from .kinetics import evolve_kinetics, return_fluxes
+    from .kinetics_cython import evolve_kinetics, return_fluxes
     from .move import move_cb_distributions
     from .forces import set_myofilament_forces, check_myofilament_forces, \
         return_hs_length_for_force, return_passive_force
