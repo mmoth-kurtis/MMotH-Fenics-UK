@@ -13,6 +13,26 @@ def import_mesh(sim_geometry, options):
     # create a dictionary to pass info for fcn assignments later
     lv_options = {}
 
+    if sim_geometry == "box_mesh":
+        print "Creating Box Mesh"
+
+        # setting default values
+        box_mesh_specs = {}
+        box_mesh_specs["base_corner_x"] = [0.0]
+        box_mesh_specs["base_corner_y"] = [0.0]
+        box_mesh_specs["base_corner_z"] = [0.0]
+        box_mesh_specs["end_x"] = [10.0]
+        box_mesh_specs["end_y"] = [1.0]
+        box_mesh_specs["end_z"] = [1.0]
+        box_mesh_specs["refinement_x"] = [10.0]
+        box_mesh_specs["refinement_y"] = [5.0]
+        box_mesh_specs["refinement_z"] = [5.0]
+        box_mesh_specs.update(options)
+
+        base_corner = Point(box_mesh_specs["base_corner_x"][0],box_mesh_specs["base_corner_y"][0],box_mesh_specs["base_corner_z"][0])
+        end_corner = Point(box_mesh_specs["end_x"][0],box_mesh_specs["end_y"][0],box_mesh_specs["end_z"][0])
+        mesh = BoxMesh(base_corner,end_corner,box_mesh_specs["refinement_x"][0],box_mesh_specs["refinement_y"][0],box_mesh_specs["refinement_z"][0])
+
     if sim_geometry == "cylinder":
 
         # initialize dictionary

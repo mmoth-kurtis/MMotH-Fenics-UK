@@ -6,7 +6,7 @@ def assign_heterogeneous_params(sim_params,hs_params_list,passive_params_list,ge
 
     # For fiber simulations, ends need to not contract, and may have different
     # stiffness than the contractile tissue
-    if sim_params["simulation_geometry"][0] == "cylinder":
+    if sim_params["simulation_geometry"][0] == "cylinder" or sim_params["simulation_geometry"][0] == "box_mesh":
 
         end_marker_array = geo_options["end_marker_array"]
 

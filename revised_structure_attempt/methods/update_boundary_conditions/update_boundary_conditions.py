@@ -15,8 +15,10 @@ def update_bcs(bcs,sim_geometry,Ftotal,geo_options,sim_protocol,expr,time,tracti
 
         if not geo_options:
             area = 1.0
-        else:
+        elif sim_geometry == "cylinder":
             area = 3.14*geo_options["end_radius"][0]**2 #assuming enough segments are used to approximate a circle
+        elif sim_geometry == "box_mesh":
+            area = 1.0
 
         f_int_total = b.copy()
         rxn_force=0.0
@@ -34,7 +36,7 @@ def update_bcs(bcs,sim_geometry,Ftotal,geo_options,sim_protocol,expr,time,tracti
             print "switching to traction boundary condition"
             if traction_switch_flag < 1:
                 expr["Press"].P = rxn_force/area
-                if sim_geometry == "cylinder":
+                if sim_geometry == "cylinder" or sim_geometry == "box_mesh":
                     bcs = [bcleft,bcfix_y,bcfix_z,bcfix_y_right,bcfix_z_right]
                 if sim_geometry == "unit_cube":
                     bcs = [bcleft, bclower, bcfront,bcfix]
@@ -73,12 +75,18 @@ def ramp_and_hold(time,sim_protocol,geo_options):
         length_scale = 1.0
     else:
         length_scale = geo_options["end_x"][0]
+        print "length scale = " + str(length_scale)
 
     if time < sim_protocol["ramp_t_start"][0]:
         disp = 0.0
+        print "displacement is " + str(disp)
+
     if time >= sim_protocol["ramp_t_end"][0]:
         disp = length_scale*sim_protocol["ramp_magnitude"][0]
+        print "displacement is " + str(disp)
     else:
         slope = sim_protocol["ramp_magnitude"][0]/(sim_protocol["ramp_t_end"][0]-sim_protocol["ramp_t_start"][0])
         disp = length_scale*slope*time
+        print "displacement is " + str(disp)
+
     return disp

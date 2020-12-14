@@ -76,7 +76,7 @@ def fenics(sim_params):
 
 
     # from the mesh, define some things
-    if sim_geometry == "cylinder" or sim_geometry == "unit_cube" :
+    if sim_geometry == "cylinder" or sim_geometry == "unit_cube" or sim_geometry == "box_mesh":
         no_of_int_points = 4 * np.shape(mesh.cells())[0]
         deg = 2
         ds = dolfin.ds(subdomain_data = facetboundaries)
@@ -268,7 +268,7 @@ def fenics(sim_params):
     # Function space for local coordinate system (fiber, sheet, sheet-normal)
     fiberFS = FunctionSpace(mesh, VQuadelem)
 
-    if sim_geometry == "cylinder" or sim_geometry == "unit_cube":
+    if sim_geometry == "cylinder" or sim_geometry == "unit_cube" or sim_geometry == "box_mesh":
         W = FunctionSpace(mesh, MixedElement([Velem,Qelem]))
         x_dofs = W.sub(0).sub(0).dofmap().dofs() # will use this for x rxn forces later
     else:

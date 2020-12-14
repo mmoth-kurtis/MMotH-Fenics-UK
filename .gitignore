@@ -1,6 +1,7 @@
 # Ignore saved results and compiled folders
 *.pyc
 *.npy
+*.csv
 # Ignore visualization files
 *.pvd
 *.vtu

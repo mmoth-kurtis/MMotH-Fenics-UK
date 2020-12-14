@@ -16,8 +16,17 @@ def set_bcs(sim_geometry,protocol,mesh,W,facetboundaries,u_D):
         bctop = DirichletBC(W.sub(0).sub(2), Expression(("0.0"), degree = 2), facetboundaries, topid)
         bcs = [bctop]
 
-    elif (sim_geometry == "cylinder"):
+    elif (sim_geometry == "cylinder") or sim_geometry == "box_mesh":
         sim_type = protocol["simulation_type"]
+
+        if sim_geometry == "cylinder":
+            center = 0.0
+            radius = 1.0
+        else:
+            center = 0.5
+            radius = 0.5
+
+
 
         # defining parts of the model where the boundary condition should be applied later
         class Left(SubDomain):
@@ -32,19 +41,19 @@ def set_bcs(sim_geometry,protocol,mesh,W,facetboundaries,u_D):
         class Fix_y(SubDomain):
             def inside(self, x, on_boundary):
                 tol = 1E-1
-                return near(x[0],0.0,tol) and near(x[1],0.0,tol)
+                return near(x[0],0.0,tol) and near(x[1],center,tol)
         class Fix_y_right(SubDomain):
             def inside(self, x, on_boundary):
                 tol = 1E-14
-                return near(x[0],10.0,tol) and near(x[1],0.0,tol)
+                return near(x[0],10.0,tol) and near(x[1],center,tol)
         class Fix_z_right(SubDomain):
             def inside(self, x, on_boundary):
                 tol = 1E-14
-                return near(x[0],10.0,tol) and near(x[2],0.0,tol)
+                return near(x[0],10.0,tol) and near(x[2],center,tol)
         class Fix_z(SubDomain):
             def inside(self, x, on_boundary):
                 tol = 1E-14
-                return (near(x[0],0.0,tol) and near(x[2],0.0,tol))
+                return (near(x[0],0.0,tol) and near(x[2],center,tol))
 
         # Appropriately mark all facetboundaries
         facetboundaries.set_all(0)
