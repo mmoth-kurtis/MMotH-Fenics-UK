@@ -144,7 +144,7 @@ if csv_flag:
     #for i in np.arange(np.shape(tarray_new)[0]):
     #    tarray[i] = tarray_new[i,i]
     #tarray = np.load('time.npy')
-    tarray = np.linspace(0,200,200)
+    tarray = np.linspace(0,150,299)
     calcium_loaded = pd.read_csv('calcium.csv',delimiter=',')
     calcium = calcium_loaded.to_numpy()
     calcium = calcium[:,gauss_point+1]

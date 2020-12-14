@@ -77,7 +77,7 @@ def set_bcs(sim_geometry,protocol,mesh,W,facetboundaries,u_D):
         bcfix_y_right = DirichletBC(W.sub(0).sub(1), Constant((0.0)),fix_y_right, method="pointwise")
         bcfix_z_right = DirichletBC(W.sub(0).sub(2), Constant((0.0)),fix_z_right, method="pointwise")
 
-        bcs = [bcleft,bcright,bcfix_y,bcfix_z,bcfix_y_right,bcfix_z_right]
+        bcs = [bcleft,bcfix_y,bcfix_z,bcfix_y_right,bcfix_z_right,bcright] # order matters!
 
         if sim_type == "work_loop":
             marker_space = FunctionSpace(mesh,'CG',1)
@@ -133,7 +133,7 @@ def set_bcs(sim_geometry,protocol,mesh,W,facetboundaries,u_D):
         bcfix = DirichletBC(W.sub(0), Constant((0.0, 0.0, 0.0)), fix, method="pointwise") # at one vertex u = v = w = 0
         bclower= DirichletBC(W.sub(0).sub(2), Constant((0.0)), facetboundaries, 4)        # u3 = 0 on lower face
         bcfront= DirichletBC(W.sub(0).sub(1), Constant((0.0)), facetboundaries, 5)        # u2 = 0 on front face
-        bcs = [bcleft, bclower, bcfront, bcright,bcfix]
+        bcs = [bcleft, bclower, bcfront,bcfix, bcright] #order matters!
 
         if sim_type == "work_loop":
             marker_space = FunctionSpace(mesh,'CG',1)

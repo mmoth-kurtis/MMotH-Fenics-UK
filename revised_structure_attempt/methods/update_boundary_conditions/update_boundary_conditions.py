@@ -1,4 +1,5 @@
 from dolfin import *
+import numpy as np
 
 def update_bcs(bcs,sim_geometry,Ftotal,geo_options,sim_protocol,expr,time,traction_switch_flag,x_dofs):
 
@@ -10,8 +11,9 @@ def update_bcs(bcs,sim_geometry,Ftotal,geo_options,sim_protocol,expr,time,tracti
 
         b = assemble(Ftotal,form_compiler_parameters={"representation":"uflacs"})
 
-        for boundary_condition in bcs:
-            boundary_condition.apply(b)
+        for boundary_condition_i in np.arange(np.shape(bcs)[0])-1:
+            bcs[boundary_condition_i].apply(b)
+
 
         if not geo_options:
             area = 1.0
