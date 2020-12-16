@@ -779,7 +779,7 @@ def fenics(sim_params):
             hsl_temp = project(hsl,FunctionSpace(mesh,'DG',1))
             hsl_temp.rename("hsl_temp","half-sarcomere length")
             hsl_file << hsl_temp
-            np.save('fx',rxn_force)
+            np.save(output_path + 'fx',rxn_force)
 
         # Save cell info
         tic_save_cell = timeit.default_timer()

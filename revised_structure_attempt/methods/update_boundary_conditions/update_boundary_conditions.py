@@ -68,6 +68,7 @@ def update_bcs(bcs,sim_geometry,Ftotal,geo_options,sim_protocol,expr,time,tracti
         output_dict["traction_switch_flag"] = traction_switch_flag
         print "assigning bcs"
         output_dict["bcs"] = bcs
+        output_dict["rxn_force"] = rxn_force
 
     return output_dict
 
