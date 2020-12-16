@@ -163,10 +163,12 @@ if csv_flag:
     pstress = pstress[:,gauss_point+1]
     sim_info = np.shape(fenics_pop_data)
     array_length = sim_info[1]
-    num_timesteps = np.shape(tarray)[0]
-    print "shape of pops " + str(sim_info[0])
+    num_timesteps = np.shape(tarray)[0]+1
+    print "shape of pops " + str(sim_info[0]+1)
+    print "no of time steps " +str(num_timesteps)
     #num_int_points = sim_info[0]/num_timesteps
-    num_int_points = 24
+    num_int_points = (sim_info[0]+1)/(num_timesteps)
+    print "no of int points = " + str(num_int_points)
     data_range = np.shape(overlap)[0]
 
 else:
@@ -523,7 +525,7 @@ ax8.invert_yaxis()
 # Animate cross-bridges during simulation
 
 #print max_nbound
-ax1 = plt.subplot(427,xlim=(xmin-1,xmax+1),ylim=(0.00,0.05))
+ax1 = plt.subplot(427,xlim=(xmin-1,xmax+1),ylim=(0.00,1.1*np.amax(max_nbound)))
 y_label = 'M_FG(x)                       \n (Proportion)                   '
 y_coord = get_y_label_y_coord(y_label)
 ax1.set_ylabel(y_label, fontsize = font_size, rotation=0,y=y_coord)
@@ -570,10 +572,7 @@ def animate(i):
         m2.append(stress_array[i,gauss_point])
     #print np.shape(cb_domain)
     t.append(tarray[i])
-    print "setting line"
-    print np.shape(cb_domain)
-    print np.shape(y)
-    print array_length
+    print "time = " + str(t[i])
     #print np.shape(y)
     line[0].set_data(cb_domain,y)
     line[1].set_data(t,m)

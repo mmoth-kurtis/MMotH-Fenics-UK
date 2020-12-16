@@ -41,7 +41,7 @@ def assign_local_coordinate_system(lv_options,coord_params,sim_params):
         f.read(n0, casename + "/" + "eN")
         f.close()
 
-    elif (sim_geometry == "cylinder") or (sim_geometry == "box_mesh"):
+    elif (sim_geometry == "cylinder") or (sim_geometry == "box_mesh")or sim_geometry == "gmesh_cylinder":
 
         if sim_geometry == "cylinder":
             radius = geo_options["base_radius"][0]

@@ -76,7 +76,7 @@ def fenics(sim_params):
 
 
     # from the mesh, define some things
-    if sim_geometry == "cylinder" or sim_geometry == "unit_cube" or sim_geometry == "box_mesh":
+    if sim_geometry == "cylinder" or sim_geometry == "unit_cube" or sim_geometry == "box_mesh" or sim_geometry == "gmesh_cylinder":
         no_of_int_points = 4 * np.shape(mesh.cells())[0]
         deg = 2
         ds = dolfin.ds(subdomain_data = facetboundaries)
@@ -268,12 +268,14 @@ def fenics(sim_params):
     # Function space for local coordinate system (fiber, sheet, sheet-normal)
     fiberFS = FunctionSpace(mesh, VQuadelem)
 
-    if sim_geometry == "cylinder" or sim_geometry == "unit_cube" or sim_geometry == "box_mesh":
+    if sim_geometry == "cylinder" or sim_geometry == "unit_cube" or sim_geometry == "box_mesh" or sim_geometry == "gmesh_cylinder":
         W = FunctionSpace(mesh, MixedElement([Velem,Qelem]))
         x_dofs = W.sub(0).sub(0).dofmap().dofs() # will use this for x rxn forces later
+        print "assigned W"
     else:
         W = FunctionSpace(mesh, MixedElement([Velem,Qelem,Relem,VRelem]))
 
+    print str(W)
     # Function space to differentiate fibrous tissue from contractile for fiber simulations
     # Can use thise to mark gauss points according to a user defined law in "assign_heterogeneous_params"
     marker_space = FunctionSpace(mesh, 'CG', 1)

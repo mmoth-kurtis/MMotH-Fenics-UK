@@ -3,6 +3,7 @@ import numpy as np
 import mshr
 import vtk_py
 import os
+import meshio
 
 ## Import the appropriate mesh to mmoth-vent
 #
@@ -33,6 +34,14 @@ def import_mesh(sim_geometry, options):
         end_corner = Point(box_mesh_specs["end_x"][0],box_mesh_specs["end_y"][0],box_mesh_specs["end_z"][0])
         mesh = BoxMesh(base_corner,end_corner,box_mesh_specs["refinement_x"][0],box_mesh_specs["refinement_y"][0],box_mesh_specs["refinement_z"][0])
 
+    if sim_geometry == "gmesh_cylinder":
+        path_to_mesh = options["mesh_path"][0]
+        #mesh = Mesh(path_to_mesh)
+
+        mesh = Mesh()
+        f = XDMFFile(mpi_comm_world(), path_to_mesh)
+        f.read(mesh)
+        f.close()
     if sim_geometry == "cylinder":
 
         # initialize dictionary

@@ -16,7 +16,7 @@ def set_bcs(sim_geometry,protocol,mesh,W,facetboundaries,u_D):
         bctop = DirichletBC(W.sub(0).sub(2), Expression(("0.0"), degree = 2), facetboundaries, topid)
         bcs = [bctop]
 
-    elif (sim_geometry == "cylinder") or sim_geometry == "box_mesh":
+    elif (sim_geometry == "cylinder") or sim_geometry == "box_mesh" or sim_geometry == "gmesh_cylinder":
         sim_type = protocol["simulation_type"]
 
         if sim_geometry == "cylinder":

@@ -11,7 +11,7 @@ def update_bcs(bcs,sim_geometry,Ftotal,geo_options,sim_protocol,expr,time,tracti
 
         b = assemble(Ftotal,form_compiler_parameters={"representation":"uflacs"})
 
-        for boundary_condition_i in np.arange(np.shape(bcs)[0])-1:
+        for boundary_condition_i in np.arange(np.shape(bcs)[0]-1):
             bcs[boundary_condition_i].apply(b)
 
 
@@ -19,6 +19,8 @@ def update_bcs(bcs,sim_geometry,Ftotal,geo_options,sim_protocol,expr,time,tracti
             area = 1.0
         elif sim_geometry == "cylinder":
             area = 3.14*geo_options["end_radius"][0]**2 #assuming enough segments are used to approximate a circle
+        elif sim_geometry == "gmesh_cylinder":
+            area = 3.14
         elif sim_geometry == "box_mesh":
             area = 1.0
 
