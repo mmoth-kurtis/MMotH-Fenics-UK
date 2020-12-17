@@ -19,7 +19,7 @@ def set_bcs(sim_geometry,protocol,mesh,W,facetboundaries,u_D):
     elif (sim_geometry == "cylinder") or sim_geometry == "box_mesh" or sim_geometry == "gmesh_cylinder":
         sim_type = protocol["simulation_type"]
 
-        if sim_geometry == "cylinder":
+        if sim_geometry == "cylinder" or sim_geometry == "gmesh_cylinder":
             center = 0.0
             radius = 1.0
         else:

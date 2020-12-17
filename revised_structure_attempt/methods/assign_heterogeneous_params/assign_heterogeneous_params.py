@@ -26,6 +26,13 @@ def assign_heterogeneous_params(sim_params,hs_params_list,passive_params_list,ge
                 fcn_list[0].vector()[jj] = fibrous_c[0]
                 fcn_list[1].vector()[jj] = fibrous_c2[0]
                 fcn_list[2].vector()[jj] = fibrous_c3[0]
+            else:
+                passive_params_list[jj]["c"] = passive_params_list[0]["c"]
+                passive_params_list[jj]["c2"] = passive_params_list[0]["c2"]
+                passive_params_list[jj]["c3"] = passive_params_list[0]["c3"]
+                fcn_list[0].vector()[jj] = passive_params_list[0]["c"]
+                fcn_list[1].vector()[jj] = passive_params_list[0]["c2"]
+                fcn_list[2].vector()[jj] = passive_params_list[0]["c3"]
 
     else:
 

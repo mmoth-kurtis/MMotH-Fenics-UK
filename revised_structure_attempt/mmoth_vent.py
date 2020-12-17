@@ -376,7 +376,7 @@ def fenics(sim_params):
 
     # Assign the heterogeneous parameters
     heterogeneous_fcn_list,hs_params_list,passive_params_list = assign_params.assign_heterogeneous_params(sim_params,hs_params_list,passive_params_list,geo_options,heterogeneous_fcn_list,no_of_int_points)
-
+    File(output_path + "c param.pvd") << project(c_param,FunctionSpace(mesh,"DG",0))
 #-------------------------------------------------------------------------------
 #           Save initial values
 #-------------------------------------------------------------------------------
@@ -811,7 +811,7 @@ def fenics(sim_params):
 
             #tarray_ds[l] = tarray[l]
             #tarray_ds.to_csv(output_path + 'time.csv',mode='a',header=False)
-            np.save("time", t) # fix this
+            np.save(output_path+"time", t) # fix this
 
             p_f_array_ds.iloc[0,:] = p_f_array[:]
             p_f_array_ds.to_csv(output_path + 'myofiber_passive.csv',mode='a',header=False)

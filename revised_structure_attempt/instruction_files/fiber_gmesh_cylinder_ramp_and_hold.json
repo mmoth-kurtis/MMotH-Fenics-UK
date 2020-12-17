@@ -18,7 +18,7 @@
       },
     "save_cell_output": [1],
     "save_visual_output": [1],
-    "output_path": ["./output_test_gmsh/"],
+    "output_path": ["./output_test_gmsh_cparam/"],
     "fiber_randomness": [0.0]
   },
 
@@ -26,9 +26,9 @@
 
     "passive_law_parameters": {
       "passive_law": ["semi_structural"],
-      "c": [4000, "(Pa), isotropic scaling factor"],
-      "c2": [500, "(Pa), myofiber stiffness"],
-      "c3": [20.0, "(unitless), myofiber exponential factor"],
+      "c": [200, "(Pa), isotropic scaling factor"],
+      "c2": [50, "(Pa), myofiber stiffness"],
+      "c3": [2.0, "(unitless), myofiber exponential factor"],
       "bf": [10.48, "(unitless),Guccione fiber factor"],
       "bt": [3.58, "(unitless), Guccione transverse factor"],
       "bfs": [1.627, "(unitless), Guccione shear factor"],
