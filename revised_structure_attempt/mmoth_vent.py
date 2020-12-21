@@ -143,6 +143,8 @@ def fenics(sim_params):
         displacement_file = File(output_path + "u_disp.pvd")
         active_stress_file = File(output_path + "active_stress_magnitude.pvd")
         hsl_file = File(output_path + "hsl_mesh.pvd")
+        # Want to visualize fiber directions through simulation
+        fiber_file = File(output_path + "f0_vectors.pvd")
         #alpha_file = File(output_path + "alpha_mesh.pvd")
 
         if (sim_geometry == "ventricle") or (sim_geometry == "ellipsoid"):
@@ -780,6 +782,11 @@ def fenics(sim_params):
             hsl_temp.rename("hsl_temp","half-sarcomere length")
             hsl_file << hsl_temp
             np.save(output_path + 'fx',rxn_force)
+            f0_temp = project(f0, VectorFunctionSpace(mesh, "CG", 1))
+            f0_temp.rename('f0','f0')
+            fiber_file << f0_temp
+            File(output_path + "fiber.pvd") << project(f0, VectorFunctionSpace(mesh, "CG", 1))
+
 
         # Save cell info
         tic_save_cell = timeit.default_timer()

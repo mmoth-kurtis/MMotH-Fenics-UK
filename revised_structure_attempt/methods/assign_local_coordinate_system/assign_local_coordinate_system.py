@@ -45,6 +45,8 @@ def assign_local_coordinate_system(lv_options,coord_params,sim_params):
 
         if sim_geometry == "cylinder":
             radius = geo_options["base_radius"][0]
+        if sim_geometry == "gmesh_cylinder":
+            radius = 1.0
         else:
             radius = 0.5
         # Create a simple expression to test if x_coord is > 9.0 or < 1.0

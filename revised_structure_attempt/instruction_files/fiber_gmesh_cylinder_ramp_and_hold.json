@@ -18,8 +18,8 @@
       },
     "save_cell_output": [1],
     "save_visual_output": [1],
-    "output_path": ["./output_test_gmsh_cparam/"],
-    "fiber_randomness": [0.0]
+    "output_path": ["./output_test_gmsh_disarray/"],
+    "fiber_randomness": [0.5]
   },
 
   "forms_parameters": {

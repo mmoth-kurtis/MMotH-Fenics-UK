@@ -144,7 +144,7 @@ if csv_flag:
     #for i in np.arange(np.shape(tarray_new)[0]):
     #    tarray[i] = tarray_new[i,i]
     #tarray = np.load('time.npy')
-    tarray = np.linspace(0,150,299)
+    tarray = np.linspace(0,200,399)
     calcium_loaded = pd.read_csv('calcium.csv',delimiter=',')
     calcium = calcium_loaded.to_numpy()
     calcium = calcium[:,gauss_point+1]
@@ -243,10 +243,10 @@ for i in range(data_range):
         M_ON[i] = fenics_pop_data[i*num_int_points+gauss_point,1]
         M_BOUND[i] = np.sum(fenics_pop_data[i*num_int_points+gauss_point,2:array_length-3])
         N_ON[i] = fenics_pop_data[i*num_int_points+gauss_point,array_length-1]
-        #if np.amax(fenics_pop_data[i*num_int_points+gauss_point,2:array_length-3]) > max_nbound:
-        #    max_nbound = np.amax(fenics_pop_data[i*num_int_points+gauss_point,2:array_length-3])
-        #else:
-        #    max_nbound = max_nbound
+        if np.amax(fenics_pop_data[i*num_int_points+gauss_point,2:array_length-3]) > max_nbound:
+            max_nbound = np.amax(fenics_pop_data[i*num_int_points+gauss_point,2:array_length-3])
+        else:
+            max_nbound = max_nbound
     else:
         M_OFF[i] = fenics_pop_data[i,gauss_point,0]
         M_ON[i] = fenics_pop_data[i,gauss_point,1]
