@@ -112,12 +112,23 @@ def set_bcs(sim_geometry,protocol,mesh,W,facetboundaries,u_D):
         class Fix(SubDomain):
             def inside(self, x, on_boundary):
                 tol = 1E-14
-                return on_boundary and abs(x[0]) < tol and abs(x[1]) < tol and abs(x[2]) < tol
+                #return on_boundary and abs(x[0]) < tol and abs(x[1]) < tol and abs(x[2]) < tol
+                return (near(x[0],0.0,tol) and near(x[1],0.0,tol) and near(x[2],0.0,tol))
+        class Fix2(SubDomain):
+            def inside(self, x, on_boundary):
+                tol = 1E-14
+                return (near(x[0],0.0,tol) and near(x[1],0.0,tol) and near(x[2],1.0,tol))
+        class Fix3(SubDomain):
+            def inside(self, x, on_boundary):
+                tol = 1E-14
+                return (near(x[0],0.0,tol) and near(x[1],1.0,tol) and near(x[2],0.0,tol))
 
         facetboundaries.set_all(0)
         left = Left()
         right = Right()
         fix = Fix()
+        fix2 = Fix2()
+        fix3 = Fix3()
         lower = Lower()
         front = Front()
         #
@@ -128,12 +139,21 @@ def set_bcs(sim_geometry,protocol,mesh,W,facetboundaries,u_D):
         front.mark(facetboundaries, 5)
 
         # Similar to cylinder but without fixing displacement along y and z axes to prevent rotation
-        bcleft= DirichletBC(W.sub(0).sub(0), Constant((0.0)), facetboundaries, 1)         # u1 = 0 on left face
+        """bcleft= DirichletBC(W.sub(0).sub(0), Constant((0.0)), facetboundaries, 1)         # u1 = 0 on left face
         bcright= DirichletBC(W.sub(0).sub(0), u_D, facetboundaries, 2)
         bcfix = DirichletBC(W.sub(0), Constant((0.0, 0.0, 0.0)), fix, method="pointwise") # at one vertex u = v = w = 0
         bclower= DirichletBC(W.sub(0).sub(2), Constant((0.0)), facetboundaries, 4)        # u3 = 0 on lower face
         bcfront= DirichletBC(W.sub(0).sub(1), Constant((0.0)), facetboundaries, 5)        # u2 = 0 on front face
-        bcs = [bcleft, bclower, bcfront,bcfix, bcright] #order matters!
+        bcs = [bcleft, bclower, bcfront,bcfix, bcright] #order matters!"""
+        # Trying shear
+        bcleft= DirichletBC(W.sub(0).sub(0), Constant((0.0)), facetboundaries, 1)         # u1 = 0 on left face
+        bcleft2 = DirichletBC(W.sub(0).sub(1), Constant((0.0)), facetboundaries, 1)
+        bcright= DirichletBC(W.sub(0).sub(1), u_D, facetboundaries, 2)
+        bcright2 = DirichletBC(W.sub(0).sub(0), Constant((0.0)), facetboundaries, 2)
+        bcfix = DirichletBC(W.sub(0), Constant((0.0, 0.0, 0.0)), fix, method="pointwise") # at one vertex u = v = w = 0
+        bclower= DirichletBC(W.sub(0).sub(2), Constant((0.0)), facetboundaries, 4)        # u3 = 0 on lower face
+        #bcs = [bcleft, bclower, bcfront,bcfix, bcright] #order matters!
+        bcs = [bcleft, bcleft2, bcright,bcright2,bcfix,bclower]
 
         if sim_type == "work_loop":
             marker_space = FunctionSpace(mesh,'CG',1)

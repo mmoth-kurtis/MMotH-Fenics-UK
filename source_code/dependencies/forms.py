@@ -33,23 +33,39 @@ class Forms(object):
         F = I + grad(u)
         return F
 
+    def Fe(self):
+        Fg = self.parameters["growth_tensor"]
+        F = self.Fmat()
+        if (Fg is None):
+            Fe = F
+        else:
+            print "calculating Fe"
+            Fe = as_tensor(F[i,j]*inv(Fg)[j,k], (i,k))
+        return Fe
+
     def Emat(self):
 
         u = self.parameters["displacement_variable"]
         d = u.ufl_domain().geometric_dimension()
         I = Identity(d)
-        F = self.Fmat()
-        return 0.5*(F.T*F-I)
+        #F = self.Fmat()
+    	F = self.Fe()
+        #return 0.5*(F.T*F-I)
+    	return 0.5*(as_tensor(F[k,i]*F[k,j] - I[i,j], (i,j)))
+
 
     def Cmat(self):
 
         u = self.parameters["displacement_variable"]
         d = u.ufl_domain().geometric_dimension()
-        F = self.Fmat()
-        return F.T*F
+        #F = self.Fmat()
+        F = self.Fe()
+        #return F.T*F
+        return as_tensor(F[k,i]*F[k,j],(i,j))
 
     def J(self):
-        F = self.Fmat()
+        #F = self.Fmat()
+        F = self.Fe()
         return det(F)
 
 
@@ -170,6 +186,8 @@ class Forms(object):
 
         alpha = sqrt(2.0 * Eff + 1.0)
         myofiber_stretch = hsl/hsl0
+        print "Myofiber stretch:"
+        print project(myofiber_stretch,FunctionSpace(self.parameters["mesh"],"DG",0)).vector().array()
         #alpha = sqrt(dot(f0, Cmat*f0))
 
 
@@ -252,7 +270,7 @@ class Forms(object):
 # this returns only myscle stress (no collagen contribution)
     def stress(self,hsl):
     #def stress(self):
-        set_point = 5000 # kurtis trying something
+        #set_point = 5000 # kurtis trying something
         mesh = self.parameters["mesh"]
 
         e1 = Constant((1.0, 0.0, 0.0))
@@ -280,7 +298,8 @@ class Forms(object):
         u = self.parameters["displacement_variable"]
         d = u.ufl_domain().geometric_dimension()
         I = Identity(d)
-        F = self.Fmat()
+        #F = self.Fmat()
+        F = self.Fe()
         #F=Fe
         J = self.J()
         Ea = self.Emat()

@@ -70,6 +70,25 @@ def update_bcs(bcs,sim_geometry,Ftotal,geo_options,sim_protocol,expr,time,tracti
         output_dict["bcs"] = bcs
         output_dict["rxn_force"] = rxn_force
 
+    elif sim_protocol["simulation_type"][0] == "custom_displacement":
+
+        if time <=5.0:
+            expr["u_D"].u_D = expr["u_D"].u_D
+        if time > 5.0 and time <=10.0:
+            expr["u_D"].u_D += 0.02
+        if time > 10.0 and time <= 70.0:
+            expr["u_D"].u_D = expr["u_D"].u_D
+        if time > 70.0 and time <= 75.0:
+            expr["u_D"].u_D -= 0.01
+        if time > 75.0 and time <= 110:
+            expr["u_D"].u_D = expr["u_D"].u_D
+
+        output_dict["expr"] = expr
+        output_dict["traction_switch_flag"] = traction_switch_flag
+        print "assigning bcs"
+        output_dict["bcs"] = bcs
+        output_dict["rxn_force"] = rxn_force
+
     return output_dict
 
 def ramp_and_hold(time,sim_protocol,geo_options):
@@ -84,14 +103,14 @@ def ramp_and_hold(time,sim_protocol,geo_options):
 
     if time < sim_protocol["ramp_t_start"][0]:
         disp = 0.0
-        print "displacement is " + str(disp)
+        print "Before ramp, displacement is " + str(disp)
 
-    if time >= sim_protocol["ramp_t_end"][0]:
+    elif time >= sim_protocol["ramp_t_end"][0]:
         disp = length_scale*sim_protocol["ramp_magnitude"][0]
-        print "displacement is " + str(disp)
+        print "After ramp, displacement is " + str(disp)
     else:
         slope = sim_protocol["ramp_magnitude"][0]/(sim_protocol["ramp_t_end"][0]-sim_protocol["ramp_t_start"][0])
-        disp = length_scale*slope*time
-        print "displacement is " + str(disp)
+        disp = length_scale*slope*(time-sim_protocol["ramp_t_start"][0])
+        print "Changing length, displacement is " + str(disp)
 
     return disp

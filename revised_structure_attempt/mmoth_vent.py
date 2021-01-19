@@ -58,6 +58,9 @@ def fenics(sim_params):
 
     # growth parameters
     kroon_time_constant = growth_params["kroon_time_constant"][0]
+    ecc_growth_rate = growth_params["ecc_growth_rate"][0]
+    set_point = growth_params["passive_set_point"][0]
+    k_myo_damp = Constant(growth_params["k_myo_damp"][0])
 
 #------------------------------------------------------------------------------
 #           Mesh Information
@@ -120,7 +123,6 @@ def fenics(sim_params):
     x_bin_max = hs_params["myofilament_parameters"]["bin_max"][0]
     x_bin_increment = hs_params["myofilament_parameters"]["bin_width"][0]
     xfiber_fraction = hs_params["myofilament_parameters"]["xfiber_fraction"][0]
-    k_myo_damp = hs_params["myofilament_parameters"]["k_myo_damp"][0]
 
     # Create x interval for cross-bridges
     xx = np.arange(x_bin_min, x_bin_max + x_bin_increment, x_bin_increment)
@@ -145,6 +147,7 @@ def fenics(sim_params):
         hsl_file = File(output_path + "hsl_mesh.pvd")
         # Want to visualize fiber directions through simulation
         fiber_file = File(output_path + "f0_vectors.pvd")
+        mesh_file = File(output_path + "mesh_growth.pvd")
         #alpha_file = File(output_path + "alpha_mesh.pvd")
 
         if (sim_geometry == "ventricle") or (sim_geometry == "ellipsoid"):
@@ -254,6 +257,11 @@ def fenics(sim_params):
     Relem = FiniteElement("Real", mesh.ufl_cell(), 0, quad_scheme="default")
     Relem._quad_scheme = 'default'
 
+    Telem2 = TensorElement("Quadrature", mesh.ufl_cell(), degree=deg, shape=2*(3,), quad_scheme='default')
+    Telem2._quad_scheme = 'default'
+    for e in Telem2.sub_elements():
+    	e._quad_scheme = 'default'
+
     # Mixed element for rigid body motion. One each for x, y displacement. One each for
     # x, y, z rotation
     VRelem = MixedElement([Relem, Relem, Relem, Relem, Relem])
@@ -269,6 +277,11 @@ def fenics(sim_params):
 
     # Function space for local coordinate system (fiber, sheet, sheet-normal)
     fiberFS = FunctionSpace(mesh, VQuadelem)
+
+    # Tensor function space
+    TF = TensorFunctionSpace(mesh, 'DG', 1)
+    TFQuad = FunctionSpace(mesh, Telem2)
+
 
     if sim_geometry == "cylinder" or sim_geometry == "unit_cube" or sim_geometry == "box_mesh" or sim_geometry == "gmesh_cylinder":
         W = FunctionSpace(mesh, MixedElement([Velem,Qelem]))
@@ -396,6 +409,31 @@ def fenics(sim_params):
 #           Initialize the solver and forms parameters, continuum tensors
 #-------------------------------------------------------------------------------
 
+    # Create growth tensor. Initialized as identity
+    M1ij = project(as_tensor(f0[m]*f0[k], (m,k)),TFQuad)
+    M2ij = project(as_tensor(s0[m]*s0[k], (m,k)),TFQuad)
+    M3ij = project(as_tensor(n0[m]*n0[k], (m,k)),TFQuad)
+    #M1ij = Function(TFQuad)
+    #print "m1ij shape = " + str(np.shape(M1ij.vector()))
+    #M2ij = Function(TFQuad)
+    #M3ij = Function(TFQuad)
+
+    Theta1 = Function(Quad)
+    Theta1.vector()[:] = 1.0
+
+    Theta2 = Function(Quad)
+    Theta2.vector()[:] = 1.0
+
+    # Based on the material coordinates, we can define different Growth Tensor Construct
+
+    Fg = project(Theta1*(M1ij) +  Theta2*(M2ij + M3ij),TFQuad)
+    #print "fg"
+    #print str(Fg.vector().get_local())
+    #Fg = as_tensor([[1.,0.,0.],[0.,1.,0.],[0.,0.,1.]])
+    print "Fg"
+    #print Fg[0][0]
+
+
     # parameters for forms file
     params= {"mesh": mesh,
              "facetboundaries": facetboundaries,
@@ -409,7 +447,8 @@ def fenics(sim_params):
              "sheet-normal": n0,
              "incompressible": isincomp,
              "hsl0": hsl0,
-             "Kappa":Constant(1e5)}
+             "Kappa":Constant(1e5),
+             "growth_tensor": Fg}
 
     # update passive params because now they are heterogeneous functions
     # need to generalize this?
@@ -429,7 +468,8 @@ def fenics(sim_params):
     Fmat = uflforms.Fmat()
 
     # Get right cauchy stretch tensor
-    Cmat = (Fmat.T*Fmat)
+    #Cmat = (Fmat.T*Fmat)
+    Cmat = uflforms.Cmat()
 
     # Get Green strain tensor
     Emat = uflforms.Emat()
@@ -458,10 +498,19 @@ def fenics(sim_params):
 
     # Calculate a pseudo stretch, not based on deformation gradient
     hsl_old.vector()[:] = hsl0.vector()[:]
-    hsl_diff_from_reference = hsl_old - hsl0
-    pseudo_alpha = pseudo_old*(1.-k_myo_damp*hsl_diff_from_reference)
+    hsl_diff_from_reference = (hsl_old - hsl0)/hsl0
+    print "hsl diff from ref:"
+    #print hsl_diff_from_reference.vector().get_local()[:]
+    pseudo_alpha = pseudo_old*(1.-(k_myo_damp*(hsl_diff_from_reference)))
+    #
+    #print "pseudo_alpha:"
+    #print project(pseudo_alpha,Quad).vector().get_local()[:]
     alpha_f = sqrt(dot(f0, Cmat*f0)) # actual stretch based on deformation gradient
+    #print "alpha_f:"
+    #print project(alpha_f,Quad).vector().get_local()[:]
     hsl = pseudo_alpha*alpha_f*hsl0
+    #print "hsl:"
+    #print project(hsl,Quad).vector().get_local()[:]
     delta_hsl = hsl - hsl_old
 
     cb_force = Constant(0.0)
@@ -548,6 +597,7 @@ def fenics(sim_params):
     F2 = inner(Fmat*Pactive, grad(v))*dx
 
     if (sim_geometry == "ventricle") or (sim_geometry == "ellipsoid"):
+        print "using F4"
         # LV volume increase
         Wvol = uflforms.LVV0constrainedE()
         F3 = derivative(Wvol, w, wtest)
@@ -570,6 +620,7 @@ def fenics(sim_params):
         Jac = Jac1 + Jac2 + Jac3 + Jac4
 
     else:
+        print "not using F4"
         F3 = inner(Press*N, v)*ds(2, domain=mesh)
 
         Ftotal = F1 + F2 - F3
@@ -659,7 +710,7 @@ def fenics(sim_params):
 
                 if save_visual_output:
                     displacement_file << w.sub(0)
-                    pk1temp = project(inner(f0,Pactive*f0),FunctionSpace(mesh,'DG',1))
+                    pk1temp = project(inner(f0,Pactive*f0),FunctionSpace(mesh,'DG',0))
                     pk1temp.rename("pk1temp","active_stress")
                     active_stress_file << pk1temp
                     hsl_temp = project(hsl,FunctionSpace(mesh,'DG',1))
@@ -690,6 +741,7 @@ def fenics(sim_params):
     for l in np.arange(no_of_time_steps):
         tic = timeit.default_timer()
 
+        print "Time step number " + str(l)
         if (sim_geometry == "ventricle") or (sim_geometry == "ellipsoid"):
 
             # Update circulatory model
@@ -714,6 +766,7 @@ def fenics(sim_params):
             overlap_counter = l
 
         # At each gauss point, solve for cross-bridge distributions using myosim
+        print "calling myosim"
         for mm in np.arange(no_of_int_points):
             temp_overlap[mm], y_interp[mm*n_array_length:(mm+1)*n_array_length], y_vec_array_new[mm*n_array_length:(mm+1)*n_array_length] = implement.update_simulation(hs, sim_timestep, delta_hsl_array[mm], hsl_array[mm], y_vec_array[mm*n_array_length:(mm+1)*n_array_length], p_f_array[mm], cb_f_array[mm], calcium[l], n_array_length, t,hs_params_list[mm])
             temp_flux_dict, temp_rate_dict = implement.return_rates_fenics(hs)
@@ -738,18 +791,45 @@ def fenics(sim_params):
 
         # Update the hsl_old function for fenics
         hsl_old.vector()[:] = hsl_array_old[:]
+        #print "hsl_old before solve"
+        #print project(hsl_old,Quad).vector().get_local()[:]
 
         # including call to nsolver commented out to show it can be used
         #solver.solvenonlinear()
 
+        print "calling Newton Solver"
         # solve for displacement to satisfy balance of linear momentum
         solve(Ftotal == 0, w, bcs, J = Jac, form_compiler_parameters={"representation":"uflacs"},solver_parameters={"newton_solver":{"relative_tolerance":1e-8},"newton_solver":{"maximum_iterations":50},"newton_solver":{"absolute_tolerance":1e-8}})
 
         # Update functions and arrays
         cb_f_array[:] = project(cb_force, Quad).vector().get_local()[:]
+        #print "hsl_old after solve"
+        #print project(hsl_old,Quad).vector().get_local()[:]
         hsl_old.vector()[:] = project(hsl, Quad).vector().get_local()[:] # for PDE
+        pseudo_old.vector()[:] = project(pseudo_alpha, Quad).vector().get_local()[:]
         hsl_array = project(hsl, Quad).vector().get_local()[:]           # for Myosim
-        delta_hsl_array = project(sqrt(dot(f0, Cmat*f0))*hsl0, Quad).vector().get_local()[:] - hsl_array_old # for Myosim
+        #delta_hsl_array = project(sqrt(dot(f0, Cmat*f0))*hsl0, Quad).vector().get_local()[:] - hsl_array_old # for Myosim
+        delta_hsl_array = project(delta_hsl, Quad).vector().get_local()[:]
+        #pseudo_old = pseudo_alpha
+        #pseudo_old.vector().get_local()[:] = project(pseudo_alpha,Quad).vector().get_local()[:]
+        #print "pseudo old"
+        #print project(pseudo_old,Quad).vector().get_local()[:]
+        #print "pseudo alpha:"
+        #print project(pseudo_alpha,Quad).vector().get_local()[:]
+        #print "real alpha"
+        #print project(alpha_f,Quad).vector().get_local()[:]
+        #print "hsl diff from ref "
+        #print project(hsl_diff_from_reference,Quad).vector().get_local()[:]
+        #print "hsl_old"
+        #print project(hsl_old,Quad).vector().get_local()[:]
+        #print "hsl0"
+        #print project(hsl0,Quad).vector().get_local()[:]
+        #print "hsl"
+        #print project(hsl,Quad).vector().get_local()[:]
+
+        # For growth
+        temp_DG_2 = project(Pg_fiber, FunctionSpace(mesh, "DG", 1), form_compiler_parameters={"representation":"uflacs"})
+        pgf = interpolate(temp_DG_2, Quad)
 
         temp_DG = project(Pff, FunctionSpace(mesh, "DG", 1), form_compiler_parameters={"representation":"uflacs"})
         p_f = interpolate(temp_DG, Quad)
@@ -764,6 +844,7 @@ def fenics(sim_params):
             # update fiber orientations
             print "updating fiber orientation"
 
+        print "updating boundary conditions"
         # Update boundary conditions/expressions (need to include general displacements and tractions)
         bc_update_dict = update_boundary_conditions.update_bcs(bcs,sim_geometry,Ftotal,geo_options,sim_protocol,expressions,t[l],traction_switch_flag,x_dofs)
         bcs = bc_update_dict["bcs"]
@@ -772,12 +853,13 @@ def fenics(sim_params):
         u_D = bc_update_dict["expr"]["u_D"]
         Press = bc_update_dict["expr"]["Press"]
 
+
         # Save visualization info
         if save_visual_output:
             displacement_file << w.sub(0)
-            pk1temp = project(inner(f0,Pactive*f0),FunctionSpace(mesh,'CG',1))
-            pk1temp.rename("pk1temp","active_stress")
-            active_stress_file << pk1temp
+            #pk1temp = project(inner(f0,Pactive*f0),FunctionSpace(mesh,'CG',1))
+            #pk1temp.rename("pk1temp","active_stress")
+            #active_stress_file << pk1temp
             hsl_temp = project(hsl,FunctionSpace(mesh,'DG',1))
             hsl_temp.rename("hsl_temp","half-sarcomere length")
             hsl_file << hsl_temp
@@ -848,6 +930,97 @@ def fenics(sim_params):
     if sim_geometry == "ventricle" or sim_geometry == "ellipsoid":
         if(MPI.rank(comm) == 0):
             fdataPV.close()
+
+    # -------------- Attempting growth here --------------------------------
+
+    Fg00 = 1.0
+    for n_grow in np.arange(10):
+
+
+        #Get passive stress tensors from forms
+        Pg, Pff, alpha = uflforms.stress(hsl)
+        Pg_fiber = inner(f0,Pg*f0)
+
+        # For growth
+        temp_DG_2 = project(Pg_fiber, FunctionSpace(mesh, "DG", 1), form_compiler_parameters={"representation":"uflacs"})
+        pgf = interpolate(temp_DG_2, Quad)
+        pgf_array = pgf.vector().get_local()[:]
+
+        temp_DG = project(Pff, FunctionSpace(mesh, "DG", 1), form_compiler_parameters={"representation":"uflacs"})
+        p_f = interpolate(temp_DG, Quad)
+        p_f_array = p_f.vector().get_local()[:]
+
+
+        print " deviation from set point = " + str(p_f_array[0]+pgf_array[0]-set_point)
+        Fg00 *= 1.+ecc_growth_rate*((p_f_array[0]+pgf_array[0]-set_point)/set_point)
+        Theta1.vector()[:] = Fg00
+        Theta2.vector()[:] = 1./Fg00
+        Fg = project(Theta1*(M1ij) + Theta2*(M2ij + M3ij))
+        uflforms.parameters["growth_tensor"] = Fg
+        #Fg22 = 1./Fg00
+        #M2ij.vector()[:] = Fg11
+        #M3ij.vector()[:] = Fg22
+
+        #Fg = as_tensor([[Fg00,0.,0.],[0.,Fg11,0.],[0.,0.,Fg22]])
+
+        print Fg.vector().get_local()[:]
+        Fe = uflforms.Fe()
+        print Fe
+        print "myof passive before solving:"
+        print p_f_array[0]
+        print "gucc fiber passive before solving:"
+        print pgf_array[0]
+
+        #Theta1.vector()[:] = Theta1.vector().array()+ecc_growth_rate*((p_f + pgf-set_point)/set_point)
+        #Theta2.vector()[:] = 1./theta1.vector().array()
+        solve(Ftotal == 0, w, bcs, J = Jac, form_compiler_parameters={"representation":"uflacs"},solver_parameters={"newton_solver":{"relative_tolerance":1e-8},"newton_solver":{"maximum_iterations":50},"newton_solver":{"absolute_tolerance":1e-8}})
+        #Get passive stress tensors from forms
+        Pg, Pff, alpha = uflforms.stress(hsl)
+        Pg_fiber = inner(f0,Pg*f0)
+        # Update functions and arrays
+        cb_f_array[:] = project(cb_force, Quad).vector().get_local()[:]
+        hsl_old.vector()[:] = project(hsl, Quad).vector().get_local()[:] # for PDE
+        hsl_array = project(hsl, Quad).vector().get_local()[:]           # for Myosim
+        delta_hsl_array = project(sqrt(dot(f0, Cmat*f0))*hsl0, Quad).vector().get_local()[:] - hsl_array_old # for Myosim
+
+        # For growth
+        temp_DG_2 = project(Pg_fiber, FunctionSpace(mesh, "DG", 1), form_compiler_parameters={"representation":"uflacs"})
+        pgf = interpolate(temp_DG_2, Quad)
+        pgf_array = pgf.vector().get_local()[:]
+
+        temp_DG = project(Pff, FunctionSpace(mesh, "DG", 1), form_compiler_parameters={"representation":"uflacs"})
+        p_f = interpolate(temp_DG, Quad)
+        p_f_array = p_f.vector().get_local()[:]
+        print "myof passive after solving:"
+        print p_f_array[0]
+        print "gucc fiber passive after solving:"
+        print pgf_array[0]
+
+        for ii in range(np.shape(hsl_array)[0]):
+            if p_f_array[ii] < 0.0:
+                p_f_array[ii] = 0.0
+
+        if save_cell_output:
+            p_f_array_ds.iloc[0,:] = p_f_array[:]
+            p_f_array_ds.to_csv(output_path + 'myofiber_passive.csv',mode='a',header=False)
+
+            pgf_array_ds.iloc[0,:] = pgf_array[:]
+            pgf_array_ds.to_csv(output_path + 'gucc_fiber_pstress.csv',mode='a',header=False)
+
+            hsl_array_ds.iloc[0,:] = hsl_array[:]
+            hsl_array_ds.to_csv(output_path + 'half_sarcomere_lengths.csv',mode='a',header=False)
+
+    ALE.move(mesh, project(u, VectorFunctionSpace(mesh, 'CG', 1)))
+    File(output_path + "mesh_grown.pvd") << mesh
+
+        #ALE.move(mesh, project(u, VectorFunctionSpace(mesh, 'CG', 1)))
+        #File(output_path + "mesh_"+str(n_grow)+".pvd") << mesh
+    #print "displacement during growth = " + str(u_D.u_D)
+        #displacement_file << w.sub(0)
+
+
+
+
 
 #-------------------------------------------------------------------------------
 # for stand-alone testing
