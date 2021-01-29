@@ -139,21 +139,22 @@ def set_bcs(sim_geometry,protocol,mesh,W,facetboundaries,u_D):
         front.mark(facetboundaries, 5)
 
         # Similar to cylinder but without fixing displacement along y and z axes to prevent rotation
-        """bcleft= DirichletBC(W.sub(0).sub(0), Constant((0.0)), facetboundaries, 1)         # u1 = 0 on left face
+        bcleft= DirichletBC(W.sub(0).sub(0), Constant((0.0)), facetboundaries, 1)         # u1 = 0 on left face
         bcright= DirichletBC(W.sub(0).sub(0), u_D, facetboundaries, 2)
         bcfix = DirichletBC(W.sub(0), Constant((0.0, 0.0, 0.0)), fix, method="pointwise") # at one vertex u = v = w = 0
         bclower= DirichletBC(W.sub(0).sub(2), Constant((0.0)), facetboundaries, 4)        # u3 = 0 on lower face
         bcfront= DirichletBC(W.sub(0).sub(1), Constant((0.0)), facetboundaries, 5)        # u2 = 0 on front face
-        bcs = [bcleft, bclower, bcfront,bcfix, bcright] #order matters!"""
+        bcs = [bcleft, bcfix,bcfront,bclower, bcright] #order matters!
         # Trying shear
-        bcleft= DirichletBC(W.sub(0).sub(0), Constant((0.0)), facetboundaries, 1)         # u1 = 0 on left face
+        """bcleft= DirichletBC(W.sub(0), Constant((0.0,0.0,0.0)), facetboundaries, 1)         # u1 = 0 on left face
         bcleft2 = DirichletBC(W.sub(0).sub(1), Constant((0.0)), facetboundaries, 1)
         bcright= DirichletBC(W.sub(0).sub(1), u_D, facetboundaries, 2)
         bcright2 = DirichletBC(W.sub(0).sub(0), Constant((0.0)), facetboundaries, 2)
+        bcright3 = DirichletBC(W.sub(0).sub(2), Constant((0.0)), facetboundaries, 2)
         bcfix = DirichletBC(W.sub(0), Constant((0.0, 0.0, 0.0)), fix, method="pointwise") # at one vertex u = v = w = 0
         bclower= DirichletBC(W.sub(0).sub(2), Constant((0.0)), facetboundaries, 4)        # u3 = 0 on lower face
         #bcs = [bcleft, bclower, bcfront,bcfix, bcright] #order matters!
-        bcs = [bcleft, bcleft2, bcright,bcright2,bcfix,bclower]
+        bcs = [bcleft, bcright,bcright2,bcright3]"""
 
         if sim_type == "work_loop":
             marker_space = FunctionSpace(mesh,'CG',1)

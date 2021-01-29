@@ -11,7 +11,7 @@
       },
     "save_cell_output": [1],
     "save_visual_output": [1],
-    "output_path": ["./output_cell_isometric_twitch_demo/"],
+    "output_path": ["./output_left_right_back/"],
     "fiber_randomness": [0.0]
   },
 
@@ -78,12 +78,11 @@
 "electrophys_parameters": {
 
   "cell_ion_parameters": {
-    "model": ["two_compartment_demo"],
+    "model": ["constant_calcium"],
     "model_inputs": {
-      "Ca_content": [1e-3,"Molar"],
-      "k_leak": [0.025],
-      "k_act": [6.84257497963],
-      "k_serca": [250.0]
+      "basal_ca":[0.0],
+      "active_ca":[0.0],
+      "t_act": [0.0]
     }
   }
 },

@@ -204,14 +204,16 @@ class Forms(object):
 
         Wp_m = C2*(exp(QQ_m) -  1.0)
 
-        Wp_m_weighted = phi_m*Wp_m
+        #Wp_m_weighted = phi_m*Wp_m
+        Wp_m_weighted = 0.5*Wp_m
 
         if(isincomp):
             Wp_c = C/2.0*(exp(QQ_c) -  1.0) - p*(self.J() - 1.0)
         else:
             Wp_c = C/2.0*(exp(QQ_c) -  1.0) + Kappa/2.0*(self.J() - 1.0)**2.0
 
-        Wp_c_weighted = phi_g*Wp_c
+        #Wp_c_weighted = phi_g*Wp_c
+
 
         Wp = Wp_m + Wp_c
         #Wp = Wp_m_weighted + Wp_c_weighted
@@ -292,6 +294,8 @@ class Forms(object):
         phi_g = self.parameters["phi_g"][0]
         isincomp = self.parameters["incompressible"]
         hsl0 = self.parameters["hsl0"]
+        Kappa = self.parameters["Kappa"]
+
 
         if(isincomp):
             p = self.parameters["pressure_variable"]
@@ -299,20 +303,50 @@ class Forms(object):
         d = u.ufl_domain().geometric_dimension()
         I = Identity(d)
         #F = self.Fmat()
-        F = self.Fe()
+        #F = self.Fe()
+        F = I + grad(u)
+        #F = Variable(F)
+        #F = variable(F)
         #F=Fe
         J = self.J()
-        Ea = self.Emat()
+        Ea = 0.5*(as_tensor(F[k,i]*F[k,j] - I[i,j], (i,j)))
+        Ea = dolfin.variable(Ea)
+        Ctensor = self.Cmat()
+        #Ea = Variable(Ea)
+        #Ea = self.Emat()
+        #Ea = 0.5*(as_tensor(F[k,i]*F[k,j] - I[i,j], (i,j)))
 
         # Make it a variable to try to differentiate wrt?
-        Ea = variable(Ea)
+        #Ea = variable(Ea)
 
-        Eff = inner(f0, Ea*f0)
+        """Eff = inner(f0, Ea*f0)
         Ess = inner(s0, Ea*s0)
         Enn = inner(n0, Ea*n0)
         Efs = inner(f0, Ea*s0)
         Efn = inner(f0, Ea*n0)
-        Ens = inner(n0, Ea*s0)
+        Ens = inner(n0, Ea*s0)"""
+        Eff = f0[i]*Ea[i,j]*f0[j]
+        Eff = dolfin.variable(Eff)
+        Ess = s0[i]*Ea[i,j]*s0[j]
+        Ess = dolfin.variable(Ess)
+        Enn = n0[i]*Ea[i,j]*n0[j]
+        Enn = dolfin.variable(Enn)
+        Efs = f0[i]*Ea[i,j]*s0[j]
+        Efs = dolfin.variable(Efs)
+        Esf = s0[i]*Ea[i,j]*f0[j]
+        Esf = dolfin.variable(Esf)
+        Efn = f0[i]*Ea[i,j]*n0[j]
+        Enf = n0[i]*Ea[i,j]*f0[j]
+        Enf = dolfin.variable(Enf)
+        Efn = dolfin.variable(Efn)
+        Ens = n0[i]*Ea[i,j]*s0[j]
+        Esn = s0[i]*Ea[i,j]*n0[j]
+        Esn = dolfin.variable(Esn)
+        Ens = dolfin.variable(Ens)
+
+        Elocal = as_matrix([[Eff,Efs,Efn],[Esf,Ess,Esn],[Enf,Ens,Enn]])
+        print type(Elocal)
+        Elocal = dolfin.variable(Elocal)
 
         alpha = sqrt(2.0 * Eff + 1.0)
         myofiber_stretch = hsl/hsl0
@@ -321,55 +355,42 @@ class Forms(object):
         #Q = C3*conditional(alpha>1.0,alpha - 1.0,0.0)**2.0
         ### KURTIS START HERE, SFF NEEDS TO BE ZERO FOR MYOFIBER_STRETCH < 1 ****
         Q = C3*conditional(myofiber_stretch > 1.0, myofiber_stretch - 1.0,0.0)**2.0
-        Sff = 2.0 * C2 * C3 * (1.0 - conditional(myofiber_stretch > 1.0,1.0/myofiber_stretch,1.0)) * exp(Q)
+        Wmyo = C2*(exp(C3*(conditional(alpha > 1.0,alpha,1.0)-1.)**2.0)-1)
+        #Sff = 2.0 * C2 * C3 * (1.0 - conditional(myofiber_stretch > 1.0,1.0/myofiber_stretch,1.0)) * exp(Q)
+        Sff = (2.0/myofiber_stretch)* C2 * C3 * (conditional(myofiber_stretch > 1.0, myofiber_stretch,1.0)-1.0)*exp(Q)
         #Sff = 2.0 * C2 * C3 * (1.0 - conditional(alpha > 1.0,1.0/alpha,1.0)) * exp(Q)
         Sff_weighted = Sff*phi_m
 
-        # Calculate Guccione passive stress?
-        Qbulk = bff*Eff**2.0 + bfx*(Ess**2.0 + Enn**2.0 + 2.0*Ens**2.0) + bxx*(2.0*Efs**2.0 + 2.0*Efn**2.0)
-        #test_E = Function(Quad)
-        #test_E.vector()[:] = 1.01
-        #Qbulk_test = bff*test_E**2.0
-        #Wp_c_test = C/2.0*(exp(Qbulk_test) - 1.0) - p*(self.J() - 1.0)
-        #sbulk_test = diff(Wp_c_test,Ea)
-        #Pg_test = F*sbulk_test
-        #test_passive_stress = inner(f0,Pg_test*f0)
+        # Calculate Guccione passive stress
+        #Qbulk = bff*Eff**2.0 + bfx*(Ess**2.0 + Enn**2.0 + 2.0*Ens**2.0) + bxx*(2.0*Efs**2.0 + 2.0*Efn**2.0)
+        Qbulk = bff*Eff**2.0 + bfx*(Ess**2.0 + Enn**2.0 + Ens**2.0 + Esn**2.0) + bxx*(Efs**2.0 + Esf**2.0 + Efn**2.0 + Enf**2.0)
 
 
-        Wp_c = C/2.0*(exp(Qbulk) -  1.0) - p*(self.J() - 1.0)
-        Wp_c_weighted = Wp_c*phi_g
+
+        #Wp_c = (C/2.0)*(exp(Qbulk) -  1.0) - p*(self.J() - 1.0)
+        if isincomp:
+            Wp_c = (C/2.0)*(exp(Qbulk) -  1.0) - p*(det(F) - 1.0)
+        else:
+            Wp_c = C/2.0*(exp(Qbulk) -  1.0) + Kappa/2.0*(self.J() - 1.0)**2.0
+
+        lm_temp = p*(det(F)-1.0)
+        temp = diff(lm_temp,Ea)
+        #Wp_c_weighted = Wp_c*phi_g
 
         #sbulk differentiated wrt Ea, in global coordinates
         #thus sbulk is PK2 in global?
-        sbulk = diff(Wp_c_weighted,Ea)
+        sbulk = diff(Wp_c,Ea)
+
+        #Let's try total:
+        s_total = diff((Wp_c+Wmyo),Ea)
+
+        #sbulk_tensor = project(sbulk,TensorFunctionSpace(mesh,"CG",2))
         #eff_final = test_E
         #test_value = project(test_passive_stress-set_point, FunctionSpace(mesh, "DG", 1), form_compiler_parameters={"representation":"uflacs"})
         #test_v = interpolate(test_value,Quad)
         #test_v_array = test_v.vector().get_local()[:]
         #test_max = np.amax(test_v_array)
         #print "test_max = " + str(test_max)
-        """if mm > 10:
-
-            while np.abs(test_max) > 10:
-                print "in while loop"
-                test_E -= test_passive_stress/inner(f0,diff(Pg_test,Ea)*f0)
-                #test_E_fcn= project(test_E,FunctionSpace(mesh,"DG",1),form_compiler_parameters={"representation":"uflacs"})
-                #print test_E_fcn.vector().get_local()[:]
-                Qbulk_test = bff*test_E**2.0
-                Wp_c_test = C/2.0*(exp(Qbulk_test) - 1.0) - p*(self.J() - 1.0)
-                sbulk_test = diff(Wp_c_test,Ea)
-                Pg_test = F*sbulk_test
-                test_passive_stress = inner(f0,Pg_test*f0)
-                test_value = project(test_passive_stress-set_point, FunctionSpace(mesh, "DG", 1), form_compiler_parameters={"representation":"uflacs"})
-                test_v = interpolate(test_value,Quad)
-                test_v_array = test_v.vector().get_local()[:]
-                test_max = np.amax(test_v_array)
-                print "test max = " +str(test_max)
-                #ps = project(test_passive_stress,FunctionSpace(mesh,"DG",1),form_compiler_parameters={"representation":"uflacs"})
-                #print "test passive =" +str(ps.vector())"""
-
-        #eff_final = test_E
-        #rint "eff final forms " +str(eff_final.vector().get_local()[:])
 
         #passive stress in fiber direction
         """Sbulk_f = inner(f0,sbulk*f0)
@@ -385,17 +406,21 @@ class Forms(object):
         #S_local = as_tensor([[Sff, Sfs, Sfn], [Sfs, Sss, Sns], [Sfn, Sns, Snn]])
 
         #S_local = as_tensor([[Sff, 0.0, 0.0], [0.0, 0.0, 0.0], [0.0, 0.0, 0.0]])
-        S_local = as_tensor([[Sff_weighted, 0.0, 0.0], [0.0, 0.0, 0.0], [0.0, 0.0, 0.0]])
+        S_local = as_tensor([[Sff, 0.0, 0.0], [0.0, 0.0, 0.0], [0.0, 0.0, 0.0]])
 
         TransMatrix = as_tensor(f0[i]*e1[j], (i,j)) + as_tensor(s0[i]*e2[j], (i,j)) + as_tensor(n0[i]*e3[j], (i,j))
 
-        S_global = as_tensor(TransMatrix[i,k]*TransMatrix[j,l]*S_local[k,l],(i,j))
-
+        #S_global = as_tensor(TransMatrix[i,k]*TransMatrix[j,l]*S_local[k,l],(i,j))
+        S_global = TransMatrix*S_local*TransMatrix.T
         # guccione global
         """S_bulk_global = as_tensor(TransMatrix[i,k]*TransMatrix[j,l]*Sbulk_local[k,l],(i,j))
         Pg = F*S_global"""
-        Pg = F*sbulk
+        #Pg = F*sbulk
+
         S = S_global
+        #S = S_local
+        #print "shape of S"
+        #print np.shape(S.vector())
         #S = S_local
 
         #P = F*S - p*inv(F.T)
@@ -406,11 +431,14 @@ class Forms(object):
         #Pbulkf = inner(f0,Pbulk*f0)
 
         #T = F*S*F.T - p*I
-        T = F*S*F.T
+        #T = F*(sbulk+S)*F.T
+        #t_proj = project(T,TensorFunctionSpace(mesh,"CG",2),form_compiler_parameters={"representation":"uflacs"})
 
+        PK2_local = as_tensor([[dolfin.diff(Wp_c,Eff),dolfin.diff(Wp_c,Efs),dolfin.diff(Wp_c,Efn)],[dolfin.diff(Wp_c,Esf),dolfin.diff(Wp_c,Ess),dolfin.diff(Wp_c,Esn)],[dolfin.diff(Wp_c,Enf),dolfin.diff(Wp_c,Ens),dolfin.diff(Wp_c,Enn)]])
+        PK2_global = as_tensor(TransMatrix[i,k]*TransMatrix[j,l]*PK2_local[k,l],(i,j))
         #return  P,S,T, alpha
         #return   Pbulkf, Pff, alpha
-        return Pg, Pff, alpha
+        return S_global+PK2_global-p*inv(Ctensor), Pff, alpha,S,temp,det(F)
 
     def return_radial_vec_ratio(self):
 

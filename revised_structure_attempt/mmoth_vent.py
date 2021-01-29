@@ -279,7 +279,7 @@ def fenics(sim_params):
     fiberFS = FunctionSpace(mesh, VQuadelem)
 
     # Tensor function space
-    TF = TensorFunctionSpace(mesh, 'DG', 1)
+    TF = TensorFunctionSpace(mesh, 'CG', 2)
     TFQuad = FunctionSpace(mesh, Telem2)
 
 
@@ -365,6 +365,8 @@ def fenics(sim_params):
         (u,p) = split(w)
         (v,q) = TestFunctions(W)
 
+    d = u.ufl_domain().geometric_dimension()
+    I = Identity(d)
     # Initial and previous timestep half-sarcomere length functions
     hsl0    = Function(Quad)
     hsl_old = Function(Quad)
@@ -401,9 +403,9 @@ def fenics(sim_params):
     hsl_temp.rename("hsl_temp","half-sarcomere length")
     hsl_file << hsl_temp
 
-    File(output_path + "fiber.pvd") << project(f0, VectorFunctionSpace(mesh, "CG", 1))
-    File(output_path + "sheet.pvd") << project(s0, VectorFunctionSpace(mesh, "CG", 1))
-    File(output_path + "sheet-normal.pvd") << project(n0, VectorFunctionSpace(mesh, "CG", 1))
+    File(output_path + "fiber.pvd") << project(f0, VectorFunctionSpace(mesh, "DG", 0))
+    File(output_path + "sheet.pvd") << project(s0, VectorFunctionSpace(mesh, "DG", 0))
+    File(output_path + "sheet-normal.pvd") << project(n0, VectorFunctionSpace(mesh, "DG", 0))
 
 #-------------------------------------------------------------------------------
 #           Initialize the solver and forms parameters, continuum tensors
@@ -466,6 +468,14 @@ def fenics(sim_params):
 
     # Get deformation gradient
     Fmat = uflforms.Fmat()
+    test_FS = FunctionSpace(mesh,Velem)
+    Fmat2 = Function(TF)
+    #d = u.ufl_domain().geometric_dimension()
+    #Fmat2= Identity(d) + grad(u)
+    print "shape of Fmat:"
+    print np.shape(Fmat)
+    print "Shape of u"
+    print np.shape(u)
 
     # Get right cauchy stretch tensor
     #Cmat = (Fmat.T*Fmat)
@@ -553,7 +563,7 @@ def fenics(sim_params):
         y_vec_array[init_counter-2] = 1
 
     #Get passive stress tensors from forms
-    Pg, Pff, alpha = uflforms.stress(hsl)
+    Pg, Pff, alpha,Pmyo,temp,jforms = uflforms.stress(hsl)
 
     # need p_f_array for myosim
     temp_DG = project(Pff, FunctionSpace(mesh, "DG", 1), form_compiler_parameters={"representation":"uflacs"})
@@ -767,11 +777,11 @@ def fenics(sim_params):
 
         # At each gauss point, solve for cross-bridge distributions using myosim
         print "calling myosim"
-        for mm in np.arange(no_of_int_points):
+        """for mm in np.arange(no_of_int_points):
             temp_overlap[mm], y_interp[mm*n_array_length:(mm+1)*n_array_length], y_vec_array_new[mm*n_array_length:(mm+1)*n_array_length] = implement.update_simulation(hs, sim_timestep, delta_hsl_array[mm], hsl_array[mm], y_vec_array[mm*n_array_length:(mm+1)*n_array_length], p_f_array[mm], cb_f_array[mm], calcium[l], n_array_length, t,hs_params_list[mm])
             temp_flux_dict, temp_rate_dict = implement.return_rates_fenics(hs)
             j3_fluxes[mm,l] = sum(temp_flux_dict["J3"])
-            j4_fluxes[mm,l] = sum(temp_flux_dict["J4"])
+            j4_fluxes[mm,l] = sum(temp_flux_dict["J4"])"""
 
         if save_cell_output:
             for  i in range(no_of_int_points):
@@ -800,6 +810,27 @@ def fenics(sim_params):
         print "calling Newton Solver"
         # solve for displacement to satisfy balance of linear momentum
         solve(Ftotal == 0, w, bcs, J = Jac, form_compiler_parameters={"representation":"uflacs"},solver_parameters={"newton_solver":{"relative_tolerance":1e-8},"newton_solver":{"maximum_iterations":50},"newton_solver":{"absolute_tolerance":1e-8}})
+        f_proj =project(Fmat,TensorFunctionSpace(mesh,"DG",1),form_compiler_parameters={"representation":"uflacs"})
+        print "saving def gradient"
+        file = File(output_path+'f_proj.pvd')
+        file << f_proj
+        Pg_fs_shear = inner(s0,Pg*f0)
+        shear_file = File(output_path+'P_fs_shear.pvd')
+        shear_file << project(Pg_fs_shear,FunctionSpace(mesh,"DG",1), form_compiler_parameters={"representation":"uflacs"})
+        #F_matrix = PETScMatrix()
+        #f_assembled = assemble(Fmat,tensor=F_matrix)
+        #print f_proj.vector().get_local()
+        print "guccione passive stress"
+        print project(Pg,TensorFunctionSpace(mesh,"DG",1),form_compiler_parameters={"representation":"uflacs"}).vector().get_local()
+        print str(project(p,FunctionSpace(mesh,"CG",1)).vector().get_local())
+        #print project(temp,TensorFunctionSpace(mesh,"DG",1),form_compiler_parameters={"representation":"uflacs"}).vector().get_local()
+        print "J"
+        print project(jforms,FunctionSpace(mesh,"DG",0)).vector().get_local()
+
+        print "f assembly"
+        #print f_assembled
+        print "Shape of u"
+        print np.shape(u)
 
         # Update functions and arrays
         cb_f_array[:] = project(cb_force, Quad).vector().get_local()[:]
@@ -864,10 +895,10 @@ def fenics(sim_params):
             hsl_temp.rename("hsl_temp","half-sarcomere length")
             hsl_file << hsl_temp
             np.save(output_path + 'fx',rxn_force)
-            f0_temp = project(f0, VectorFunctionSpace(mesh, "CG", 1))
+            f0_temp = project(f0, VectorFunctionSpace(mesh, "DG", 0))
             f0_temp.rename('f0','f0')
             fiber_file << f0_temp
-            File(output_path + "fiber.pvd") << project(f0, VectorFunctionSpace(mesh, "CG", 1))
+            #File(output_path + "fiber.pvd") << project(f0, VectorFunctionSpace(mesh, "DG", 0))
 
 
         # Save cell info
@@ -938,8 +969,9 @@ def fenics(sim_params):
 
 
         #Get passive stress tensors from forms
-        Pg, Pff, alpha = uflforms.stress(hsl)
+        Pg, Pff, alpha,Pmyo,temp,jforms= uflforms.stress(hsl)
         Pg_fiber = inner(f0,Pg*f0)
+
 
         # For growth
         temp_DG_2 = project(Pg_fiber, FunctionSpace(mesh, "DG", 1), form_compiler_parameters={"representation":"uflacs"})
@@ -975,7 +1007,7 @@ def fenics(sim_params):
         #Theta2.vector()[:] = 1./theta1.vector().array()
         solve(Ftotal == 0, w, bcs, J = Jac, form_compiler_parameters={"representation":"uflacs"},solver_parameters={"newton_solver":{"relative_tolerance":1e-8},"newton_solver":{"maximum_iterations":50},"newton_solver":{"absolute_tolerance":1e-8}})
         #Get passive stress tensors from forms
-        Pg, Pff, alpha = uflforms.stress(hsl)
+        Pg, Pff, alpha,Pmyo,temp,jforms = uflforms.stress(hsl)
         Pg_fiber = inner(f0,Pg*f0)
         # Update functions and arrays
         cb_f_array[:] = project(cb_force, Quad).vector().get_local()[:]

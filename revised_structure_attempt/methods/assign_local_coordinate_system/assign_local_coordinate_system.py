@@ -20,8 +20,10 @@ def assign_local_coordinate_system(lv_options,coord_params,sim_params):
     facetboundaries = coord_params["facetboundaries"]
     edgeboundaries = coord_params["edgeboundaries"]
     # mean values for gaussian for fiber orientation
+    #m_x = 0.342020143325669
+    #m_y = 0.939692620785908
     m_x = 1.0
-    m_y = 0.0
+    m_y = 0.
     m_z = 0.0
     width = sim_params["fiber_randomness"][0]
 
@@ -118,10 +120,11 @@ def assign_local_coordinate_system(lv_options,coord_params,sim_params):
             z_axis.vector()[nn*3+1] = 0.0
             z_axis.vector()[nn*3+2] = 1.0
 
-        s0 = cross(f0,z_axis)
+        s0 = cross(z_axis,f0)
         s0 = s0/sqrt(inner(s0,s0))
 
-        n0 = project(cross(s0,f0),VectorFunctionSpace(mesh, "DG", 0))
+        n0 = cross(f0,s0)
+        #n0 = project(cross(f0,s0),VectorFunctionSpace(mesh, "DG", 0))
         n0 = n0/sqrt(inner(n0,n0))
 
     return f0,s0,n0,geo_options
