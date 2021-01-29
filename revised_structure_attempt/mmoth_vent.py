@@ -562,16 +562,16 @@ def fenics(sim_params):
         # Initialize all binding sites to off state
         y_vec_array[init_counter-2] = 1
 
-    #Get passive stress tensors from forms
-    Pg, Pff, alpha,Pmyo,temp,jforms = uflforms.stress(hsl)
+    #Get passive stress tensor, magnitude of myofiber passive stress
+    PK2_passive,Sff = uflforms.stress(hsl)
 
     # need p_f_array for myosim
-    temp_DG = project(Pff, FunctionSpace(mesh, "DG", 1), form_compiler_parameters={"representation":"uflacs"})
+    temp_DG = project(Sff, FunctionSpace(mesh, "DG", 1), form_compiler_parameters={"representation":"uflacs"})
     p_f = interpolate(temp_DG, Quad)
     p_f_array = p_f.vector().get_local()[:]
 
     # calculate magnitude of passive stress for guccione_fiber, guccione_transverse, and guccione_shear
-    if save_cell_output:
+    """if save_cell_output:
 
         # Magnitude of bulk passive stress in fiber direction
         Pg_fiber = inner(f0,Pg*f0)
@@ -590,7 +590,7 @@ def fenics(sim_params):
         pgt_array = pgt.vector().get_local()[:]
         temp_DG_4 = project(Pg_shear, FunctionSpace(mesh, "DG", 1), form_compiler_parameters={"representation":"uflacs"})
         pgs = interpolate(temp_DG_4, Quad)
-        pgs_array = pgs.vector().get_local()[:]
+        pgs_array = pgs.vector().get_local()[:]"""
 
     # define cb force array to save
     cb_f_array = project(cb_force, Quad).vector().get_local()[:]
@@ -688,7 +688,7 @@ def fenics(sim_params):
             hsl_array = project(hsl, Quad).vector().get_local()[:]           # for Myosim
 
 
-            temp_DG = project(Pff, FunctionSpace(mesh, "DG", 1), form_compiler_parameters={"representation":"uflacs"})
+            temp_DG = project(Sff, FunctionSpace(mesh, "DG", 1), form_compiler_parameters={"representation":"uflacs"})
             p_f = interpolate(temp_DG, Quad)
             p_f_array = p_f.vector().get_local()[:]
 
@@ -703,7 +703,7 @@ def fenics(sim_params):
                 alphas = interpolate(temp_DG_1, Quad)
                 alpha_array = alphas.vector().get_local()[:]
 
-                temp_DG_2 = project(Pg_fiber, FunctionSpace(mesh, "DG", 1), form_compiler_parameters={"representation":"uflacs"})
+                """temp_DG_2 = project(Pg_fiber, FunctionSpace(mesh, "DG", 1), form_compiler_parameters={"representation":"uflacs"})
                 pgf = interpolate(temp_DG_2, Quad)
                 pgf_array = pgf.vector().get_local()[:]
                 temp_DG_3 = project(Pg_transverse, FunctionSpace(mesh, "DG", 1), form_compiler_parameters={"representation":"uflacs"})
@@ -711,7 +711,7 @@ def fenics(sim_params):
                 pgt_array = pgt.vector().get_local()[:]
                 temp_DG_4 = project(Pg_shear, FunctionSpace(mesh, "DG", 1), form_compiler_parameters={"representation":"uflacs"})
                 pgs = interpolate(temp_DG_4, Quad)
-                pgs_array = pgs.vector().get_local()[:]
+                pgs_array = pgs.vector().get_local()[:]"""
 
 
             if(MPI.rank(comm) == 0):
@@ -814,23 +814,23 @@ def fenics(sim_params):
         print "saving def gradient"
         file = File(output_path+'f_proj.pvd')
         file << f_proj
-        Pg_fs_shear = inner(s0,Pg*f0)
-        shear_file = File(output_path+'P_fs_shear.pvd')
-        shear_file << project(Pg_fs_shear,FunctionSpace(mesh,"DG",1), form_compiler_parameters={"representation":"uflacs"})
+        #Pg_fs_shear = inner(s0,Pg*f0)
+        #shear_file = File(output_path+'P_fs_shear.pvd')
+        #shear_file << project(Pg_fs_shear,FunctionSpace(mesh,"DG",1), form_compiler_parameters={"representation":"uflacs"})
         #F_matrix = PETScMatrix()
         #f_assembled = assemble(Fmat,tensor=F_matrix)
         #print f_proj.vector().get_local()
         print "guccione passive stress"
-        print project(Pg,TensorFunctionSpace(mesh,"DG",1),form_compiler_parameters={"representation":"uflacs"}).vector().get_local()
-        print str(project(p,FunctionSpace(mesh,"CG",1)).vector().get_local())
+        print project(PK2_passive,TensorFunctionSpace(mesh,"DG",1),form_compiler_parameters={"representation":"uflacs"}).vector().get_local()
+        #print str(project(p,FunctionSpace(mesh,"CG",1)).vector().get_local())
         #print project(temp,TensorFunctionSpace(mesh,"DG",1),form_compiler_parameters={"representation":"uflacs"}).vector().get_local()
-        print "J"
-        print project(jforms,FunctionSpace(mesh,"DG",0)).vector().get_local()
+        #print "J"
+        #print project(jforms,FunctionSpace(mesh,"DG",0)).vector().get_local()
 
-        print "f assembly"
+        #print "f assembly"
         #print f_assembled
-        print "Shape of u"
-        print np.shape(u)
+        #print "Shape of u"
+        #print np.shape(u)
 
         # Update functions and arrays
         cb_f_array[:] = project(cb_force, Quad).vector().get_local()[:]
@@ -859,10 +859,10 @@ def fenics(sim_params):
         #print project(hsl,Quad).vector().get_local()[:]
 
         # For growth
-        temp_DG_2 = project(Pg_fiber, FunctionSpace(mesh, "DG", 1), form_compiler_parameters={"representation":"uflacs"})
-        pgf = interpolate(temp_DG_2, Quad)
+        """temp_DG_2 = project(Pg_fiber, FunctionSpace(mesh, "DG", 1), form_compiler_parameters={"representation":"uflacs"})
+        pgf = interpolate(temp_DG_2, Quad)"""
 
-        temp_DG = project(Pff, FunctionSpace(mesh, "DG", 1), form_compiler_parameters={"representation":"uflacs"})
+        temp_DG = project(Sff, FunctionSpace(mesh, "DG", 1), form_compiler_parameters={"representation":"uflacs"})
         p_f = interpolate(temp_DG, Quad)
         p_f_array = p_f.vector().get_local()[:]
 
@@ -905,7 +905,7 @@ def fenics(sim_params):
         tic_save_cell = timeit.default_timer()
         if save_cell_output:
 
-            temp_DG_2 = project(Pg_fiber, FunctionSpace(mesh, "DG", 1), form_compiler_parameters={"representation":"uflacs"})
+            """temp_DG_2 = project(Pg_fiber, FunctionSpace(mesh, "DG", 1), form_compiler_parameters={"representation":"uflacs"})
             pgf = interpolate(temp_DG_2, Quad)
             pgf_array = pgf.vector().get_local()[:]
             temp_DG_3 = project(Pg_transverse, FunctionSpace(mesh, "DG", 1), form_compiler_parameters={"representation":"uflacs"})
@@ -913,7 +913,7 @@ def fenics(sim_params):
             pgt_array = pgt.vector().get_local()[:]
             temp_DG_4 = project(Pg_shear, FunctionSpace(mesh, "DG", 1), form_compiler_parameters={"representation":"uflacs"})
             pgs = interpolate(temp_DG_4, Quad)
-            pgs_array = pgs.vector().get_local()[:]
+            pgs_array = pgs.vector().get_local()[:]"""
 
             active_stress_ds.iloc[0,:] = cb_f_array[:]
             active_stress_ds.to_csv(output_path + 'active_stress.csv',mode='a',header=False)
@@ -936,20 +936,20 @@ def fenics(sim_params):
             p_f_array_ds.iloc[0,:] = p_f_array[:]
             p_f_array_ds.to_csv(output_path + 'myofiber_passive.csv',mode='a',header=False)
 
-            pgf_array_ds.iloc[0,:] = pgf_array[:]
+            """pgf_array_ds.iloc[0,:] = pgf_array[:]
             pgf_array_ds.to_csv(output_path + 'gucc_fiber_pstress.csv',mode='a',header=False)
 
             pgt_array_ds.iloc[0,:] = pgt_array[:]
             pgt_array_ds.to_csv(output_path + 'gucc_trans_pstress.csv',mode='a',header=False)
 
             pgs_array_ds.iloc[0,:] = pgs_array[:]
-            pgs_array_ds.to_csv(output_path + 'gucc_shear_pstress.csv',mode='a',header=False)
+            pgs_array_ds.to_csv(output_path + 'gucc_shear_pstress.csv',mode='a',header=False)"""
 
             temp_overlap_ds.iloc[0,:] = temp_overlap[:]
             temp_overlap_ds.to_csv(output_path + 'overlap.csv',mode='a',header=False)
 
-            alpha_array_ds.iloc[0,:] = alpha_array[:]
-            alpha_array_ds.to_csv(output_path + 'alpha.csv',mode='a',header=False)
+            #alpha_array_ds.iloc[0,:] = alpha_array[:]
+            #alpha_array_ds.to_csv(output_path + 'alpha.csv',mode='a',header=False)
 
             delta_hsl_array_ds.iloc[0,:] = delta_hsl_array[:]
             delta_hsl_array_ds.to_csv(output_path + 'delta_hsl.csv',mode='a',header=False)
@@ -965,11 +965,11 @@ def fenics(sim_params):
     # -------------- Attempting growth here --------------------------------
 
     Fg00 = 1.0
-    for n_grow in np.arange(10):
+    """for n_grow in np.arange(10):
 
 
         #Get passive stress tensors from forms
-        Pg, Pff, alpha,Pmyo,temp,jforms= uflforms.stress(hsl)
+        PK2_passive= uflforms.stress(hsl)
         Pg_fiber = inner(f0,Pg*f0)
 
 
@@ -978,7 +978,7 @@ def fenics(sim_params):
         pgf = interpolate(temp_DG_2, Quad)
         pgf_array = pgf.vector().get_local()[:]
 
-        temp_DG = project(Pff, FunctionSpace(mesh, "DG", 1), form_compiler_parameters={"representation":"uflacs"})
+        temp_DG = project(Sff, FunctionSpace(mesh, "DG", 1), form_compiler_parameters={"representation":"uflacs"})
         p_f = interpolate(temp_DG, Quad)
         p_f_array = p_f.vector().get_local()[:]
 
@@ -1007,7 +1007,7 @@ def fenics(sim_params):
         #Theta2.vector()[:] = 1./theta1.vector().array()
         solve(Ftotal == 0, w, bcs, J = Jac, form_compiler_parameters={"representation":"uflacs"},solver_parameters={"newton_solver":{"relative_tolerance":1e-8},"newton_solver":{"maximum_iterations":50},"newton_solver":{"absolute_tolerance":1e-8}})
         #Get passive stress tensors from forms
-        Pg, Pff, alpha,Pmyo,temp,jforms = uflforms.stress(hsl)
+        PK2_passive = uflforms.stress(hsl)
         Pg_fiber = inner(f0,Pg*f0)
         # Update functions and arrays
         cb_f_array[:] = project(cb_force, Quad).vector().get_local()[:]
@@ -1020,7 +1020,7 @@ def fenics(sim_params):
         pgf = interpolate(temp_DG_2, Quad)
         pgf_array = pgf.vector().get_local()[:]
 
-        temp_DG = project(Pff, FunctionSpace(mesh, "DG", 1), form_compiler_parameters={"representation":"uflacs"})
+        temp_DG = project(Sff, FunctionSpace(mesh, "DG", 1), form_compiler_parameters={"representation":"uflacs"})
         p_f = interpolate(temp_DG, Quad)
         p_f_array = p_f.vector().get_local()[:]
         print "myof passive after solving:"
@@ -1043,7 +1043,7 @@ def fenics(sim_params):
             hsl_array_ds.to_csv(output_path + 'half_sarcomere_lengths.csv',mode='a',header=False)
 
     ALE.move(mesh, project(u, VectorFunctionSpace(mesh, 'CG', 1)))
-    File(output_path + "mesh_grown.pvd") << mesh
+    File(output_path + "mesh_grown.pvd") << mesh"""
 
         #ALE.move(mesh, project(u, VectorFunctionSpace(mesh, 'CG', 1)))
         #File(output_path + "mesh_"+str(n_grow)+".pvd") << mesh
